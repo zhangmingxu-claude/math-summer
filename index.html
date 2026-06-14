@@ -1069,6 +1069,9 @@ function endArena(){
   document.getElementById('arenaFeedback').innerHTML=`擂台得分：<b>${STATE.arenaScore}</b> 分！`;
   sfxComplete();spawnConfetti(50);
   STATE.learnPhase='done';updatePhaseTabs();updateProgress();document.getElementById('learnProgress').style.width='100%';
+  // 擂台结束即解锁下一天（不依赖错题回顾）
+  const mi=STATE._mapIndex;
+  if(mi===STATE.currentDay&&STATE.currentDay<29&&!STATE._previewMode){STATE.currentDay=mi+1;}
   // 错题回顾
   if(STATE._todayWrong.length>0&&!STATE._previewMode){
     setTimeout(()=>startMistakeReview(),1200);
@@ -1085,9 +1088,20 @@ function startMistakeReview(){
   document.getElementById('phaseTab2').classList.add('done');
   const qb=document.getElementById('questionBox');
   qb.innerHTML=`<div style="text-align:center">📋<br><b>错题回顾</b><br><br>今天有 <b style="color:var(--pink-deep);font-size:28px">${STATE._todayWrong.length}</b> 道错题<br>我们来重新做一遍吧！<br><br>做对了✅就过关<br>做错了❌留到错题本下次再练</div>`;
-  document.getElementById('answerRow').innerHTML=`<button class="btn btn-primary" onclick="renderMistakeQ()" style="font-size:18px;padding:14px 36px">开始回顾 📋</button>`;
+  document.getElementById('answerRow').innerHTML=`
+    <button class="btn btn-primary" onclick="renderMistakeQ()" style="font-size:16px;padding:12px 28px">开始回顾 📋</button>
+    <button class="btn-sm" onclick="skipMistakeReview()" style="margin-left:8px">跳过回顾 →</button>`;
   document.getElementById('feedbackBox').className='feedback-box';
   document.getElementById('levelTitle').textContent='📋 错题回顾';
+}
+
+function skipMistakeReview(){
+  // 错题保留在错题本，直接完成今天学习
+  document.getElementById('questionBox').innerHTML='📋 错题已保存到错题本<br>可以之后在家长面板中复习';
+  document.getElementById('answerRow').innerHTML='';
+  document.getElementById('arenaCard').style.display='block';
+  document.getElementById('finishDayBtn').style.display='inline-block';
+  saveState();renderMap();
 }
 
 function renderMistakeQ(){
@@ -1119,7 +1133,6 @@ function submitMistake(){
     fb.className='feedback-box show correct';fb.innerHTML='✅ 这次对了！太棒了！';
     sfxCorrect();spawnStars(2);
     entry.correctCount=(entry.correctCount||0)+1;
-    // 连续对3次从错题本移除
     if(entry.correctCount>=3){
       const idx=STATE.wrongBook.indexOf(entry);
       if(idx>=0)STATE.wrongBook.splice(idx,1);
@@ -1137,12 +1150,19 @@ function submitMistake(){
 
 function finishMistakeReview(){
   document.getElementById('questionBox').innerHTML='🎊 错题回顾完成！<br><br>做对的题目已从错题本消除<br>还不会的留到下次再练～';
-  document.getElementById('answerRow').innerHTML='';
+  document.getElementById('answerRow').innerHTML=`
+    <button class="btn btn-primary" onclick="showFinishDayBtn()" style="font-size:16px;padding:12px 28px">✅ 确认完成</button>`;
   document.getElementById('feedbackBox').className='feedback-box show correct';
   document.getElementById('feedbackBox').innerHTML='错题本中共有 <b>'+STATE.wrongBook.length+'</b> 道待复习题目';
   document.getElementById('arenaCard').style.display='block';
-  if(!STATE._previewMode){document.getElementById('finishDayBtn').style.display='inline-block';}
   saveState();renderMap();
+}
+
+function showFinishDayBtn(){
+  document.getElementById('finishDayBtn').style.display='inline-block';
+  document.getElementById('questionBox').innerHTML='🎊 今天的学习全部完成！';
+  document.getElementById('answerRow').innerHTML='';
+  document.getElementById('finishDayBtn').scrollIntoView({behavior:'smooth'});
 }
 
 function finishDay(){
@@ -1152,7 +1172,6 @@ function finishDay(){
   let ds=STATE.arenaScore>=30?3:STATE.arenaScore>=10?2:1;ds=Math.max(ds,Math.round(avg));
   STATE.dayStars[mi]=ds;STATE.totalStars=Object.values(STATE.dayStars).reduce((a,b)=>a+b,0);
   STATE.totalScore+=STATE.arenaScore+ds*5;STATE.completedDays=Object.keys(STATE.dayStars).length;
-  if(mi===STATE.currentDay&&STATE.currentDay<29)STATE.currentDay=mi+1;
   checkBadges();saveState();updateLearnStats();
   showModal('🎉','太棒了！`今天获得 <b>${ds}</b> 颗星 ⭐<br>擂台得分 <b>${STATE.arenaScore}</b> 分<br>最长连对 <b>${STATE.streakBest}</b> 题<br><br>第${mi+1}天挑战完成！',()=>{goMap();});
 }
@@ -1267,14 +1286,27 @@ function showParentDashboard(){
   }
 }
 function parentClearWrongBook(){if(confirm('确定要清空所有错题记录吗？')){STATE.wrongBook=[];saveState();showParentDashboard();}}
-function parentUnlockAll(){STATE.currentDay=29;STATE._parentAuth=true;saveState();renderMap();showParentDashboard();alert('✅ 已解锁全部天数！');}
+function parentUnlockAll(){
+  // 保存解锁前的进度
+  if(!STATE._savedDay)savedDay=STATE.currentDay;
+  STATE._savedBeforeUnlock=STATE.currentDay;
+  STATE.currentDay=29;STATE._parentAuth=true;saveState();renderMap();showParentDashboard();
+  alert('✅ 已解锁全部天数！\n退出家长模式后自动恢复到解锁前的进度。');
+}
 function parentReset(){if(confirm('⚠️ 确定要重置所有学习进度吗？此操作不可恢复！')){localStorage.removeItem('math_summer_v3');location.reload();}}
 function parentChangePin(){
   const np=prompt('请输入新密码（4-6位数字）：');
   if(np&&np.length>=4&&/^\d+$/.test(np)){localStorage.setItem('parent_pin',np);alert('✅ 密码已修改：'+np);}
   else if(np)alert('密码需4-6位数字');
 }
-function parentLogout(){STATE._parentAuth=false;STATE._previewMode=false;switchPage('page-map');renderMap();}
+function parentLogout(){
+  // 恢复解锁前的进度
+  if(STATE._savedBeforeUnlock!==undefined){
+    STATE.currentDay=STATE._savedBeforeUnlock;
+    STATE._savedBeforeUnlock=undefined;
+  }
+  STATE._parentAuth=false;STATE._previewMode=false;switchPage('page-map');renderMap();
+}
 window.parentLogin=parentLogin;window.parentUnlockAll=parentUnlockAll;window.parentReset=parentReset;window.parentChangePin=parentChangePin;window.parentLogout=parentLogout;
 
 // ==================== PWA ====================
