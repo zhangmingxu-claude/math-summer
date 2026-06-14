@@ -290,6 +290,10 @@ body{font-family:var(--font);background:linear-gradient(170deg,#FFF5F5 0%,#FFF0F
       <h3 style="margin-top:16px;">📖 内容预览</h3>
       <p style="font-size:13px;color:var(--text-light);margin-bottom:8px;">点击预览任意一天的内容（包括未解锁的）</p>
       <div id="previewGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;"></div>
+      <h3 style="margin-top:16px;">📋 错题本</h3>
+      <div id="mistakeBook" style="font-size:13px;max-height:300px;overflow-y:auto;">
+        <p style="color:var(--text-light);">暂无错题记录 🎉</p>
+      </div>
       <h3 style="margin-top:16px;">⚙️ 管理</h3>
       <button class="btn btn-secondary" onclick="parentUnlockAll()" style="margin:4px;">🔓 解锁全部天数</button>
       <button class="btn btn-secondary" onclick="parentReset()" style="margin:4px;">🔄 重置所有进度</button>
@@ -606,19 +610,21 @@ const STATE={
   learnPhase:'lecture',currentLevel:0,_levelStars:[0,0,0],levelCorrect:0,levelWrong:0,levelTotal:0,
   currentQuestion:null,arenaActive:false,arenaScore:0,arenaTimer:null,arenaSeconds:120,
   lectureStep:0,streakCount:0,streakBest:0,selectedChoice:null,
-  _mapIndex:null,_studyDay:null,_previewMode:false,_parentAuth:false
+  _mapIndex:null,_studyDay:null,_previewMode:false,_parentAuth:false,
+  _usedQKeys:new Set(),wrongBook:[],_todayWrong:[],_mistakeReviewIdx:0,
 };
 function loadState(){
-  try{const s=JSON.parse(localStorage.getItem('math_summer_v3'));if(s)Object.assign(STATE,s);STATE._parentAuth=!!localStorage.getItem('parent_pin');}catch(e){}
+  try{const s=JSON.parse(localStorage.getItem('math_summer_v3'));if(s){Object.assign(STATE,s);STATE.wrongBook=STATE.wrongBook||[];}STATE._parentAuth=!!localStorage.getItem('parent_pin');}catch(e){}
   STATE.arenaActive=false;STATE.arenaTimer=null;STATE.currentQuestion=null;
   STATE.learnPhase='lecture';STATE.currentLevel=0;STATE._levelStars=[0,0,0];
   STATE.lectureStep=0;STATE.streakCount=0;STATE.selectedChoice=null;STATE._previewMode=false;
+  STATE._usedQKeys=new Set();STATE._todayWrong=[];STATE._mistakeReviewIdx=0;
 }
 function saveState(){
   try{localStorage.setItem('math_summer_v3',JSON.stringify({
     currentDay:STATE.currentDay,completedDays:STATE.completedDays,totalStars:STATE.totalStars,
     totalScore:STATE.totalScore,dayStars:STATE.dayStars,arenaTotal:STATE.arenaTotal,badges:STATE.badges,
-    streakBest:STATE.streakBest
+    streakBest:STATE.streakBest,wrongBook:STATE.wrongBook
   }));}catch(e){}
 }
 
@@ -629,6 +635,16 @@ function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=rand(0,i);[arr[i],
 function genQ(dayId,levelIdx){
   const day=STUDY_DAYS[dayId];if(!day)return{q:'?',a:0};
   const lvl=day.levels[Math.min(levelIdx,day.levels.length-1)];
+  let q=null, tries=0;
+  while(tries<30){
+    q=_genQRaw(dayId,levelIdx,day,lvl);
+    const key=String(q.a)+'|'+q.q.replace(/<[^>]+>/g,'').substring(0,40);
+    if(!STATE._usedQKeys.has(key)){STATE._usedQKeys.add(key);break;}
+    tries++;
+  }
+  return q||{q:'?',a:0};
+}
+function _genQRaw(dayId,levelIdx,day,lvl){
   const t=lvl.type;
   switch(t){
     case'compare':{const a=rand(1,20),b=rand(1,20);return{q:`哪个数更大？<br><span style="font-size:40px">${a} 和 ${b}</span>`,a:Math.max(a,b)};}
@@ -712,7 +728,7 @@ function genQ(dayId,levelIdx){
     case'sudoku4':{return{q:'🧩 每行每列填入1-4不重复<br><br>1 2 3 _<br>3 4 _ 2<br>2 _ 4 1<br>_ 1 2 3<br><br>第一行最后填几？',a:4};}
     default:return{q:'?',a:0};
   }
-}
+} // end _genQRaw
 
 // ==================== 擂台题目（关联当天知识点） ====================
 function genArenaQ(dayId){
@@ -765,7 +781,7 @@ function openStudyDay(mapIdx){
   document.getElementById('finishDayBtn').style.display='none';
   STATE.learnPhase='lecture';STATE.currentLevel=0;STATE.lectureStep=0;
   STATE._levelStars=[0,0,0];STATE.levelCorrect=0;STATE.levelWrong=0;STATE.levelTotal=0;
-  STATE.streakCount=0;STATE.selectedChoice=null;
+  STATE.streakCount=0;STATE.selectedChoice=null;STATE._usedQKeys=new Set();STATE._todayWrong=[];
   // 阶段标签
   ['phaseTab0','phaseTab1','phaseTab2'].forEach((id,i)=>{document.getElementById(id).classList.remove('active','done');if(i===0)document.getElementById(id).classList.add('active');});
   // 初始化讲堂轮播
@@ -857,12 +873,25 @@ function updatePhaseTabs(){
 function nextLevel(day){
   const lvl=day.data.levels[STATE.currentLevel];
   STATE.levelTotal=0;STATE.levelCorrect=0;STATE.levelWrong=0;STATE.streakCount=0;STATE.selectedChoice=null;
+  STATE._usedQKeys=new Set(); // 新关卡清空去重
   STATE.currentQuestion=genQ(day.data.id-1,STATE.currentLevel);
   document.getElementById('levelTitle').textContent=`🎯 第${STATE.currentLevel+1}关：${lvl.name}（${lvl.count}题）`;
   renderQuestion(STATE.currentQuestion);
   document.getElementById('feedbackBox').className='feedback-box';
   document.getElementById('hintBox').className='hint-box';
   document.getElementById('levelStars').textContent='⭐⭐⭐';
+}
+
+function recordWrong(q,userAns){
+  // 记录错题
+  const entry={
+    qHTML:q.q, a:String(q.a), userAns:String(userAns),
+    day:STATE._mapIndex, level:STATE.currentLevel,
+    topic:STATE._studyDay.data.topic.split(' ')[1]||STATE._studyDay.data.topic,
+    date:new Date().toLocaleDateString('zh-CN'), correctCount:0
+  };
+  STATE.wrongBook.push(entry);
+  STATE._todayWrong.push(entry);
 }
 
 function renderQuestion(q){
@@ -906,7 +935,7 @@ function submitChoice(val,q){
   STATE.levelTotal++;STATE.selectedChoice=null;
   const correct=val===q.a;
   if(correct){STATE.levelCorrect++;STATE.streakCount++;showFB(true,q.disp||q.a);sfxCorrect();spawnStars(2);bounceElement(document.getElementById('questionBox'));}
-  else{STATE.levelWrong++;STATE.streakCount=0;showFB(false,q.disp||q.a);sfxWrong();shakeElement(document.getElementById('questionBox'));}
+  else{STATE.levelWrong++;STATE.streakCount=0;showFB(false,q.disp||q.a);sfxWrong();shakeElement(document.getElementById('questionBox'));recordWrong(q,val);}
   checkStreak();
   nextAfterFB();
 }
@@ -920,7 +949,7 @@ function submitAnswer(){
   STATE.levelTotal++;
   const correct=String(ans)===String(q.a);
   if(correct){STATE.levelCorrect++;STATE.streakCount++;showFB(true,q.disp||q.a);sfxCorrect();spawnStars(2);bounceElement(document.getElementById('questionBox'));}
-  else{STATE.levelWrong++;STATE.streakCount=0;showFB(false,q.disp||q.a);sfxWrong();shakeElement(document.getElementById('questionBox'));}
+  else{STATE.levelWrong++;STATE.streakCount=0;showFB(false,q.disp||q.a);sfxWrong();shakeElement(document.getElementById('questionBox'));recordWrong(q,ans);}
   checkStreak();
   nextAfterFB();
 }
@@ -1038,9 +1067,81 @@ function endArena(){
   document.getElementById('arenaFeedback').className='feedback-box show correct';
   document.getElementById('arenaFeedback').innerHTML=`擂台得分：<b>${STATE.arenaScore}</b> 分！`;
   sfxComplete();spawnConfetti(50);
-  if(!STATE._previewMode){document.getElementById('finishDayBtn').style.display='inline-block';}
   STATE.learnPhase='done';updatePhaseTabs();updateProgress();document.getElementById('learnProgress').style.width='100%';
-  if(!STATE._previewMode){saveState();renderMap();}
+  // 错题回顾
+  if(STATE._todayWrong.length>0&&!STATE._previewMode){
+    setTimeout(()=>startMistakeReview(),1200);
+  }else{
+    if(!STATE._previewMode){document.getElementById('finishDayBtn').style.display='inline-block';}
+    if(!STATE._previewMode){saveState();renderMap();}
+  }
+}
+
+// ==================== 错题回顾 ====================
+function startMistakeReview(){
+  STATE._mistakeReviewIdx=0;
+  document.getElementById('arenaCard').style.display='none';
+  document.getElementById('phaseTab2').classList.add('done');
+  const qb=document.getElementById('questionBox');
+  qb.innerHTML=`<div style="text-align:center">📋<br><b>错题回顾</b><br><br>今天有 <b style="color:var(--pink-deep);font-size:28px">${STATE._todayWrong.length}</b> 道错题<br>我们来重新做一遍吧！<br><br>做对了✅就过关<br>做错了❌留到错题本下次再练</div>`;
+  document.getElementById('answerRow').innerHTML=`<button class="btn btn-primary" onclick="renderMistakeQ()" style="font-size:18px;padding:14px 36px">开始回顾 📋</button>`;
+  document.getElementById('feedbackBox').className='feedback-box';
+  document.getElementById('levelTitle').textContent='📋 错题回顾';
+}
+
+function renderMistakeQ(){
+  if(STATE._mistakeReviewIdx>=STATE._todayWrong.length){
+    finishMistakeReview();return;
+  }
+  const entry=STATE._todayWrong[STATE._mistakeReviewIdx];
+  document.getElementById('levelTitle').textContent=`📋 错题 ${STATE._mistakeReviewIdx+1}/${STATE._todayWrong.length}`;
+  const qb=document.getElementById('questionBox');
+  qb.innerHTML=entry.qHTML;
+  qb.classList.remove('shake','bounce');qb.style.filter='';qb.style.opacity='';
+  document.getElementById('feedbackBox').className='feedback-box';
+  const row=document.getElementById('answerRow');
+  row.innerHTML=`
+    <input class="answer-input" type="number" id="answerInput" placeholder="?" autocomplete="off" inputmode="numeric">
+    <button class="btn btn-primary" onclick="submitMistake()">确认 ✓</button>
+  `;
+  document.getElementById('hintBox').className='hint-box';
+  setTimeout(()=>{const inp=document.getElementById('answerInput');if(inp)inp.focus();},300);
+}
+
+function submitMistake(){
+  const inp=document.getElementById('answerInput');if(!inp)return;
+  const ans=inp.value.trim();if(ans==='')return;
+  const entry=STATE._todayWrong[STATE._mistakeReviewIdx];
+  const correct=String(ans)===entry.a;
+  const fb=document.getElementById('feedbackBox');
+  if(correct){
+    fb.className='feedback-box show correct';fb.innerHTML='✅ 这次对了！太棒了！';
+    sfxCorrect();spawnStars(2);
+    entry.correctCount=(entry.correctCount||0)+1;
+    // 连续对3次从错题本移除
+    if(entry.correctCount>=3){
+      const idx=STATE.wrongBook.indexOf(entry);
+      if(idx>=0)STATE.wrongBook.splice(idx,1);
+    }
+    STATE._mistakeReviewIdx++;
+    setTimeout(()=>renderMistakeQ(),800);
+  }else{
+    fb.className='feedback-box show wrong';
+    fb.innerHTML=`❌ 还是不对～正确答案是 <b>${entry.a}</b><br>留到错题本，下次再练！`;
+    sfxWrong();shakeElement(document.getElementById('questionBox'));
+    STATE._mistakeReviewIdx++;
+    setTimeout(()=>renderMistakeQ(),1200);
+  }
+}
+
+function finishMistakeReview(){
+  document.getElementById('questionBox').innerHTML='🎊 错题回顾完成！<br><br>做对的题目已从错题本消除<br>还不会的留到下次再练～';
+  document.getElementById('answerRow').innerHTML='';
+  document.getElementById('feedbackBox').className='feedback-box show correct';
+  document.getElementById('feedbackBox').innerHTML='错题本中共有 <b>'+STATE.wrongBook.length+'</b> 道待复习题目';
+  document.getElementById('arenaCard').style.display='block';
+  if(!STATE._previewMode){document.getElementById('finishDayBtn').style.display='inline-block';}
+  saveState();renderMap();
 }
 
 function finishDay(){
@@ -1141,7 +1242,30 @@ function showParentDashboard(){
     if(STATE.dayStars[i]!==undefined)btn.style.background='var(--success)';
     pg.appendChild(btn);
   });
+  // 错题本渲染
+  const mb=document.getElementById('mistakeBook');if(!mb)return;
+  if(!STATE.wrongBook||STATE.wrongBook.length===0){
+    mb.innerHTML='<p style="color:var(--text-light);text-align:center;">🎉 暂无错题，继续保持！</p>';
+  }else{
+    // 按天分组
+    const groups={};STATE.wrongBook.forEach((e,i)=>{e._idx=i;const k='第'+(e.day+1)+'天 '+e.topic;if(!groups[k])groups[k]=[];groups[k].push(e);});
+    let html='';
+    for(const[day,entries]of Object.entries(groups)){
+      html+=`<div style="margin-bottom:8px;font-weight:600;color:var(--pink-deep)">${day}（${entries.length}题）</div>`;
+      entries.forEach(e=>{
+        html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dashed rgba(0,0,0,0.05);font-size:12px">
+          <span style="flex:1">${e.qHTML.replace(/<[^>]+>/g,'').substring(0,30)}…</span>
+          <span style="color:var(--error);margin:0 6px">✗${e.userAns}</span>
+          <span style="color:#2D6A4F">✓${e.a}</span>
+          <span style="font-size:10px;color:var(--text-light);margin-left:4px">${e.correctCount||0}/3</span>
+        </div>`;
+      });
+    }
+    html+=`<button class="btn-sm" style="margin-top:8px;width:100%" onclick="parentClearWrongBook()">🗑️ 清空错题本</button>`;
+    mb.innerHTML=html;
+  }
 }
+function parentClearWrongBook(){if(confirm('确定要清空所有错题记录吗？')){STATE.wrongBook=[];saveState();showParentDashboard();}}
 function parentUnlockAll(){STATE.currentDay=29;STATE._parentAuth=true;saveState();renderMap();showParentDashboard();alert('✅ 已解锁全部天数！');}
 function parentReset(){if(confirm('⚠️ 确定要重置所有学习进度吗？此操作不可恢复！')){localStorage.removeItem('math_summer_v3');location.reload();}}
 function parentChangePin(){
