@@ -175,6 +175,16 @@ body.review-mode .topbar{background:linear-gradient(135deg,rgba(255,200,160,0.85
 body.review-mode .topbar .title{color:#D4642A}
 body.review-mode .phase-tabs{opacity:0.5;pointer-events:none}
 body.review-mode .progress-fill{background:linear-gradient(90deg,#FF8C42,#FFB088,#FFC4A0)}
+/* 护眼模式 */
+body.warm-mode{--bg:#FFF8F0;--card:rgba(255,250,240,0.9);--pink-light:#FFE8D8;--pink:#FFC8A0;--pink-deep:#FFA878;--yellow-light:#FFF6E8;--yellow:#FFE0B0;--blue-light:#F5F0E8;--blue:#D8C8B0;--text:#5C4A3A;--text-light:#8A7868;--success:#C8E0C8;--error:#FFD0C8;--lock:#E8E0D8}
+body.warm-mode{background:linear-gradient(170deg,#FFF8F0 0%,#FFF5E8 30%,#F5F0E5 60%,#FFF8F0 100%)!important}
+body.warm-mode .topbar{background:rgba(255,250,242,0.85)!important}
+body.warm-mode .question-box{background:linear-gradient(135deg,#F5F0E8,#F0EBE0)!important}
+body.warm-mode .highlight-box{background:linear-gradient(135deg,#FFF8E8,#FFFDF5)!important}
+body.warm-mode .interact-box{background:linear-gradient(135deg,#F5F0E8,#F8F5F0)!important}
+/* 大按钮优化：关键操作按钮最小48px */
+.btn-choice,.btn-primary,.btn-yellow,.btn-success{min-height:48px;min-width:48px;padding:12px 20px}
+.answer-input{min-height:54px;font-size:28px}
 </style>
 <script>
 // 课堂汉字拼音映射表（792字，嵌入式，零外部依赖）
@@ -308,6 +318,13 @@ const PINYIN_MAP={一:'yī',七:'qī',三:'sān',上:'shàng',下:'xià',不:'b�
       <div class="data-row"><span>总积分</span><span class="data-val" id="pdScore">0</span></div>
       <div class="data-row"><span>擂台累计</span><span class="data-val" id="pdArena">0</span></div>
       <div class="data-row"><span>已解锁徽章</span><span class="data-val" id="pdBadges">0</span></div>
+      <h3 style="margin-top:16px;">⚙️ 偏好设置</h3>
+      <div class="data-row"><span>护眼模式</span><button class="btn-sm" id="warmToggle" onclick="toggleWarmMode()" style="font-size:12px;padding:4px 12px">🌙 开</button></div>
+      <div class="data-row"><span>拼音模式</span><select id="pinyinModeSelect" onchange="setPinyinMode(this.value)" style="font-family:var(--font);font-size:13px;padding:4px 8px;border-radius:8px;border:1px solid var(--pink-light)"><option value="on">🔤 总是开启</option><option value="off">🔤 总是关闭</option><option value="smart">🔤 智能（学习日开）</option></select></div>
+      <h3 style="margin-top:16px;">📊 学习报告</h3>
+      <div id="learningReport" style="font-size:13px;max-height:260px;overflow-y:auto;">
+        <p style="color:var(--text-light);">完成学习日后自动生成报告</p>
+      </div>
       <h3 style="margin-top:16px;">📖 内容预览</h3>
       <p style="font-size:13px;color:var(--text-light);margin-bottom:8px;">点击预览任意一天的内容（包括未解锁的）</p>
       <div id="previewGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;"></div>
@@ -698,7 +715,9 @@ const STATE={
   lectureStep:0,streakCount:0,streakBest:0,selectedChoice:null,
   _mapIndex:null,_studyDay:null,_previewMode:false,_parentAuth:false,
   _usedQKeys:new Set(),wrongBook:[],_todayWrong:[],_mistakeReviewIdx:0,
-  pinyinEnabled:true,
+  pinyinEnabled:true,pinyinMode:'smart',warmMode:true,
+  _studyTimer:null,_studySeconds:0,_resting:false,_restUntil:0,
+  _wrongRetry:null,learningLog:[],
 };
 function loadState(){
   try{const s=JSON.parse(localStorage.getItem('math_summer_v3'));if(s){Object.assign(STATE,s);STATE.wrongBook=STATE.wrongBook||[];}STATE._parentAuth=!!localStorage.getItem('parent_pin');}catch(e){}
@@ -709,12 +728,15 @@ function loadState(){
   // 拼音偏好：默认开启
   if(localStorage.getItem('pinyin_enabled')===null)STATE.pinyinEnabled=true;
   else STATE.pinyinEnabled=localStorage.getItem('pinyin_enabled')==='1';
+  STATE.pinyinMode=localStorage.getItem('pinyin_mode')||'smart';
+  STATE.warmMode=localStorage.getItem('warm_mode')!=='0';
+  if(STATE.warmMode)document.body.classList.add('warm-mode');
 }
 function saveState(){
   try{localStorage.setItem('math_summer_v3',JSON.stringify({
     currentDay:STATE.currentDay,completedDays:STATE.completedDays,totalStars:STATE.totalStars,
     totalScore:STATE.totalScore,dayStars:STATE.dayStars,arenaTotal:STATE.arenaTotal,badges:STATE.badges,
-    streakBest:STATE.streakBest,wrongBook:STATE.wrongBook
+    streakBest:STATE.streakBest,wrongBook:STATE.wrongBook,learningLog:STATE.learningLog
   }));}catch(e){}
 }
 
@@ -771,8 +793,8 @@ function _genQRaw(dayId,levelIdx,day,lvl){
     case'noCarryAdd':{const a=rand(11,18),b=rand(1,19-a);return{q:`${a} + ${b} = ?`,a:a+b};}
     case'noBorrowSub':{const a=rand(11,19),b=rand(1,a%10||1);return{q:`${a} - ${b} = ?`,a:a-b};}
     case'makeTenFriend':{const n=rand(1,9);return{q:`${n} + ? = 10`,a:10-n};}
-    case'makeTen9':{const n=rand(2,9);return{q:`9 + ${n} = ?`,a:9+n};}
-    case'makeTen8':{const n=rand(3,9);return{q:`8 + ${n} = ?`,a:8+n};}
+    case'makeTen9':{const n=rand(2,9);return{q:`9 + ${n} = ?`,a:9+n,hint:`想一想：9差几到10？从${n}里拿几出来？`};}
+    case'makeTen8':{const n=rand(3,9);return{q:`8 + ${n} = ?`,a:8+n,hint:`想一想：8差几到10？从${n}里拿几出来？`};}
     case'breakTen':{const a=rand(11,18),b=rand(a%10+1,9);return{q:`${a} - ${b} = ?`,a:a-b};}
     case'addToSub':{const a=rand(11,18),b=rand(a%10+1,9);return{q:`${a} - ${b} = ?<br><span style="font-size:13px">想：${b}+?=${a}</span>`,a:a-b};}
     case'borrowSub':{const a=rand(11,18),b=rand(a%10+1,9);return{q:`${a} - ${b} = ?`,a:a-b};}
@@ -872,6 +894,9 @@ function openStudyDay(mapIdx){
   STATE.learnPhase='lecture';STATE.currentLevel=0;STATE.lectureStep=0;
   STATE._levelStars=[0,0,0];STATE.levelCorrect=0;STATE.levelWrong=0;STATE.levelTotal=0;
   STATE.streakCount=0;STATE.selectedChoice=null;STATE._usedQKeys=new Set();STATE._todayWrong=[];
+  STATE._wrongRetry=null;
+  // 智能拼音：学习日开，周末关
+  if(STATE.pinyinMode==='smart'){STATE.pinyinEnabled=true;localStorage.setItem('pinyin_enabled','1');}
   // 阶段标签
   ['phaseTab0','phaseTab1','phaseTab2'].forEach((id,i)=>{document.getElementById(id).classList.remove('active','done');if(i===0)document.getElementById(id).classList.add('active');});
   // 初始化讲堂轮播
@@ -880,6 +905,10 @@ function openStudyDay(mapIdx){
   resetPractice();
   // 初始化擂区
   resetArenaUI();
+  // 错题间隔复习：检查是否有≥2天前的未复习错题
+  checkSpacedReview();
+  // 25分钟休息计时器
+  startStudyTimer();
   switchPage('page-learn');updateLearnStats();
   setTimeout(()=>document.getElementById('lectureCarousel').scrollIntoView({behavior:'smooth'}),200);
 }
@@ -980,7 +1009,8 @@ function recordWrong(q,userAns){
     qHTML:q.q, a:String(q.a), userAns:String(userAns),
     day:STATE._mapIndex, level:STATE.currentLevel,
     topic:STATE._studyDay.data.topic.split(' ')[1]||STATE._studyDay.data.topic,
-    date:new Date().toLocaleDateString('zh-CN'), correctCount:0
+    date:new Date().toLocaleDateString('zh-CN'), correctCount:0,
+    _ts:Date.now(),_reviewed:0
   };
   STATE.wrongBook.push(entry);
   STATE._todayWrong.push(entry);
@@ -1024,12 +1054,15 @@ function renderQuestion(q){
 }
 
 function submitChoice(val,q){
-  STATE.levelTotal++;STATE.selectedChoice=null;
+  STATE.selectedChoice=null;
   const correct=val===q.a;
-  if(correct){STATE.levelCorrect++;STATE.streakCount++;showFB(true,q.disp||q.a);sfxCorrect();spawnStars(2);bounceElement(document.getElementById('questionBox'));}
-  else{STATE.levelWrong++;STATE.streakCount=0;showFB(false,q.disp||q.a);sfxWrong();shakeElement(document.getElementById('questionBox'));recordWrong(q,val);}
-  checkStreak();
-  nextAfterFB();
+  if(correct){
+    STATE.levelTotal++;STATE.levelCorrect++;STATE.streakCount++;STATE._wrongRetry=null;
+    showFB(true,q.disp||q.a);sfxCorrect();spawnStars(2);bounceElement(document.getElementById('questionBox'));
+    checkStreak();nextAfterFB();
+  }else{
+    handleWrongAnswer(q,val);
+  }
 }
 
 function submitAnswer(){
@@ -1038,12 +1071,50 @@ function submitAnswer(){
   const inp=document.getElementById('answerInput');if(!inp)return;
   const ans=inp.value.trim();if(ans==='')return;
   const q=STATE.currentQuestion;if(q.type==='choice')return;
-  STATE.levelTotal++;
   const correct=String(ans)===String(q.a);
-  if(correct){STATE.levelCorrect++;STATE.streakCount++;showFB(true,q.disp||q.a);sfxCorrect();spawnStars(2);bounceElement(document.getElementById('questionBox'));}
-  else{STATE.levelWrong++;STATE.streakCount=0;showFB(false,q.disp||q.a);sfxWrong();shakeElement(document.getElementById('questionBox'));recordWrong(q,ans);}
-  checkStreak();
-  nextAfterFB();
+  if(correct){
+    STATE.levelTotal++;STATE.levelCorrect++;STATE.streakCount++;STATE._wrongRetry=null;
+    showFB(true,q.disp||q.a);sfxCorrect();spawnStars(2);bounceElement(document.getElementById('questionBox'));
+    checkStreak();nextAfterFB();
+  }else{
+    handleWrongAnswer(q,ans);
+  }
+}
+
+function handleWrongAnswer(q,userAns){
+  // 第一次答错：显示算理提示 + 再试一次（不算入总题数）
+  if(!STATE._wrongRetry||STATE._wrongRetry.q!==q){
+    STATE._wrongRetry={q:q,userAns:userAns};
+    const hint=q.hint||getDefaultHint(q);
+    const fb=document.getElementById('feedbackBox');
+    fb.className='feedback-box show wrong';
+    fb.innerHTML=`🤔 再想想～<br><b style="font-size:15px">${hint}</b><br><span style="font-size:13px">再试一次吧！</span>`;
+    sfxWrong();
+    // 清空输入框，保留题目
+    const inp=document.getElementById('answerInput');
+    if(inp){inp.value='';inp.focus();}
+    // 恢复选项按钮
+    if(q.choices)document.querySelectorAll('.btn-choice').forEach(b=>b.disabled=false);
+    return;
+  }
+  // 第二次答错：显示正确答案
+  STATE.levelTotal++;STATE.levelWrong++;STATE.streakCount=0;STATE._wrongRetry=null;
+  showFB(false,q.disp||q.a);sfxWrong();shakeElement(document.getElementById('questionBox'));
+  recordWrong(q,userAns);
+  checkStreak();nextAfterFB();
+}
+
+function getDefaultHint(q){
+  // 无预设hint时根据题型生成通用提示
+  const t=q.q.replace(/<[^>]+>/g,'');
+  if(t.includes('+'))return '从左到右一步一步算，可以先凑十哦～';
+  if(t.includes('-'))return '个位不够减时，从十位借1个十！';
+  if(t.includes('规律'))return '看看相邻两个数之间差几？';
+  if(t.includes('几时'))return '分针指向12是整时，指向6是半时～';
+  if(t.includes('一共'))return '看到"一共"用加法！';
+  if(t.includes('还剩'))return '看到"还剩"用减法！';
+  if(t.includes('第')&&t.includes('个'))return '前+后-1，因为自己数了两次哦～';
+  return '仔细读题，圈出数字和关键词～';
 }
 
 function checkStreak(){
@@ -1302,17 +1373,86 @@ function showFinishDayBtn(){
 
 function finishDay(){
   if(STATE._previewMode){alert('预览模式不计分');goMap();return;}
+  clearStudyTimer();
   const mi=STATE._mapIndex;
   const avg=STATE._levelStars.reduce((a,b)=>a+b,0)/3;
   let ds=STATE.arenaScore>=30?3:STATE.arenaScore>=10?2:1;ds=Math.max(ds,Math.round(avg));
   STATE.dayStars[mi]=ds;STATE.totalStars=Object.values(STATE.dayStars).reduce((a,b)=>a+b,0);
   STATE.totalScore+=STATE.arenaScore+ds*5;STATE.completedDays=Object.keys(STATE.dayStars).length;
+  // 记录学习日志
+  const day=STATE._studyDay;
+  const totalInDay=(STATE._levelStars[0]||0)+(STATE._levelStars[1]||0)+(STATE._levelStars[2]||0);
+  STATE.learningLog.push({
+    date:new Date().toLocaleDateString('zh-CN'),
+    topic:day.data.topic.split(' ')[1]||day.data.topic,
+    correct:STATE.levelCorrect,total:STATE.levelTotal,
+    stars:ds,arena:STATE.arenaScore,streak:STATE.streakBest,
+    wrongs:STATE._todayWrong.length
+  });
+  if(STATE.learningLog.length>50)STATE.learningLog=STATE.learningLog.slice(-50);
   checkBadges();saveState();updateLearnStats();
   showModal('🎉','太棒了！`今天获得 <b>${ds}</b> 颗星 ⭐<br>擂台得分 <b>${STATE.arenaScore}</b> 分<br>最长连对 <b>${STATE.streakBest}</b> 题<br><br>第${mi+1}天挑战完成！',()=>{goMap();});
 }
 
+// ==================== 学习计时 & 休息提醒 ====================
+function startStudyTimer(){
+  if(STATE._studyTimer)clearInterval(STATE._studyTimer);
+  STATE._studySeconds=0;STATE._resting=false;
+  STATE._studyTimer=setInterval(()=>{
+    if(STATE._resting)return;
+    STATE._studySeconds++;
+    if(STATE._studySeconds>=1500){ // 25分钟
+      clearInterval(STATE._studyTimer);
+      STATE._resting=true;STATE._restUntil=Date.now()+300000; // 锁定5分钟
+      showRestModal();
+    }
+  },1000);
+}
+function showRestModal(){
+  const remaining=Math.ceil((STATE._restUntil-Date.now())/60000);
+  showModal('😊','小眼睛累啦！','花花休息一下～<br>去喝口水、跳一跳、看看窗外<br><br><b style="font-size:18px;color:var(--pink-deep)">⏳ '+remaining+' 分钟后继续</b><br><br><span style="font-size:13px;color:var(--text-light)">休息好了学得更棒哦！</span>',()=>{
+    if(Date.now()<STATE._restUntil){
+      const r=Math.ceil((STATE._restUntil-Date.now())/60000);
+      alert('再休息 '+r+' 分钟吧～小眼睛需要放松！');
+      showRestModal();return;
+    }
+    STATE._resting=false;startStudyTimer();
+  });
+}
+function clearStudyTimer(){
+  if(STATE._studyTimer){clearInterval(STATE._studyTimer);STATE._studyTimer=null;}
+  STATE._resting=false;
+}
+function checkSpacedReview(){
+  if(STATE._previewMode||!STATE.wrongBook||STATE.wrongBook.length===0)return;
+  const now=Date.now();const twoDays=172800000;
+  const dueItems=STATE.wrongBook.filter(e=>e._ts&&(now-e._ts)>twoDays&&(e._reviewed||0)<2);
+  if(dueItems.length===0)return;
+  // 取最多3道
+  const pick=dueItems.slice(0,3);
+  STATE._spacedReview=pick;
+  // 在地图页不打断，在打开学习日时弹出
+  setTimeout(()=>{
+    showModal('📋','错题复习时间！','有 <b>'+pick.length+'</b> 道错题该复习啦～<br><br>做完再开始今天的学习吧！',()=>startSpacedReview());
+  },800);
+}
+function startSpacedReview(){
+  if(!STATE._spacedReview||STATE._spacedReview.length===0){return;}
+  STATE._mistakeReviewIdx=0;STATE._todayWrong=STATE._spacedReview;
+  enterReviewMode();
+  document.getElementById('arenaCard').style.opacity='0.4';
+  document.getElementById('arenaCard').style.pointerEvents='none';
+  renderMistakeQ();
+  // 重写 finishMistakeReview 恢复后进入正常学习
+  const origFinish=finishMistakeReview;
+  // 简单标记：复习做完后标记已复习时间戳
+  STATE._spacedReview.forEach(e=>{e._reviewed=(e._reviewed||0)+1;e._ts=Date.now();});
+  STATE._spacedReview=null;
+}
+
 function confirmLeaveLearn(){
-  exitReviewMode(); // 清理错题回顾样式
+  clearStudyTimer();
+  exitReviewMode();
   if(STATE.learnPhase!=='done'&&STATE.levelTotal>0&&!STATE._previewMode){
     showModal('🤔','确定要离开吗？','当前进度会被保存<br>下次回来可以继续～',()=>{saveState();goMap();});
   }else{goMap();}
@@ -1321,6 +1461,8 @@ function confirmLeaveLearn(){
 // ==================== 周末 ====================
 function openWeekendDay(mi){
   STATE._mapIndex=mi;const d=MAP_DAYS[mi];STATE._weekendDay=d;
+  STATE._studyDay=d; // 拼音智能模式需要
+  if(STATE.pinyinMode==='smart'){STATE.pinyinEnabled=false;localStorage.setItem('pinyin_enabled','0');}
   document.getElementById('weekendTitle').textContent=`🎪 第${mi+1}天 · ${d.data.theme}`;
   document.getElementById('taskCard').innerHTML=`<div class="task-icon">${d.data.icon}</div><h2>${d.data.theme}</h2><p style="color:var(--text-light);margin-bottom:12px">${d.data.desc}</p><div style="background:linear-gradient(135deg,#FFF8DC,#FFFDF5);border-radius:14px;padding:16px;text-align:left;line-height:1.8"><ol class="task-checklist">${d.data.tasks.map(t=>`<li>${t}</li>`).join('')}</ol></div><div style="margin-top:12px;padding:10px;background:linear-gradient(135deg,#F0F4FF,#F5F8FF);border-radius:12px;font-size:13px;text-align:left">${d.data.tip}</div>`;
   document.getElementById('finishWeekendBtn').style.display=STATE.dayStars[mi]!==undefined?'none':'inline-block';
@@ -1369,7 +1511,7 @@ function switchPage(pid){
   const pt=document.getElementById('pinyinToggle');
   if(pt)pt.style.display=(pid==='page-learn')?'flex':'none';
 }
-function goMap(){switchPage('page-map');renderMap();}
+function goMap(){clearStudyTimer();switchPage('page-map');renderMap();}
 
 // ==================== 家长模式 ====================
 function renderParentPanel(){
@@ -1389,7 +1531,10 @@ function showParentDashboard(){
   document.getElementById('pdScore').textContent=STATE.totalScore;
   document.getElementById('pdArena').textContent=STATE.arenaTotal;
   document.getElementById('pdBadges').textContent=Object.values(STATE.badges).filter(Boolean).length;
-  // 恢复按钮：有保存进度时显示
+  // 设置控件
+  const wt=document.getElementById('warmToggle');if(wt)wt.textContent=STATE.warmMode?'🌙 开':'☀️ 关';
+  const ps=document.getElementById('pinyinModeSelect');if(ps)ps.value=STATE.pinyinMode;
+  // 恢复按钮
   const rb=document.getElementById('restoreProgressBtn');
   if(rb)rb.style.display=(STATE._savedBeforeUnlock!==undefined)?'inline-block':'none';
   // 预览网格
@@ -1423,11 +1568,39 @@ function showParentDashboard(){
         </div>`;
       });
     }
-    html+=`<button class="btn-sm" style="margin-top:8px;width:100%" onclick="parentClearWrongBook()">🗑️ 清空错题本</button>`;
+    html+=`<button class="btn-sm" style="margin-top:8px;width:100%" onclick="parentClearBook()">🗑️ 清空错题本</button>`;
     mb.innerHTML=html;
   }
+  // 学习报告
+  const lr=document.getElementById('learningReport');if(!lr)return;
+  if(!STATE.learningLog||STATE.learningLog.length===0){
+    lr.innerHTML='<p style="color:var(--text-light);text-align:center;">完成学习日后自动生成报告</p>';
+  }else{
+    // 知识点掌握统计
+    const topicStats={};
+    STATE.learningLog.forEach(log=>{
+      if(!topicStats[log.topic])topicStats[log.topic]={correct:0,total:0,stars:0,count:0};
+      topicStats[log.topic].correct+=log.correct||0;
+      topicStats[log.topic].total+=log.total||0;
+      topicStats[log.topic].stars+=log.stars||0;
+      topicStats[log.topic].count++;
+    });
+    let rh='<div style="font-weight:600;margin-bottom:6px;">📈 知识点掌握</div>';
+    for(const[topic,stats]of Object.entries(topicStats)){
+      const rate=stats.total>0?Math.round(stats.correct/stats.total*100):0;
+      const color=rate>=80?'#4CAF50':rate>=60?'#FF9800':'#F44336';
+      rh+=`<div style="margin:4px 0;display:flex;align-items:center;gap:6px;"><span style="min-width:80px;font-size:12px;">${topic}</span><div style="flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden"><div style="width:${rate}%;height:100%;background:${color};border-radius:4px;"></div></div><span style="font-size:11px;min-width:35px;text-align:right;">${rate}%</span></div>`;
+    }
+    rh+=`<div style="font-weight:600;margin:10px 0 4px;">📋 最近记录</div>`;
+    STATE.learningLog.slice(-5).reverse().forEach(log=>{
+      rh+=`<div style="font-size:11px;padding:3px 0;border-bottom:1px dashed rgba(0,0,0,0.05);">📖 ${log.date} ${log.topic} ⭐${log.stars} 正确${log.correct}/${log.total} 擂台${log.arena||0}分</div>`;
+    });
+    rh+=`<button class="btn-sm" style="margin-top:6px;width:100%" onclick="parentClearLog()">🗑️ 清空报告</button>`;
+    lr.innerHTML=rh;
+  }
 }
-function parentClearWrongBook(){if(confirm('确定要清空所有错题记录吗？')){STATE.wrongBook=[];saveState();showParentDashboard();}}
+function parentClearBook(){if(confirm('确定要清空所有错题记录吗？')){STATE.wrongBook=[];saveState();showParentDashboard();}}
+function parentClearLog(){if(confirm('确定要清空学习报告吗？')){STATE.learningLog=[];saveState();showParentDashboard();}}
 function parentUnlockAll(){
   STATE._savedBeforeUnlock=STATE.currentDay;
   STATE.currentDay=29;STATE._parentAuth=true;saveState();renderMap();showParentDashboard();
@@ -1458,6 +1631,20 @@ function parentLogout(){
   }
   STATE._parentAuth=false;STATE._previewMode=false;switchPage('page-map');renderMap();
 }
+function toggleWarmMode(){
+  STATE.warmMode=!STATE.warmMode;
+  localStorage.setItem('warm_mode',STATE.warmMode?'1':'0');
+  document.body.classList.toggle('warm-mode',STATE.warmMode);
+  document.getElementById('warmToggle').textContent=STATE.warmMode?'🌙 开':'☀️ 关';
+}
+function setPinyinMode(mode){
+  STATE.pinyinMode=mode;localStorage.setItem('pinyin_mode',mode);
+  if(mode==='on')STATE.pinyinEnabled=true;
+  else if(mode==='off')STATE.pinyinEnabled=false;
+  else STATE.pinyinEnabled=STATE._studyDay&&STATE._studyDay.type==='weekend'?false:true;
+  localStorage.setItem('pinyin_enabled',STATE.pinyinEnabled?'1':'0');
+}
+window.toggleWarmMode=toggleWarmMode;window.setPinyinMode=setPinyinMode;
 window.parentLogin=parentLogin;window.parentUnlockAll=parentUnlockAll;window.parentReset=parentReset;window.parentChangePin=parentChangePin;window.parentLogout=parentLogout;
 
 // ==================== PWA ====================
