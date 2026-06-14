@@ -9,592 +9,243 @@
 <title>🌻 乐乐的数学冒险</title>
 <link rel="manifest" href="manifest.json">
 <style>
-/* ========== 护眼配色系统 ========== */
 :root {
-  --bg:         #FFF5F5;
-  --card:       rgba(255,255,255,0.85);
-  --card-solid: #FFFBFB;
-  --pink-light: #FFE4E6;
-  --pink:       #FFB6C1;
-  --pink-deep:  #FF9AA2;
-  --pink-glow:  #FFD1D7;
-  --yellow-light:#FFF8DC;
-  --yellow:     #FFE4A0;
-  --yellow-deep:#FFCC66;
-  --blue-light: #F0F4FF;
-  --blue:       #B5D8FF;
-  --blue-deep:  #7AB8F5;
-  --text:       #4A4458;
-  --text-light: #8A8498;
-  --success:    #B5EAD7;
-  --error:      #FFC4BF;
-  --gold:       #FFD700;
-  --star:       #FFB347;
-  --lock:       #E8E0D8;
-  --radius-sm:  12px;
-  --radius:     20px;
-  --radius-lg:  28px;
-  --shadow-sm:  0 2px 8px rgba(180,140,140,0.08);
-  --shadow:     0 4px 20px rgba(180,140,140,0.12);
-  --shadow-lg:  0 8px 32px rgba(180,140,140,0.16);
-  --font: 'PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
+  --bg:#FFF5F5; --card:rgba(255,255,255,0.85); --pink-light:#FFE4E6; --pink:#FFB6C1;
+  --pink-deep:#FF9AA2; --yellow-light:#FFF8DC; --yellow:#FFE4A0; --yellow-deep:#FFCC66;
+  --blue-light:#F0F4FF; --blue:#B5D8FF; --text:#4A4458; --text-light:#8A8498;
+  --success:#B5EAD7; --error:#FFC4BF; --gold:#FFD700; --star:#FFB347; --lock:#E8E0D8;
+  --shadow-sm:0 2px 8px rgba(180,140,140,0.08); --shadow:0 4px 20px rgba(180,140,140,0.12);
+  --shadow-lg:0 8px 32px rgba(180,140,140,0.16); --radius:20px; --radius-lg:28px;
+  --font:'PingFang SC','Microsoft YaHei',sans-serif;
 }
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: var(--font);
-  background: linear-gradient(170deg, #FFF5F5 0%, #FFF0F5 30%, #F5F0FF 60%, #FFF5F0 100%);
-  background-attachment: fixed;
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  -webkit-user-select: none;
-}
-/* 背景装饰 */
-.bg-decorations { position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:0; overflow:hidden; }
-.bg-float {
-  position:absolute; border-radius:50%; opacity:0.35;
-  animation: bgFloat linear infinite;
-}
-@keyframes bgFloat {
-  0% { transform:translateY(0) translateX(0) scale(1); }
-  25% { transform:translateY(-30px) translateX(15px) scale(1.05); }
-  50% { transform:translateY(-15px) translateX(-10px) scale(0.95); }
-  75% { transform:translateY(-40px) translateX(-20px) scale(1.02); }
-  100% { transform:translateY(0) translateX(0) scale(1); }
-}
-/* ========== 页面容器 ========== */
-.page { display:none; min-height:100vh; padding-bottom:20px; position:relative; z-index:1; }
-.page.active { display:block; animation: pageIn 0.45s cubic-bezier(0.22,0.61,0.36,1); }
-@keyframes pageIn {
-  from { opacity:0; transform:translateY(20px) scale(0.96); }
-  to { opacity:1; transform:translateY(0) scale(1); }
-}
-
-/* ========== 顶部导航 ========== */
-.topbar {
-  background: rgba(255,255,255,0.78);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  padding: 14px 20px;
-  display:flex; align-items:center; justify-content:space-between;
-  position:sticky; top:0; z-index:100;
-  border-bottom: 1px solid rgba(255,182,193,0.3);
-  box-shadow: 0 1px 12px rgba(255,154,162,0.08);
-}
-.topbar .title { font-size:21px; font-weight:700; letter-spacing:0.5px; }
-.topbar .stats { display:flex; gap:18px; align-items:center; }
-.topbar .stat {
-  display:flex; align-items:center; gap:5px; font-size:14px; font-weight:600;
-  background: rgba(255,255,255,0.7); padding:5px 12px; border-radius:20px;
-  box-shadow: var(--shadow-sm);
-}
-.topbar .stat .icon { font-size:18px; animation: iconBounce 2s ease-in-out infinite; }
-@keyframes iconBounce {
-  0%,100% { transform:translateY(0); }
-  50% { transform:translateY(-3px); }
-}
-
-/* ========== 主页地图 ========== */
-.map-header { text-align:center; padding: 28px 20px 10px; position:relative; z-index:1; }
-.map-header h1 { font-size:28px; margin-bottom:6px; }
-.map-header .subtitle { font-size:14px; color:var(--text-light); }
-.legend { display:flex; justify-content:center; gap:18px; flex-wrap:wrap; margin:14px 0 8px; font-size:12px; }
-.legend span { display:flex; align-items:center; gap:5px; background:rgba(255,255,255,0.6); padding:4px 10px; border-radius:12px; }
-.legend .dot { width:14px; height:14px; border-radius:50%; display:inline-block; }
-
-.days-grid {
-  display:grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-  padding: 0 16px;
-  max-width: 600px;
-  margin: 0 auto 24px;
-  position:relative; z-index:1;
-}
-.day-cell {
-  aspect-ratio:1;
-  border-radius: var(--radius);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  transition: all 0.3s cubic-bezier(0.22,0.61,0.36,1);
-  position:relative;
-  font-weight:700;
-  font-size:13px;
-  text-align:center;
-  gap: 2px;
-  box-shadow: var(--shadow);
-  border: 2px solid transparent;
-  overflow:hidden;
-}
-.day-cell::after {
-  content:''; position:absolute; top:0; left:0; right:0; bottom:0;
-  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.6) 0%, transparent 60%);
-  border-radius:inherit; pointer-events:none;
-}
-.day-cell:active { transform:scale(0.92); transition: all 0.1s; }
-.day-cell .day-num { font-size:20px; position:relative; z-index:1; }
-.day-cell .day-label { font-size:10px; opacity:0.85; position:relative; z-index:1; }
-.day-cell .stars-row { font-size:11px; margin-top:2px; position:relative; z-index:1; }
-
-.day-cell.study {
-  background: linear-gradient(145deg, #FFF5F5 0%, #FFE8EA 100%);
-  border-color: rgba(255,182,193,0.5);
-}
-.day-cell.study:hover:not(.locked) {
-  transform:translateY(-4px); box-shadow: 0 10px 28px rgba(255,154,162,0.25);
-  border-color: var(--pink-deep);
-}
-.day-cell.study.done { background: linear-gradient(145deg, #E8F8F0 0%, #B5EAD7 100%); border-color: #90D5BB; }
-.day-cell.study.done:hover:not(.locked) { box-shadow: 0 10px 28px rgba(144,213,187,0.3); }
-.day-cell.study.current {
-  border-color: var(--pink-deep); box-shadow: 0 0 0 6px rgba(255,154,162,0.2);
-  animation: cellPulse 2.2s ease-in-out infinite;
-}
-.day-cell.study.locked { background: linear-gradient(145deg, #F0EDE8 0%, #E8E0D8 100%); opacity:0.5; cursor:not-allowed; }
-
-.day-cell.weekend {
-  background: linear-gradient(145deg, #FFFDF5 0%, #FFF8DC 100%);
-  border-color: rgba(255,228,160,0.6); border-style: dashed;
-}
-.day-cell.weekend:hover:not(.locked) {
-  transform:translateY(-4px); box-shadow: 0 10px 28px rgba(255,204,102,0.25);
-  border-color: var(--yellow-deep);
-}
-.day-cell.weekend.done { background: linear-gradient(145deg, #E8F8F0 0%, #B5EAD7 100%); border-color: #90D5BB; }
-.day-cell.weekend.current {
-  border-color: var(--yellow-deep); box-shadow: 0 0 0 6px rgba(255,204,102,0.25);
-  animation: cellPulse 2.2s ease-in-out infinite;
-}
-.day-cell.weekend.locked { background: linear-gradient(145deg, #F0EDE8 0%, #E8E0D8 100%); opacity:0.5; cursor:not-allowed; }
-
-@keyframes cellPulse {
-  0%,100% { box-shadow: 0 0 0 4px rgba(255,154,162,0.15); }
-  50% { box-shadow: 0 0 0 14px rgba(255,154,162,0); }
-}
-
-/* ========== 学习日页面 ========== */
-.learn-container { max-width:680px; margin:0 auto; padding:0 16px; position:relative; z-index:1; }
-
-/* 进度条 */
-.progress-wrap { margin: 16px 0; position:relative; }
-.progress-bar {
-  background: rgba(255,182,193,0.25);
-  border-radius:12px; height:16px; overflow:hidden;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
-}
-.progress-fill {
-  height:100%;
-  background: linear-gradient(90deg, #FF9AA2, #FFB6C1, #FFC8D0);
-  background-size: 200% 100%;
-  border-radius:12px;
-  transition: width 0.6s cubic-bezier(0.22,0.61,0.36,1);
-  animation: shimmer 2s linear infinite;
-  position:relative;
-}
-.progress-fill::after {
-  content:''; position:absolute; top:2px; left:6px; right:6px; bottom:2px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 60%);
-  border-radius:8px;
-}
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: 0 0; }
-}
-
-/* 阶段标签 */
-.phase-tabs { display:flex; gap:8px; margin-bottom:14px; }
-.phase-tab {
-  flex:1; text-align:center; padding:10px 6px; border-radius:14px;
-  font-size:13px; font-weight:600; transition:all 0.3s;
-  background: rgba(255,255,255,0.5); color: var(--text-light);
-}
-.phase-tab.active { background: var(--pink-deep); color:#fff; box-shadow: 0 4px 12px rgba(255,154,162,0.35); }
-.phase-tab.done { background: var(--success); color:var(--text); }
-
-/* 讲堂卡片 */
-.lecture-card {
-  background: var(--card); backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: var(--radius-lg); padding: 24px;
-  box-shadow: var(--shadow-lg); border: 1px solid rgba(255,255,255,0.6);
-  border-left: 6px solid var(--pink-deep);
-  margin-bottom: 16px;
-  animation: cardIn 0.5s cubic-bezier(0.22,0.61,0.36,1);
-  position:relative; overflow:hidden;
-}
-.lecture-card::before {
-  content:''; position:absolute; top:-30px; right:-30px;
-  width:80px; height:80px; background: var(--pink-glow);
-  border-radius:50%; opacity:0.3;
-}
-@keyframes cardIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
-.lecture-card h2 { font-size:20px; margin-bottom:12px; color:var(--pink-deep); position:relative; }
-.lecture-card .teacher-bubble {
-  background: linear-gradient(135deg, #FFF8DC, #FFFDF5);
-  border-radius: 16px; padding: 16px 20px; font-size:15px;
-  line-height:1.8; position:relative; border: 1px solid rgba(255,228,160,0.5);
-}
-.lecture-card .example-box {
-  background: linear-gradient(135deg, #F0F4FF, #F5F8FF);
-  border-radius: 14px; padding: 14px 18px; margin-top: 12px;
-  font-size:17px; text-align:center; font-weight:600;
-  border: 1px solid rgba(181,216,255,0.5);
-}
-
-/* 练习区 */
-.practice-area {
-  background: var(--card); backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: var(--radius-lg); padding: 22px;
-  box-shadow: var(--shadow-lg); border: 1px solid rgba(255,255,255,0.6);
-  margin-bottom: 16px; animation: cardIn 0.5s 0.1s both;
-}
-.practice-area h3 { font-size:17px; margin-bottom:14px; }
-.question-box {
-  background: linear-gradient(135deg, #F5F8FF, #F0F4FF);
-  border-radius: 16px; padding: 22px; text-align:center;
-  font-size:30px; font-weight:700; margin-bottom: 16px; min-height:80px;
-  display:flex; align-items:center; justify-content:center; flex-direction:column;
-  letter-spacing: 2px; transition:all 0.3s; border: 1px solid rgba(181,216,255,0.3);
-}
-.question-box.shake { animation: shake 0.5s ease; }
-@keyframes shake {
-  0%,100% { transform:translateX(0); }
-  20% { transform:translateX(-8px); }
-  40% { transform:translateX(8px); }
-  60% { transform:translateX(-5px); }
-  80% { transform:translateX(5px); }
-}
-.question-box.bounce { animation: qBounce 0.5s ease; }
-@keyframes qBounce {
-  0% { transform:scale(1); }
-  40% { transform:scale(1.08); }
-  70% { transform:scale(0.95); }
-  100% { transform:scale(1); }
-}
-
-.answer-row { display:flex; gap:12px; align-items:center; justify-content:center; flex-wrap:wrap; }
-.answer-input {
-  width:110px; height:60px; font-size:30px; text-align:center;
-  border: 3px solid rgba(255,182,193,0.5); border-radius: 16px;
-  background: rgba(255,255,255,0.8); color: var(--text); font-weight:700;
-  outline:none; font-family: var(--font);
-  transition: all 0.3s; box-shadow: var(--shadow-sm);
-}
-.answer-input:focus {
-  border-color: var(--pink-deep);
-  box-shadow: 0 0 0 6px rgba(255,154,162,0.15);
-  transform:scale(1.03);
-}
-.btn {
-  padding: 12px 28px; font-size:17px; font-weight:700;
-  border:none; border-radius: 16px; cursor:pointer;
-  transition: all 0.25s cubic-bezier(0.22,0.61,0.36,1);
-  font-family: var(--font); position:relative; overflow:hidden;
-  box-shadow: var(--shadow-sm);
-}
-.btn::after {
-  content:''; position:absolute; top:50%; left:50%;
-  width:0; height:0; border-radius:50%;
-  background:rgba(255,255,255,0.4); transition:all 0.5s;
-  transform:translate(-50%,-50%);
-}
-.btn:active::after { width:300px; height:300px; }
-.btn:active { transform:scale(0.94); }
-.btn-primary { background: linear-gradient(135deg, #FF9AA2, #FFB6C1); color:#fff; }
-.btn-primary:hover { box-shadow: 0 6px 20px rgba(255,154,162,0.4); transform:translateY(-2px); }
-.btn-secondary { background: linear-gradient(135deg, #B5D8FF, #D0E8FF); color:var(--text); }
-.btn-secondary:hover { box-shadow: 0 6px 20px rgba(181,216,255,0.5); transform:translateY(-2px); }
-.btn-yellow { background: linear-gradient(135deg, #FFE4A0, #FFD066); color:var(--text); }
-.btn-yellow:hover { box-shadow: 0 6px 20px rgba(255,204,102,0.4); transform:translateY(-2px); }
-.btn-success { background: linear-gradient(135deg, #B5EAD7, #C8F5E5); color:var(--text); }
-.btn-success:hover { box-shadow: 0 6px 20px rgba(181,234,215,0.5); transform:translateY(-2px); }
-.btn:disabled { opacity:0.5; cursor:not-allowed; transform:none !important; }
-
-.feedback-box {
-  padding: 14px 18px; border-radius: 16px; text-align:center;
-  font-weight:700; font-size:18px; margin-top:12px;
-  display:none; transition:all 0.3s;
-}
-.feedback-box.show { display:block; animation: popIn 0.4s cubic-bezier(0.68,-0.55,0.27,1.55); }
-.feedback-box.correct { background: linear-gradient(135deg, #B5EAD7, #D4F5E8); color:#2D6A4F; }
-.feedback-box.wrong { background: linear-gradient(135deg, #FFC4BF, #FFD9D5); color:#8B3A3A; }
-@keyframes popIn {
-  0% { transform:scale(0.5); opacity:0; }
-  100% { transform:scale(1); opacity:1; }
-}
-
-/* 擂区 */
-.arena-card {
-  background: linear-gradient(145deg, rgba(255,255,255,0.85), rgba(255,248,220,0.7));
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-lg);
-  margin-bottom: 20px; text-align:center;
-  border: 2px solid rgba(255,228,160,0.5); animation: cardIn 0.5s 0.2s both;
-  position:relative; overflow:hidden;
-}
-.arena-card::before {
-  content:'⚡'; position:absolute; top:10px; right:16px; font-size:24px;
-  animation: iconBounce 1.5s ease-in-out infinite;
-}
-.arena-card h3 { font-size:18px; margin-bottom:4px; }
-.arena-card .timer {
-  font-size:52px; font-weight:800; color:var(--pink-deep);
-  margin:10px 0; font-variant-numeric:tabular-nums;
-  text-shadow: 0 2px 8px rgba(255,154,162,0.2);
-}
-.arena-card .timer.urgent { animation: timerPulse 0.5s ease-in-out infinite; color:#FF6B6B; }
-@keyframes timerPulse {
-  0%,100% { transform:scale(1); }
-  50% { transform:scale(1.08); }
-}
-
-/* ========== 周末任务卡 ========== */
-.weekend-container { max-width:600px; margin:0 auto; padding:16px; position:relative; z-index:1; }
-.task-card {
-  background: var(--card); backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: var(--radius-lg); padding: 28px;
-  box-shadow: var(--shadow-lg); border-top: 8px solid var(--yellow-deep);
-  text-align:center; animation: cardIn 0.5s ease;
-}
-.task-card .task-icon { font-size:72px; margin-bottom:12px; animation: iconBounce 2s ease-in-out infinite; display:inline-block; }
-.task-card h2 { font-size:22px; margin-bottom:6px; }
-.task-card .task-theme { font-size:15px; color:var(--text-light); margin-bottom:16px; }
-.task-card .task-desc {
-  background: linear-gradient(135deg, #FFF8DC, #FFFDF5);
-  border-radius: 14px; padding: 18px; text-align:left;
-  font-size:15px; line-height:1.8; margin-bottom:8px;
-  border: 1px solid rgba(255,228,160,0.4);
-}
-.task-card .task-checklist { text-align:left; margin:12px 0; list-style:none; }
-.task-card .task-checklist li {
-  padding:8px 0; font-size:15px; border-bottom:1px dashed rgba(0,0,0,0.05);
-  display:flex; align-items:flex-start; gap:8px;
-}
-.task-card .task-checklist li::before { content:'✅'; flex-shrink:0; }
-
-/* ========== 庆祝粒子 ========== */
-.confetti-container { position:fixed; top:0; left:0; right:0; bottom:0; pointer-events:none; z-index:200; }
-.confetti {
-  position:absolute; width:12px; height:12px; border-radius:3px;
-  animation: confettiFall linear forwards;
-}
-@keyframes confettiFall {
-  0% { transform:translateY(-60px) rotate(0deg) scale(1); opacity:1; }
-  80% { opacity:1; }
-  100% { transform:translateY(105vh) rotate(720deg) scale(0.3); opacity:0; }
-}
-.star-burst {
-  position:fixed; pointer-events:none; z-index:200;
-  font-size:36px;
-  animation: starFly 1.4s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
-}
-@keyframes starFly {
-  0% { opacity:1; transform:translate(0,0) scale(0.3) rotate(0deg); }
-  60% { opacity:1; transform:translate(var(--dx),var(--dy)) scale(1.4) rotate(180deg); }
-  100% { opacity:0; transform:translate(var(--dx),calc(var(--dy) - 40px)) scale(0.2) rotate(360deg); }
-}
-
-/* ========== 弹窗 ========== */
-.modal-overlay {
-  position:fixed; top:0; left:0; right:0; bottom:0;
-  background: rgba(0,0,0,0.35); z-index:150;
-  display:none; align-items:center; justify-content:center;
-  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-}
-.modal-overlay.show { display:flex; animation: fadeIn 0.25s ease; }
-@keyframes fadeIn { from{opacity:0} to{opacity:1} }
-.modal-box {
-  background: var(--card-solid); border-radius: var(--radius-lg);
-  padding: 36px 28px; text-align:center; max-width:380px; width:90%;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-  animation: modalPop 0.4s cubic-bezier(0.68,-0.55,0.27,1.55);
-}
-@keyframes modalPop { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
-.modal-box h2 { margin-bottom:12px; font-size:24px; }
-.modal-box .big-emoji { font-size:64px; display:inline-block; animation: iconBounce 1s ease-in-out infinite; }
-
-/* ========== 徽章墙 ========== */
-.badges-grid {
-  display:flex; flex-wrap:wrap; gap:14px; justify-content:center; padding:20px;
-}
-.badge-item {
-  width:88px; height:100px;
-  background: var(--card); backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 16px; display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  box-shadow: var(--shadow); font-size:11px; font-weight:600;
-  text-align:center; gap:4px; transition:all 0.3s;
-  border: 1px solid rgba(255,255,255,0.5);
-}
-.badge-item:not(.locked):hover { transform:translateY(-4px); box-shadow: var(--shadow-lg); }
-.badge-item.locked { opacity:0.35; filter:grayscale(1); }
-.badge-item .badge-icon { font-size:34px; }
-.badge-item.unlock-anim { animation: badgeUnlock 0.8s cubic-bezier(0.68,-0.55,0.27,1.55); }
-@keyframes badgeUnlock {
-  0% { transform:scale(0) rotate(-180deg); opacity:0; }
-  60% { transform:scale(1.3) rotate(10deg); }
-  100% { transform:scale(1) rotate(0deg); opacity:1; }
-}
-
-/* ========== 返回按钮 ========== */
-.back-btn {
-  padding:8px 18px; background: rgba(255,255,255,0.7);
-  border:none; border-radius:12px; font-size:15px; cursor:pointer;
-  font-family: var(--font); font-weight:600; color: var(--text);
-  transition:all 0.3s; box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-}
-.back-btn:hover { background:var(--pink-light); transform:translateX(-2px); }
-
-/* ========== 底部导航 ========== */
-.bottom-nav {
-  position:fixed; bottom:0; left:0; right:0;
-  background: rgba(255,255,255,0.82); backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  display:flex; justify-content:space-around; padding: 8px 0 12px;
-  border-top: 1px solid rgba(255,182,193,0.25); z-index:100;
-  box-shadow: 0 -2px 16px rgba(0,0,0,0.04);
-}
-.bottom-nav .nav-item {
-  display:flex; flex-direction:column; align-items:center; gap:2px;
-  cursor:pointer; font-size:11px; font-weight:600; color: var(--text-light);
-  padding: 6px 16px; border-radius: 14px; transition:all 0.3s;
-}
-.bottom-nav .nav-item.active { color: var(--pink-deep); background: rgba(255,182,193,0.2); }
-.bottom-nav .nav-item .nav-icon { font-size:22px; transition:transform 0.3s; }
-.bottom-nav .nav-item:active .nav-icon { transform:scale(1.3); }
-.spacer { height:80px; }
-
-/* ========== 安装提示 ========== */
-.install-banner {
-  display:none; background: linear-gradient(135deg, var(--pink-deep), #FFB6C1);
-  color:#fff; text-align:center; padding: 14px; font-weight:600;
-  cursor:pointer; font-size:15px; animation: slideDown 0.4s ease;
-  box-shadow: 0 4px 12px rgba(255,154,162,0.3);
-}
-@keyframes slideDown { from{transform:translateY(-100%)} to{transform:translateY(0)} }
-
-/* ========== 响应式 ========== */
-@media (max-width:480px) {
-  .days-grid { gap:8px; }
-  .day-cell { font-size:11px; border-radius:14px; }
-  .day-cell .day-num { font-size:16px; }
-  .topbar .title { font-size:17px; }
-  .question-box { font-size:26px; padding:16px; }
-}
-@media (min-width:768px) {
-  .days-grid { max-width:650px; gap:16px; }
-  .day-cell .day-num { font-size:24px; }
-}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:linear-gradient(170deg,#FFF5F5 0%,#FFF0F5 30%,#F5F0FF 60%,#FFF5F0 100%);background-attachment:fixed;color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+.bg-decorations{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:0;overflow:hidden}
+.bg-float{position:absolute;border-radius:50%;opacity:0.3;animation:bgFloat linear infinite}
+@keyframes bgFloat{0%{transform:translateY(0)translateX(0)scale(1)}25%{transform:translateY(-30px)translateX(15px)scale(1.05)}50%{transform:translateY(-15px)translateX(-10px)scale(0.95)}75%{transform:translateY(-40px)translateX(-20px)scale(1.02)}100%{transform:translateY(0)translateX(0)scale(1)}}
+.page{display:none;min-height:100vh;padding-bottom:20px;position:relative;z-index:1}
+.page.active{display:block;animation:pageIn 0.4s cubic-bezier(0.22,0.61,0.36,1)}
+@keyframes pageIn{from{opacity:0;transform:translateY(16px)scale(0.97)}to{opacity:1;transform:translateY(0)scale(1)}}
+.topbar{background:rgba(255,255,255,0.78);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,182,193,0.3);box-shadow:0 1px 12px rgba(255,154,162,0.06)}
+.topbar .title{font-size:19px;font-weight:700}
+.topbar .stats{display:flex;gap:14px;align-items:center}
+.topbar .stat{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;background:rgba(255,255,255,0.7);padding:4px 10px;border-radius:16px;box-shadow:var(--shadow-sm)}
+.back-btn{padding:6px 14px;background:rgba(255,255,255,0.7);border:none;border-radius:12px;font-size:14px;cursor:pointer;font-family:var(--font);font-weight:600;color:var(--text);transition:all 0.3s}
+.back-btn:hover{background:var(--pink-light)}
+.map-header{text-align:center;padding:24px 20px 8px;position:relative;z-index:1}
+.map-header h1{font-size:26px;margin-bottom:4px}
+.legend{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:12px 0 6px;font-size:11px}
+.legend span{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,0.6);padding:3px 10px;border-radius:10px}
+.legend .dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+.days-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;padding:0 14px;max-width:600px;margin:0 auto 24px;position:relative;z-index:1}
+.day-cell{aspect-ratio:1;border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s cubic-bezier(0.22,0.61,0.36,1);position:relative;font-weight:700;font-size:12px;text-align:center;gap:1px;box-shadow:var(--shadow);border:2px solid transparent;overflow:hidden}
+.day-cell::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at 30% 20%,rgba(255,255,255,0.6) 0%,transparent 60%);border-radius:inherit;pointer-events:none}
+.day-cell:active{transform:scale(0.92);transition:all 0.1s}
+.day-cell .day-num{font-size:18px;position:relative;z-index:1}
+.day-cell .day-label{font-size:10px;opacity:0.85;position:relative;z-index:1}
+.day-cell .stars-row{font-size:10px;margin-top:1px;position:relative;z-index:1}
+.day-cell.study{background:linear-gradient(145deg,#FFF5F5,#FFE8EA);border-color:rgba(255,182,193,0.5)}
+.day-cell.study:hover:not(.locked){transform:translateY(-4px);box-shadow:0 10px 28px rgba(255,154,162,0.25);border-color:var(--pink-deep)}
+.day-cell.study.done{background:linear-gradient(145deg,#E8F8F0,#B5EAD7);border-color:#90D5BB}
+.day-cell.study.current{border-color:var(--pink-deep);animation:cellPulse 2.2s ease-in-out infinite}
+.day-cell.study.locked{background:linear-gradient(145deg,#F0EDE8,#E8E0D8);opacity:0.5;cursor:not-allowed}
+.day-cell.weekend{background:linear-gradient(145deg,#FFFDF5,#FFF8DC);border-color:rgba(255,228,160,0.6);border-style:dashed}
+.day-cell.weekend:hover:not(.locked){transform:translateY(-4px);box-shadow:0 10px 28px rgba(255,204,102,0.25)}
+.day-cell.weekend.done{background:linear-gradient(145deg,#E8F8F0,#B5EAD7);border-color:#90D5BB}
+.day-cell.weekend.current{border-color:var(--yellow-deep);animation:cellPulse 2.2s ease-in-out infinite}
+.day-cell.weekend.locked{background:linear-gradient(145deg,#F0EDE8,#E8E0D8);opacity:0.5;cursor:not-allowed}
+@keyframes cellPulse{0%,100%{box-shadow:0 0 0 4px rgba(255,154,162,0.15)}50%{box-shadow:0 0 0 14px rgba(255,154,162,0)}}
+.learn-container{max-width:680px;margin:0 auto;padding:0 14px;position:relative;z-index:1}
+.progress-wrap{margin:14px 0}
+.progress-bar{background:rgba(255,182,193,0.25);border-radius:12px;height:14px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,0.05)}
+.progress-fill{height:100%;background:linear-gradient(90deg,#FF9AA2,#FFB6C1,#FFC8D0);background-size:200% 100%;border-radius:12px;transition:width 0.6s cubic-bezier(0.22,0.61,0.36,1);animation:shimmer 2s linear infinite;position:relative}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:0 0}}
+.phase-tabs{display:flex;gap:6px;margin-bottom:12px}
+.phase-tab{flex:1;text-align:center;padding:8px 4px;border-radius:12px;font-size:12px;font-weight:600;transition:all 0.3s;background:rgba(255,255,255,0.5);color:var(--text-light)}
+.phase-tab.active{background:var(--pink-deep);color:#fff;box-shadow:0 3px 10px rgba(255,154,162,0.3)}
+.phase-tab.done{background:var(--success);color:var(--text)}
+/* 讲堂轮播 */
+.lecture-carousel{position:relative;margin-bottom:14px}
+.lecture-slide{background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,0.6);border-left:5px solid var(--pink-deep);display:none;animation:cardIn 0.4s ease}
+.lecture-slide.active{display:block}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.lecture-slide h3{font-size:18px;margin-bottom:10px;color:var(--pink-deep)}
+.lecture-slide .slide-content{font-size:16px;line-height:1.9;padding:8px 0}
+.lecture-slide .slide-content .big-num{font-size:36px;font-weight:800;display:inline-block;margin:0 4px;color:var(--pink-deep)}
+.lecture-slide .highlight-box{background:linear-gradient(135deg,#FFF8DC,#FFFDF5);border-radius:14px;padding:14px 18px;margin:10px 0;text-align:center;font-size:18px;font-weight:600;border:1px solid rgba(255,228,160,0.5)}
+.lecture-slide .interact-box{background:linear-gradient(135deg,#F0F4FF,#F5F8FF);border-radius:14px;padding:16px;margin:10px 0;text-align:center;border:1px solid rgba(181,216,255,0.5)}
+.lecture-nav{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.lecture-dots{display:flex;gap:6px}
+.lecture-dot{width:8px;height:8px;border-radius:50%;background:var(--pink-light);transition:all 0.3s}
+.lecture-dot.active{background:var(--pink-deep);width:20px;border-radius:4px}
+.btn-sm{padding:8px 18px;font-size:14px;font-weight:700;border:none;border-radius:12px;cursor:pointer;transition:all 0.2s;font-family:var(--font);background:var(--pink-light);color:var(--text)}
+.btn-sm:active{transform:scale(0.95)}
+.btn-sm.primary{background:linear-gradient(135deg,#FF9AA2,#FFB6C1);color:#fff}
+/* 钟表SVG */
+.clock-svg{display:block;margin:10px auto;background:#FFFBFB;border-radius:50%;box-shadow:0 4px 16px rgba(0,0,0,0.08)}
+.practice-area{background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,0.6);margin-bottom:14px}
+.practice-area h3{font-size:16px;margin-bottom:12px}
+.question-box{background:linear-gradient(135deg,#F5F8FF,#F0F4FF);border-radius:16px;padding:20px;text-align:center;font-size:28px;font-weight:700;margin-bottom:14px;min-height:70px;display:flex;align-items:center;justify-content:center;flex-direction:column;letter-spacing:2px;transition:all 0.3s;border:1px solid rgba(181,216,255,0.3)}
+.question-box.shake{animation:shake 0.5s ease}
+.question-box.bounce{animation:qBounce 0.5s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes qBounce{0%{transform:scale(1)}40%{transform:scale(1.08)}70%{transform:scale(0.95)}100%{transform:scale(1)}}
+.answer-row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.answer-input{width:100px;height:54px;font-size:28px;text-align:center;border:3px solid rgba(255,182,193,0.5);border-radius:14px;background:rgba(255,255,255,0.8);color:var(--text);font-weight:700;outline:none;font-family:var(--font);transition:all 0.3s;box-shadow:var(--shadow-sm)}
+.answer-input:focus{border-color:var(--pink-deep);box-shadow:0 0 0 6px rgba(255,154,162,0.15);transform:scale(1.03)}
+.btn{padding:12px 26px;font-size:16px;font-weight:700;border:none;border-radius:14px;cursor:pointer;transition:all 0.25s cubic-bezier(0.22,0.61,0.36,1);font-family:var(--font);position:relative;overflow:hidden;box-shadow:var(--shadow-sm)}
+.btn::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;background:rgba(255,255,255,0.4);transition:all 0.5s;transform:translate(-50%,-50%)}
+.btn:active::after{width:300px;height:300px}
+.btn:active{transform:scale(0.94)}
+.btn-primary{background:linear-gradient(135deg,#FF9AA2,#FFB6C1);color:#fff}
+.btn-primary:hover{box-shadow:0 6px 20px rgba(255,154,162,0.4);transform:translateY(-2px)}
+.btn-secondary{background:linear-gradient(135deg,#B5D8FF,#D0E8FF);color:var(--text)}
+.btn-secondary:hover{box-shadow:0 6px 20px rgba(181,216,255,0.5);transform:translateY(-2px)}
+.btn-yellow{background:linear-gradient(135deg,#FFE4A0,#FFD066);color:var(--text)}
+.btn-success{background:linear-gradient(135deg,#B5EAD7,#C8F5E5);color:var(--text)}
+.btn-success:hover{box-shadow:0 6px 20px rgba(181,234,215,0.5);transform:translateY(-2px)}
+.btn-choice{min-width:70px;padding:12px 16px;font-size:18px;font-weight:700;border:3px solid rgba(181,216,255,0.5);border-radius:14px;background:rgba(255,255,255,0.8);cursor:pointer;transition:all 0.2s;font-family:var(--font)}
+.btn-choice:hover{border-color:var(--blue-deep);background:var(--blue-light);transform:translateY(-2px)}
+.btn-choice.selected{border-color:var(--pink-deep)!important;background:var(--pink-light)!important;box-shadow:0 0 0 4px rgba(255,154,162,0.2)}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important}
+.feedback-box{padding:12px 16px;border-radius:14px;text-align:center;font-weight:700;font-size:17px;margin-top:10px;display:none;transition:all 0.3s}
+.feedback-box.show{display:block;animation:popIn 0.4s cubic-bezier(0.68,-0.55,0.27,1.55)}
+.feedback-box.correct{background:linear-gradient(135deg,#B5EAD7,#D4F5E8);color:#2D6A4F}
+.feedback-box.wrong{background:linear-gradient(135deg,#FFC4BF,#FFD9D5);color:#8B3A3A}
+@keyframes popIn{0%{transform:scale(0.5);opacity:0}100%{transform:scale(1);opacity:1}}
+.hint-box{display:none;background:linear-gradient(135deg,#FFF8DC,#FFFDF5);border-radius:12px;padding:12px;margin-top:8px;font-size:14px;text-align:center;border:1px dashed var(--yellow-deep)}
+.hint-box.show{display:block;animation:popIn 0.3s ease}
+.arena-card{background:linear-gradient(145deg,rgba(255,255,255,0.85),rgba(255,248,220,0.7));backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow-lg);margin-bottom:18px;text-align:center;border:2px solid rgba(255,228,160,0.5);position:relative}
+.arena-card .timer{font-size:48px;font-weight:800;color:var(--pink-deep);margin:8px 0;font-variant-numeric:tabular-nums;text-shadow:0 2px 8px rgba(255,154,162,0.2)}
+.arena-card .timer.urgent{animation:timerPulse 0.5s ease-in-out infinite;color:#FF6B6B}
+@keyframes timerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.weekend-container{max-width:600px;margin:0 auto;padding:14px;position:relative;z-index:1}
+.task-card{background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:var(--radius-lg);padding:26px;box-shadow:var(--shadow-lg);border-top:7px solid var(--yellow-deep);text-align:center}
+.task-card .task-icon{font-size:64px;margin-bottom:10px;display:inline-block;animation:iconBounce 2s ease-in-out infinite}
+@keyframes iconBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.task-card h2{font-size:21px;margin-bottom:4px}
+.task-card .task-checklist{text-align:left;margin:10px 0;list-style:none}
+.task-card .task-checklist li{padding:7px 0;font-size:14px;border-bottom:1px dashed rgba(0,0,0,0.05);display:flex;align-items:flex-start;gap:6px}
+.task-card .task-checklist li::before{content:'✅';flex-shrink:0}
+.confetti-container{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:200}
+.confetti{position:absolute;width:10px;height:10px;border-radius:3px;animation:confettiFall linear forwards}
+@keyframes confettiFall{0%{transform:translateY(-60px)rotate(0deg)scale(1);opacity:1}80%{opacity:1}100%{transform:translateY(105vh)rotate(720deg)scale(0.3);opacity:0}}
+.star-burst{position:fixed;pointer-events:none;z-index:200;font-size:34px;animation:starFly 1.4s cubic-bezier(0.25,0.46,0.45,0.94) forwards}
+@keyframes starFly{0%{opacity:1;transform:translate(0,0)scale(0.3)rotate(0deg)}60%{opacity:1;transform:translate(var(--dx),var(--dy))scale(1.4)rotate(180deg)}100%{opacity:0;transform:translate(var(--dx),calc(var(--dy)-40px))scale(0.2)rotate(360deg)}}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.35);z-index:150;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex;animation:fadeIn 0.25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{background:#FFFBFB;border-radius:var(--radius-lg);padding:32px 24px;text-align:center;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.18);animation:modalPop 0.4s cubic-bezier(0.68,-0.55,0.27,1.55)}
+@keyframes modalPop{from{transform:scale(0.7);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-box h2{margin-bottom:10px;font-size:22px}
+.modal-box .big-emoji{font-size:56px;display:inline-block;animation:iconBounce 1s ease-in-out infinite}
+.badges-grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;padding:18px}
+.badge-item{width:82px;height:94px;background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:var(--shadow);font-size:11px;font-weight:600;text-align:center;gap:3px;transition:all 0.3s;border:1px solid rgba(255,255,255,0.5)}
+.badge-item:not(.locked):hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.badge-item.locked{opacity:0.35;filter:grayscale(1)}
+.badge-item .badge-icon{font-size:32px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,0.82);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:flex;justify-content:space-around;padding:6px 0 10px;border-top:1px solid rgba(255,182,193,0.25);z-index:100;box-shadow:0 -2px 16px rgba(0,0,0,0.04)}
+.bottom-nav .nav-item{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;font-size:10px;font-weight:600;color:var(--text-light);padding:4px 12px;border-radius:14px;transition:all 0.3s}
+.bottom-nav .nav-item.active{color:var(--pink-deep);background:rgba(255,182,193,0.2)}
+.bottom-nav .nav-item .nav-icon{font-size:20px;transition:transform 0.3s}
+.spacer{height:80px}
+/* 家长面板 */
+.parent-panel{background:var(--card);border-radius:var(--radius-lg);padding:20px;margin:14px;box-shadow:var(--shadow);max-width:600px;margin-left:auto;margin-right:auto}
+.parent-panel h3{font-size:16px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--pink-light)}
+.parent-panel .data-row{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;border-bottom:1px solid rgba(0,0,0,0.03)}
+.parent-panel .data-val{font-weight:700;color:var(--pink-deep)}
+.pin-input{width:80px;height:44px;font-size:24px;text-align:center;border:3px solid var(--pink-light);border-radius:12px;font-family:var(--font);outline:none;letter-spacing:8px}
+.sound-toggle{position:fixed;top:80px;right:14px;z-index:110;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.8);border:2px solid var(--pink-light);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;box-shadow:var(--shadow-sm);transition:all 0.3s}
+.sound-toggle.muted{opacity:0.5}
+.install-banner{display:none;background:linear-gradient(135deg,var(--pink-deep),#FFB6C1);color:#fff;text-align:center;padding:12px;font-weight:600;cursor:pointer;font-size:14px;animation:slideDown 0.4s ease}
+@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+@media(max-width:480px){.days-grid{gap:7px}.day-cell{font-size:10px;border-radius:14px}.day-cell .day-num{font-size:15px}.question-box{font-size:24px;padding:14px}}
 </style>
 </head>
 <body>
 
-<!-- 背景装饰 -->
 <div class="bg-decorations" id="bgDeco"></div>
-
-<!-- 庆祝粒子容器 -->
 <div class="confetti-container" id="confettiContainer"></div>
+<div class="sound-toggle" id="soundToggle" onclick="toggleSound()" title="音效开关">🔊</div>
+<div class="install-banner" id="installBanner" onclick="installApp()">📲 点击这里，添加到平板桌面，像APP一样使用！</div>
 
-<!-- 安装提示 -->
-<div class="install-banner" id="installBanner" onclick="installApp()">
-  📲 点击这里，添加到平板桌面，像APP一样使用！
-</div>
-
-<!-- ==================== 主页 ==================== -->
+<!-- ====== 主页 ====== -->
 <div class="page active" id="page-map">
   <div class="topbar">
     <div class="title">🌻 乐乐的数学冒险</div>
     <div class="stats">
-      <div class="stat"><span class="icon">⭐</span><span id="totalStars">0</span></div>
-      <div class="stat"><span class="icon">🏆</span><span id="totalScore">0</span>分</div>
+      <div class="stat"><span>⭐</span><span id="totalStars">0</span></div>
+      <div class="stat"><span>🏆</span><span id="totalScore">0</span>分</div>
     </div>
   </div>
   <div class="map-header">
     <h1>🗺️ 30天闯关地图</h1>
-    <div class="subtitle">点击彩色格子开始当天的冒险吧！</div>
+    <div style="font-size:12px;color:var(--text-light);">点击格子开始冒险 · 每天40分钟</div>
     <div class="legend">
-      <span><span class="dot" style="background:#FFE8EA;border:2px solid #FFB6C1"></span> 学习日</span>
-      <span><span class="dot" style="background:#FFF8DC;border:2px dashed #FFE4A0"></span> 生活数学日</span>
-      <span><span class="dot" style="background:#B5EAD7"></span> 已完成</span>
-      <span><span class="dot" style="background:#E8E0D8"></span> 未解锁</span>
+      <span><span class="dot" style="background:#FFE8EA;border:2px solid #FFB6C1"></span>学习日</span>
+      <span><span class="dot" style="background:#FFF8DC;border:2px dashed #FFE4A0"></span>生活数学日</span>
+      <span><span class="dot" style="background:#B5EAD7"></span>已完成</span>
+      <span><span class="dot" style="background:#E8E0D8"></span>未解锁</span>
     </div>
   </div>
   <div class="days-grid" id="daysGrid"></div>
   <div class="spacer"></div>
 </div>
 
-<!-- ==================== 学习日 ==================== -->
+<!-- ====== 学习日 ====== -->
 <div class="page" id="page-learn">
   <div class="topbar">
-    <button class="back-btn" onclick="goMap()">← 返回地图</button>
+    <button class="back-btn" onclick="confirmLeaveLearn()">← 返回</button>
     <div class="title" id="learnTitle">第1天</div>
     <div class="stats" id="learnStats"></div>
   </div>
   <div class="learn-container">
-    <div class="progress-wrap">
-      <div class="progress-bar"><div class="progress-fill" id="learnProgress" style="width:0%"></div></div>
-    </div>
+    <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" id="learnProgress" style="width:0%"></div></div></div>
     <div class="phase-tabs">
       <div class="phase-tab active" id="phaseTab0">📖 小老师讲堂</div>
       <div class="phase-tab" id="phaseTab1">🎯 闯关练习</div>
       <div class="phase-tab" id="phaseTab2">⚡ 趣味擂台</div>
     </div>
 
-    <!-- 小老师讲堂 -->
-    <div class="lecture-card" id="lectureCard">
-      <h2>📖 小老师讲堂</h2>
-      <div class="teacher-bubble" id="teacherContent"></div>
-      <div class="example-box" id="exampleContent"></div>
-    </div>
+    <!-- 讲堂轮播 -->
+    <div class="lecture-carousel" id="lectureCarousel"></div>
 
     <!-- 闯关练习 -->
     <div class="practice-area" id="practiceArea">
       <h3 id="levelTitle">🎯 第1关</h3>
       <div class="question-box" id="questionBox">准备开始！</div>
-      <div class="answer-row" id="answerRow">
-        <input class="answer-input" type="number" id="answerInput" placeholder="?" autocomplete="off" inputmode="numeric">
-        <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()">确认 ✓</button>
-      </div>
+      <div class="answer-row" id="answerRow"></div>
+      <div class="hint-box" id="hintBox"></div>
       <div class="feedback-box" id="feedbackBox"></div>
-      <div style="text-align:center;margin-top:12px;">
-        <span style="font-size:14px;color:var(--text-light);">本关星星：</span>
-        <span id="levelStars" style="font-size:22px;">⭐⭐⭐</span>
+      <div style="text-align:center;margin-top:10px;">
+        <span style="font-size:13px;color:var(--text-light);">本关星星：</span>
+        <span id="levelStars" style="font-size:20px;">⭐⭐⭐</span>
+        <span style="font-size:12px;color:var(--text-light);margin-left:6px;">连对3题额外+⭐</span>
       </div>
     </div>
 
     <!-- 趣味擂台 -->
     <div class="arena-card" id="arenaCard">
       <h3>⚡ 趣味擂台</h3>
-      <p style="color:var(--text-light);">限时2分钟，看你能做对多少！</p>
+      <p style="color:var(--text-light);font-size:13px;">限时2分钟，题目来自今天知识点</p>
       <div class="timer" id="arenaTimer">2:00</div>
-      <div class="question-box" id="arenaQuestion" style="font-size:26px;min-height:60px;">准备好了吗？</div>
+      <div class="question-box" id="arenaQuestion" style="font-size:24px;min-height:50px;">准备好了吗？</div>
       <div class="answer-row" style="justify-content:center;">
         <input class="answer-input" type="number" id="arenaInput" placeholder="?" autocomplete="off" inputmode="numeric">
         <button class="btn btn-yellow" id="arenaSubmit" onclick="submitArena()">开始挑战！</button>
       </div>
       <div class="feedback-box" id="arenaFeedback"></div>
-      <div style="margin-top:10px;font-weight:700;font-size:18px;" id="arenaScoreDisplay">得分：0</div>
+      <div style="margin-top:8px;font-weight:700;font-size:17px;" id="arenaScoreDisplay">得分：0</div>
     </div>
 
-    <div style="text-align:center;padding:16px;">
-      <button class="btn btn-success" id="finishDayBtn" onclick="finishDay()" style="display:none;font-size:18px;padding:14px 40px;">
-        🎉 完成今天的学习！
-      </button>
+    <div style="text-align:center;padding:14px;">
+      <button class="btn btn-success" id="finishDayBtn" onclick="finishDay()" style="display:none;font-size:17px;padding:12px 36px;">🎉 完成今天的学习！</button>
     </div>
     <div class="spacer"></div>
   </div>
 </div>
 
-<!-- ==================== 周末任务 ==================== -->
+<!-- ====== 周末任务 ====== -->
 <div class="page" id="page-weekend">
   <div class="topbar">
     <button class="back-btn" onclick="goMap()">← 返回地图</button>
@@ -603,254 +254,338 @@ body {
   </div>
   <div class="weekend-container">
     <div class="task-card" id="taskCard"></div>
-    <div style="text-align:center;padding:20px;">
-      <button class="btn btn-success" id="finishWeekendBtn" onclick="finishWeekend()" style="font-size:18px;padding:14px 40px;">
-        ✅ 任务完成！（家长确认）
-      </button>
+    <div style="text-align:center;padding:18px;" id="weekendAction">
+      <button class="btn btn-success" id="finishWeekendBtn" onclick="finishWeekend()" style="font-size:17px;padding:12px 36px;">✅ 任务完成！（家长确认）</button>
     </div>
     <div class="spacer"></div>
   </div>
 </div>
 
-<!-- ==================== 徽章墙 ==================== -->
+<!-- ====== 徽章墙 ====== -->
 <div class="page" id="page-badges">
-  <div class="topbar">
-    <div class="title">🏅 成就徽章</div>
-    <button class="back-btn" onclick="switchPage('page-map')">← 返回</button>
-  </div>
-  <div style="text-align:center;padding:20px;">
-    <h2 style="margin-bottom:4px;">乐乐的徽章收集册</h2>
-    <p style="color:var(--text-light);">每完成一项成就就解锁一个徽章！</p>
-  </div>
+  <div class="topbar"><div class="title">🏅 成就徽章</div><button class="back-btn" onclick="switchPage('page-map')">← 返回</button></div>
+  <div style="text-align:center;padding:18px;"><h2>乐乐的徽章收集册</h2></div>
   <div class="badges-grid" id="badgesGrid"></div>
+  <div class="spacer"></div>
+</div>
+
+<!-- ====== 家长面板 ====== -->
+<div class="page" id="page-parent">
+  <div class="topbar"><div class="title">👨‍👧 家长面板</div><button class="back-btn" onclick="switchPage('page-map')">← 返回</button></div>
+  <div style="max-width:600px;margin:0 auto;padding:14px;">
+    <div class="parent-panel" id="parentLogin">
+      <h3>🔐 请输入家长密码</h3>
+      <input class="pin-input" type="password" id="parentPin" maxlength="6" placeholder="****" autocomplete="off">
+      <button class="btn btn-primary" style="margin-left:10px;" onclick="parentLogin()">确认</button>
+      <p style="font-size:12px;color:var(--text-light);margin-top:8px;">默认密码：1234</p>
+      <p id="pinError" style="color:red;font-size:13px;display:none;">密码错误，请重试</p>
+    </div>
+    <div class="parent-panel" id="parentDashboard" style="display:none;">
+      <h3>📊 学习数据</h3>
+      <div class="data-row"><span>完成天数</span><span class="data-val" id="pdDays">0/30</span></div>
+      <div class="data-row"><span>总星星</span><span class="data-val" id="pdStars">0</span></div>
+      <div class="data-row"><span>总积分</span><span class="data-val" id="pdScore">0</span></div>
+      <div class="data-row"><span>擂台累计</span><span class="data-val" id="pdArena">0</span></div>
+      <div class="data-row"><span>已解锁徽章</span><span class="data-val" id="pdBadges">0</span></div>
+      <h3 style="margin-top:16px;">📖 内容预览</h3>
+      <p style="font-size:13px;color:var(--text-light);margin-bottom:8px;">点击预览任意一天的内容（包括未解锁的）</p>
+      <div id="previewGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;"></div>
+      <h3 style="margin-top:16px;">⚙️ 管理</h3>
+      <button class="btn btn-secondary" onclick="parentUnlockAll()" style="margin:4px;">🔓 解锁全部天数</button>
+      <button class="btn btn-secondary" onclick="parentReset()" style="margin:4px;">🔄 重置所有进度</button>
+      <button class="btn btn-secondary" onclick="parentChangePin()" style="margin:4px;">🔑 修改密码</button>
+      <button class="btn btn-secondary" onclick="parentLogout()" style="margin:4px;">🚪 退出家长模式</button>
+      <p style="font-size:11px;color:var(--text-light);margin-top:6px;">调试功能：预览模式下点击天数可查看完整内容（不计分）</p>
+    </div>
+  </div>
   <div class="spacer"></div>
 </div>
 
 <!-- 底部导航 -->
 <div class="bottom-nav" id="bottomNav">
-  <div class="nav-item active" onclick="switchPage('page-map')" data-page="page-map"><span class="nav-icon">🗺️</span>闯关地图</div>
-  <div class="nav-item" onclick="switchPage('page-badges')" data-page="page-badges"><span class="nav-icon">🏅</span>徽章墙</div>
+  <div class="nav-item active" onclick="switchPage('page-map')" data-page="page-map"><span class="nav-icon">🗺️</span>地图</div>
+  <div class="nav-item" onclick="switchPage('page-badges')" data-page="page-badges"><span class="nav-icon">🏅</span>徽章</div>
+  <div class="nav-item" onclick="switchPage('page-parent')" data-page="page-parent"><span class="nav-icon">👨‍👧</span>家长</div>
 </div>
 
-<!-- 完成弹窗 -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal-box" id="modalBox"></div>
-</div>
+<div class="modal-overlay" id="modalOverlay"><div class="modal-box" id="modalBox"></div></div>
 
 <script>
-// ============================================================
-// 背景装饰
-// ============================================================
-(function initBg() {
-  const container = document.getElementById('bgDeco');
-  const colors = ['#FFD1D7','#FFE4A0','#B5D8FF','#FFE8EA','#FFF0C0','#C8E5FF','#FFDDE0','#FFE8C0'];
-  for (let i=0;i<18;i++) {
-    const el = document.createElement('div');
-    el.className = 'bg-float';
-    const size = 20 + Math.random()*60;
-    el.style.cssText = `
-      width:${size}px; height:${size}px; left:${Math.random()*100}%;
-      top:${Math.random()*100}%; background:${colors[i%colors.length]};
-      animation-duration:${12+Math.random()*18}s;
-      animation-delay:${-Math.random()*20}s;
-    `;
-    container.appendChild(el);
+// ==================== 背景装饰 ====================
+(function(){
+  const c=document.getElementById('bgDeco');
+  const cols=['#FFD1D7','#FFE4A0','#B5D8FF','#FFE8EA','#FFF0C0','#C8E5FF','#FFDDE0'];
+  for(let i=0;i<18;i++){
+    const d=document.createElement('div'); d.className='bg-float';
+    const s=20+Math.random()*50;
+    d.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}%;top:${Math.random()*100}%;background:${cols[i%cols.length]};animation-duration:${12+Math.random()*18}s;animation-delay:${-Math.random()*20}s`;
+    c.appendChild(d);
   }
 })();
 
-// ============================================================
-// 粒子/庆祝动画
-// ============================================================
-function spawnConfetti(count=40) {
-  const container = document.getElementById('confettiContainer');
-  const colors = ['#FF9AA2','#FFB6C1','#FFD700','#B5EAD7','#B5D8FF','#FFE4A0','#FF8A98','#FFCC66'];
-  for (let i=0;i<count;i++) {
-    setTimeout(()=>{
-      const el=document.createElement('div');
-      el.className='confetti';
-      el.style.cssText = `
-        left:${10+Math.random()*80}%; top:-20px;
-        width:${8+Math.random()*14}px; height:${6+Math.random()*16}px;
-        background:${colors[Math.floor(Math.random()*colors.length)]};
-        animation-duration:${1.5+Math.random()*2.5}s;
-        animation-delay:${Math.random()*0.3}s;
-        border-radius:${Math.random()>0.5?'50%':'2px'};
-      `;
-      container.appendChild(el);
-      setTimeout(()=>el.remove(), 3000);
-    }, i*15);
-  }
+// ==================== 音效引擎 (Web Audio API) ====================
+let soundEnabled=true;
+let _audioCtx=null;
+function getCtx(){if(!_audioCtx)_audioCtx=new(window.AudioContext||window.webkitAudioContext)();return _audioCtx}
+function playTone(freq,dur,type='sine',vol=0.15){
+  if(!soundEnabled)return;
+  try{const ctx=getCtx();const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+dur)}catch(e){}
+}
+function sfxCorrect(){playTone(660,0.12);setTimeout(()=>playTone(880,0.15),100)}
+function sfxWrong(){playTone(200,0.25,'triangle',0.1)}
+function sfxLevelUp(){playTone(523,0.1);setTimeout(()=>playTone(659,0.1),100);setTimeout(()=>playTone(784,0.1),200);setTimeout(()=>playTone(1047,0.2),300)}
+function sfxStar(){playTone(1200,0.08,'sine',0.1);setTimeout(()=>playTone(1600,0.1,'sine',0.12),80)}
+function sfxClick(){playTone(440,0.05,'sine',0.05)}
+function sfxComplete(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>playTone(f,0.2,'triangle',0.13),i*120))}
+function sfxTick(){playTone(800,0.04,'square',0.06)}
+function toggleSound(){soundEnabled=!soundEnabled;document.getElementById('soundToggle').textContent=soundEnabled?'🔊':'🔇';document.getElementById('soundToggle').classList.toggle('muted',!soundEnabled);if(soundEnabled)sfxClick()}
+window.toggleSound=toggleSound;
+
+// ==================== 粒子动画 ====================
+function spawnConfetti(n=40){
+  const c=document.getElementById('confettiContainer');
+  const cols=['#FF9AA2','#FFB6C1','#FFD700','#B5EAD7','#B5D8FF','#FFE4A0','#FF8A98','#FFCC66'];
+  for(let i=0;i<n;i++)setTimeout(()=>{
+    const e=document.createElement('div');e.className='confetti';
+    e.style.cssText=`left:${10+Math.random()*80}%;top:-20px;width:${6+Math.random()*14}px;height:${5+Math.random()*14}px;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${1.5+Math.random()*2.5}s;animation-delay:${Math.random()*0.3}s;border-radius:${Math.random()>0.5?'50%':'2px'}`;
+    c.appendChild(e);setTimeout(()=>e.remove(),3000);
+  },i*12);
+}
+function spawnStars(n=5){
+  for(let i=0;i<n;i++)setTimeout(()=>{
+    const s=document.createElement('div');s.className='star-burst';s.textContent='⭐';
+    s.style.left=20+Math.random()*60+'%';s.style.top=25+Math.random()*40+'%';
+    s.style.setProperty('--dx',(Math.random()-0.5)*200+'px');s.style.setProperty('--dy',-(80+Math.random()*150)+'px');
+    document.body.appendChild(s);setTimeout(()=>s.remove(),1500);
+  },i*70);
+  if(n>=3)sfxStar();
+}
+function shakeElement(el){el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),500)}
+function bounceElement(el){el.classList.add('bounce');setTimeout(()=>el.classList.remove('bounce'),500)}
+
+// ==================== SVG时钟 ====================
+function clockSVG(hour,minute=0){
+  const hAngle=(hour%12)*30+minute*0.5-90;
+  const mAngle=minute*6-90;
+  return `<svg class="clock-svg" width="140" height="140" viewBox="0 0 140 140">
+    <circle cx="70" cy="70" r="65" fill="#FFFBFB" stroke="#D0C0C0" stroke-width="3"/>
+    ${[1,2,3,4,5,6,7,8,9,10,11,12].map(n=>{
+      const a=(n*30-90)*Math.PI/180,r=n%3===0?52:56;
+      return `<text x="${70+Math.cos(a)*r}" y="${70+Math.sin(a)*r}" text-anchor="middle" dominant-baseline="central" font-size="${n%3===0?'13':'9'}" fill="#666" font-weight="${n%3===0?'bold':'normal'}">${n}</text>`;
+    }).join('')}
+    <line x1="70" y1="70" x2="${70+Math.cos(hAngle*Math.PI/180)*30}" y2="${70+Math.sin(hAngle*Math.PI/180)*30}" stroke="#555" stroke-width="4" stroke-linecap="round"/>
+    <line x1="70" y1="70" x2="${70+Math.cos(mAngle*Math.PI/180)*45}" y2="${70+Math.sin(mAngle*Math.PI/180)*45}" stroke="#999" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="70" cy="70" r="3" fill="#FF9AA2"/>
+  </svg>`;
 }
 
-function spawnStars(count=5) {
-  for (let i=0;i<count;i++) {
-    setTimeout(()=>{
-      const star=document.createElement('div');
-      star.className='star-burst';
-      star.textContent='⭐';
-      star.style.left=20+Math.random()*60+'%';
-      star.style.top=25+Math.random()*40+'%';
-      star.style.setProperty('--dx',(Math.random()-0.5)*200+'px');
-      star.style.setProperty('--dy',-(80+Math.random()*150)+'px');
-      document.body.appendChild(star);
-      setTimeout(()=>star.remove(),1500);
-    }, i*80);
-  }
-}
+// ==================== 小老师讲堂数据 (22天 × 多步骤) ====================
+const LECTURES = {
+0:[ // Day1 比大小+序数+找规律
+  {t:'📖 鳄鱼的大嘴巴',c:'乐乐好！今天我们来认识"大于号"和"小于号"～<br><br>🐊 有一只<b>贪吃的鳄鱼</b>，它的嘴巴总是<b>张开朝向更大的数字</b>！<br><br><span class="big-num">5</span> 和 <span class="big-num">3</span> —— 鳄鱼要吃谁？',h:'<b>5 > 3</b> 读作"5大于3"<br><b>3 < 5</b> 读作"3小于5"<br>鳄鱼嘴巴永远朝着大的数！'},
+  {t:'✋ 第几个？',c:'乐乐，你在排队的时候，从左边数你是第几个？<br><br>这就是"<b>序数</b>"——第1、第2、第3...<br><br>🐱🐶🐰🐻🐸<br>从左边数，🐰小兔是<b>第3个</b><br>从右边数，🐰小兔是<b>第3个</b>',h:'数第几个时，先确定从哪边开始数<br>然后"第1、第2、第3..."一个一个数'},
+  {t:'🔍 找规律',c:'数字宝宝有时候会"排队"哦！<br><br>看看这排数字：<span class="big-num">1, 3, 5, 7, ?</span><br><br>发现了什么？每次跳2个！<br>1(+2)=3(+2)=5(+2)=7(+2)=<b>9</b>',h:'规律就是每次都做同样的变化<br>看相邻两个数字之间差几'},
+  {t:'🎯 小试牛刀',c:'<b>哪个数字更大？</b><br><br><span class="big-num">8</span> 和 <span class="big-num">6</span><br><br>鳄鱼嘴巴应该朝向谁？',q:'8和6谁更大？',a:'8',choices:['6','8']},
+  {t:'📝 今天学到了',c:'✅ 大于号">"和小于号"<"，尖角对小数字<br>✅ 序数就是"第几个"，先确定从哪边数<br>✅ 找规律就是看数字每次变多少<br><br>准备好闯关了吗？💪'}
+],
+1:[ // Day2 填未知数+简单谜题
+  {t:'🔍 数字小侦探',c:'乐乐，今天的你是小侦探！<br><br>有些算式里藏着一个<b>失踪的数字</b>，你要把它找出来！<br><br><span class="big-num">3 + ? = 9</span><br><br>想想看：3加几等于9？',h:'用减法找答案：9 - 3 = 6<br>所以 3 + 6 = 9 ✅'},
+  {t:'🔎 怎么找失踪数字',c:'加法填空：<span class="big-num">? + 4 = 10</span><br>→ 10 - 4 = <b>6</b>，答案就是6！<br><br>减法填空：<span class="big-num">8 - ? = 2</span><br>→ 8 - 2 = <b>6</b>，答案就是6！<br><br><b>口诀</b>：加法填空用减法，减法填空用减法！',h:'加法中找加数：和 - 已知加数 = 未知加数<br>减法中找减数：被减数 - 差 = 减数'},
+  {t:'🧩 数字小谜题',c:'小侦探还要挑战数字谜题！<br><br>每个空格填一个数字，<b>每行每列的数字不能重复</b>哦～<br><br>比如：<br>1 _ <br>_ 2<br><br>第一行空格不能是1（同行重复），也不能是2（因为第二行有2、同列可能重复）→ 答案是<b>2</b>',h:'先看同行有什么数字，排除掉<br>再看同列有什么数字，排除掉<br>剩下没被排除的就是答案'},
+  {t:'🎯 小试牛刀',c:'<b>? + 5 = 12</b><br><br>失踪的数字是几？',q:'?+5=12，?是几？',a:'7',choices:['7','5','6']},
+  {t:'📝 今天学到了',c:'✅ 填未知数：用相反的运算来找<br>✅ 加法填空用减法，减法填空也用减法<br>✅ 数字谜题：排除同行同列已有的数字<br><br>小侦探，出发破案！🔍'}
+],
+2:[ // Day3 连加连减
+  {t:'🚀 连加小火箭',c:'乐乐，今天来学连加连减！<br><br><span class="big-num">2 + 3 + 1 = ?</span><br><br>怎么算？<b>从左到右</b>一步步来：<br>第一步：2 + 3 = 5<br>第二步：5 + 1 = 6<br><br>答案就是<b>6</b>！🚀',h:'连加连减的秘诀：<br>从左到右，一步一步算<br>不要把顺序搞乱！'},
+  {t:'📉 连减小降落伞',c:'连减也是一样的规则：<br><br><span class="big-num">8 - 2 - 3 = ?</span><br><br>从左到右：<br>第一步：8 - 2 = 6<br>第二步：6 - 3 = 3<br><br>答案就是<b>3</b>！',h:'注意：减法不能随便换顺序<br>8-2-3 不等于 8-3-2<br>一定要从左到右！'},
+  {t:'🎢 加减混合过山车',c:'加法和减法混在一起怎么办？<br><br><span class="big-num">5 + 3 - 2 = ?</span><br><br>还是<b>从左到右</b>：<br>第一步：5 + 3 = 8<br>第二步：8 - 2 = 6<br><br>不管加减，顺序不变！',h:'加减混合的规则跟连加连减一样<br>从左到右，保持顺序'},
+  {t:'🎯 小试牛刀',c:'<b>3 + 4 + 2 = ?</b><br><br>从左到右算一算！',q:'3+4+2=?',a:'9',choices:['9','8','7']},
+  {t:'📝 今天学到了',c:'✅ 连加：从左到右，一步一步加<br>✅ 连减：从左到右，一步一步减<br>✅ 加减混合：还是从左到右<br><br>准备加速！⚡'}
+],
+3:[ // Day4 图文应用题
+  {t:'📖 读懂题目',c:'乐乐，应用题就是把数学藏在故事里！<br><br>读题三步法：<br>1️⃣ <b>圈数字</b>：把题目里的数字找出来<br>2️⃣ <b>找关键词</b>："一共"→加，"还剩"→减<br>3️⃣ <b>列算式</b>：把数字和符号写成算式',h:'应用题不难，关键是读懂题目在说什么'},
+  {t:'➕ "一共"用加法',c:'例题：<br>"树上有<b>5</b>只小鸟，又飞来<b>4</b>只，<b>一共</b>有几只？"<br><br>圈数字：5 和 4<br>关键词：一共 → 用加法<br>算式：5 + 4 = <b>9</b>（只）',h:'看到"一共""合起来""总共"→ 用加法'},
+  {t:'➖ "还剩"用减法',c:'例题：<br>"小明有<b>8</b>块糖，吃了<b>3</b>块，<b>还剩</b>几块？"<br><br>圈数字：8 和 3<br>关键词：还剩 → 用减法<br>算式：8 - 3 = <b>5</b>（块）',h:'看到"还剩""剩下""还有"→ 用减法'},
+  {t:'🎯 小试牛刀',c:'"池塘里有<b>7</b>条鱼，游走了<b>2</b>条，<b>还剩</b>几条？"<br><br>用加法还是减法？',q:'7条鱼游走2条，剩几条？',a:'5',choices:['5','9','7']},
+  {t:'📝 今天学到了',c:'✅ 圈数字 + 找关键词 + 列算式<br>✅ "一共"→ 加法<br>✅ "还剩"→ 减法<br><br>你已经是读题小能手了！📖'}
+],
+4:[ // Day5 图形
+  {t:'📦 立体图形王国',c:'今天来认识立体图形！<br><br>🔹 <b>长方体</b>：像鞋盒，6个面，对面一样大<br>🔹 <b>正方体</b>：像骰子🎲，6个面<b>都一样大</b><br>🔹 <b>圆柱</b>：像水杯🥤，上下两个圆面<br>🔹 <b>球</b>：像皮球⚽，圆滚滚没有平面',h:'关键区分：<br>正方体所有面一样大<br>长方体有对面一样大（但不是全部一样）'},
+  {t:'🔍 找一找',c:'在生活中找图形：<br><br>📦 冰箱 → <b>长方体</b><br>🎲 骰子 → <b>正方体</b><br>🥫 易拉罐 → <b>圆柱</b><br>🏀 篮球 → <b>球</b><br><br>乐乐，你在家里能找到这四种图形吗？',h:'长方体最多见：书柜、冰箱、鞋盒<br>球最容易认：圆的、能滚的'},
+  {t:'🧱 拼一拼',c:'正方体可以拼搭哦！<br><br>🧊 + 🧊 = 两个正方体拼成<b>长方体</b><br><br>4个小正方体（2×2排列）拼成什么？还是<b>长方体</b>！<br><br>至少需要<b>8个</b>小正方体才能拼成一个大正方体（2×2×2）',h:'正方体拼搭是空间想象的基础<br>动手试试看！'},
+  {t:'🎯 小试牛刀',c:'📦 鞋盒是什么立体图形？',q:'鞋盒是什么立体图形？',a:'长方体',choices:['长方体','正方体','圆柱','球']},
+  {t:'📝 今天学到了',c:'✅ 四种立体图形：长方体、正方体、圆柱、球<br>✅ 正方体6个面都一样，长方体不是<br>✅ 2个正方体拼成长方体<br><br>出发探索图形王国！📐'}
+],
+5:[ // Day6 方位
+  {t:'🧭 上下和前后',c:'乐乐，我们来认方向！<br><br>🔝 <b>上</b>：天花板的方向<br>🔚 <b>下</b>：地板的方向<br><br>👆 <b>前</b>：肚子的方向<br>👈 <b>后</b>：背的方向<br><br>书架上有三层：<br>🔝 最上面是故事书<br>　 中间是数学书<br>🔚 最下面是图画书',h:'上下前后是相对的位置<br>参考的东西不同，上下前后也会变'},
+  {t:'✋ 左手和右手',c:'这是最重要的方向！<br><br>✋ <b>右手</b>：拿筷子的手（大多数人）<br>✋ <b>左手</b>：另一只手<br><br>小窍门：<br>伸出两只手，手背朝上<br>👍 左手的大拇指和食指组成一个"L"（Left）',h:'记住：拿筷子的手 = 右手<br>大多数门从右边开，大多数楼梯靠右走'},
+  {t:'🗺️ 走迷宫',c:'方向还可以用来走迷宫！<br><br>从起点出发：<br>→ 向右走两步<br>↑ 向上走两步<br>→ 再向右走一步<br><br>最后到了起点的什么方向？<br>——到了起点的<b>右上方</b>！',h:'走迷宫要记住方向<br>一步一个方向，不要乱'},
+  {t:'🎯 小试牛刀',c:'你拿筷子的手是<b>左手还是右手</b>？',q:'拿筷子的手是？',a:'右手',choices:['左手','右手']},
+  {t:'📝 今天学到了',c:'✅ 上下前后：相对的位置<br>✅ 左右：拿筷子的是右手<br>✅ 方向可以用来走迷宫<br><br>方位指挥官，出发！🧭'}
+],
+6:[ // Day7 数位
+  {t:'🏗️ 十位和个位',c:'乐乐，从今天开始数字要"住进格子"了！<br><br>比如 <span class="big-num">15</span><br><br>它由两部分组成：<br>🔹 <b>十位</b>（左边）：<b>1</b> → 表示 <b>1个十 = 10</b><br>🔹 <b>个位</b>（右边）：<b>5</b> → 表示 <b>5个一 = 5</b><br><br>所以 15 = 10 + 5',h:'十位上的数字表示"几个十"<br>个位上的数字表示"几个一"'},
+  {t:'📐 小棒法',c:'用小棒来理解数位：<br><br>🔟 一捆小棒 = <b>10根</b> = 1个十<br>📏 一根小棒 = <b>1根</b> = 1个一<br><br>1捆 + 3根 = <b>13</b><br>1捆 + 7根 = <b>17</b><br>1捆 + 9根 = <b>19</b>',h:'十几 = 1个十 + 几个一<br>1捆小棒从不改变，散的小棒从1到9'},
+  {t:'🔢 看数位说数字',c:'反过来也重要！<br><br>"1个十和4个一"合起来是几？<br>→ <b>14</b><br><br>"1个十和8个一"合起来是几？<br>→ <b>18</b><br><br>十位填1，个位填几？→ 就是十几！',h:'合起来的时候：十位写1，个位写几<br>比如1个十+6个一 = 16'},
+  {t:'🎯 小试牛刀',c:'<b>1个十和5个一</b><br>合起来是几？',q:'1个十和5个一合起来是几？',a:'15',choices:['15','5','10']},
+  {t:'📝 今天学到了',c:'✅ 十位在左边，表示几个十<br>✅ 个位在右边，表示几个一<br>✅ 十几 = 1个十 + 几个一<br><br>数位工匠，开工！🏗️'}
+],
+7:[ // Day8 11-20不进位不退位
+  {t:'🔟 十加几最简单',c:'10加上几是最简单的！<br><br><span class="big-num">10 + 3 = 13</span><br><span class="big-num">10 + 7 = 17</span><br><span class="big-num">10 + 9 = 19</span><br><br>规律：十位是1，个位就是加的那个数',h:'10+几 = 十几<br>十位不变（永远是1），个位就是那个"几"'},
+  {t:'➕ 不进位加法',c:'十几加几，但个位加起来不超过9：<br><br><span class="big-num">13 + 4 = ?</span><br><br>十位还是1（不变）<br>个位：3 + 4 = 7<br>答案：<b>17</b><br><br><span class="big-num">15 + 2 = 17</span>（5+2=7）',h:'不进位加：十位不变，个位相加<br>前提：个位相加不超过9'},
+  {t:'➖ 不退位减法',c:'十几减几，个位够减：<br><br><span class="big-num">17 - 4 = ?</span><br><br>十位还是1（不变）<br>个位：7 - 4 = 3<br>答案：<b>13</b><br><br><span class="big-num">19 - 5 = 14</span>（9-5=4）',h:'不退位减：十位不变，个位相减<br>前提：个位够减'},
+  {t:'🎯 小试牛刀',c:'<b>14 + 3 = ?</b><br><br>十位不变，个位相加',q:'14+3=?',a:'17',choices:['17','16','11']},
+  {t:'📝 今天学到了',c:'✅ 10+几=十几<br>✅ 不进位加：十位不变，个位相加<br>✅ 不退位减：十位不变，个位相减<br><br>11-20小行家，出发！🔢'}
+],
+8:[ // Day9 凑十法
+  {t:'🤝 凑十好朋友',c:'乐乐，今天学一个超级重要的本领——<b>凑十法</b>！<br><br>先记住<b>凑十好朋友</b>：<br>1️⃣+9️⃣=10　2️⃣+8️⃣=10<br>3️⃣+7️⃣=10　4️⃣+6️⃣=10<br>5️⃣+5️⃣=10<br><br>加起来等于10的两个数就是好朋友！',h:'好朋友口诀：<br>一九一九好朋友，二八二八手拉手<br>三七三七真亲密，四六四六一起走<br>五五凑成一双手'},
+  {t:'🎯 凑十法怎么做',c:'<b>口诀：看大数，分小数，凑成十，加剩数</b><br><br>例：<span class="big-num">9 + 4</span><br><br>① 看大数：9<br>② 9差1到10<br>③ 分小数：把4拆成<b>1和3</b><br>④ 凑成十：9+1=10<br>⑤ 加剩数：10+3=<b>13</b>',h:'凑十法就是把一个数拆开<br>先凑成10，再加剩下的'},
+  {t:'🧮 再来一个例子',c:'<span class="big-num">8 + 5</span><br><br>① 看大数：8<br>② 8差2到10<br>③ 分小数：把5拆成<b>2和3</b><br>④ 凑成十：8+2=10<br>⑤ 加剩数：10+3=<b>13</b><br><br>不管大数是9还是8、7、6，方法都一样！',h:'大数差几到10，就从小数里拿几'},
+  {t:'🎯 小试牛刀',c:'<b>9 + 6 = ?</b><br><br>9差1到10，从6拿1，剩5',q:'9+6=?',a:'15',choices:['15','16','14']},
+  {t:'📝 今天学到了',c:'✅ 凑十好朋友：1和9、2和8、3和7、4和6、5和5<br>✅ 凑十法口诀：看大数、分小数、凑成十、加剩数<br>✅ 这是一年级最重要的本领！<br><br>凑十达人，准备闯关！🎯'}
+],
+9:[ // Day10 退位减法
+  {t:'💡 破十法',c:'乐乐，今天学减法中最难的本领——<b>退位减法</b>！<br><br>什么叫退位？个位不够减的时候就要"退位"<br><br><span class="big-num">13 - 5</span><br><br>个位3减5不够减！怎么办？',h:'个位不够减时，从十位"借"一个十<br>这就是退位减法'},
+  {t:'🔨 破十法步骤',c:'<b>破十法</b>：<br><br><span class="big-num">13 - 5</span><br><br>① 把13拆成 <b>10 + 3</b><br>② 用10减：10 - 5 = <b>5</b><br>③ 加剩下的：5 + 3 = <b>8</b><br><br>答案就是<b>8</b>！',h:'破十法口诀：<br>拆成十和几，用十去减，再加剩下的'},
+  {t:'🤔 想加算减',c:'另一种方法：<b>想加算减</b><br><br><span class="big-num">13 - 5 = ?</span><br><br>想：5 + <b>?</b> = 13<br>想：5 + <b>8</b> = 13<br><br>所以 13 - 5 = <b>8</b><br><br>两种方法都可以，选你喜欢的！',h:'想加算减：把减法变成加法来想<br>减法是加法的逆运算'},
+  {t:'🎯 小试牛刀',c:'<b>15 - 7 = ?</b><br><br>用破十法：15=10+5<br>10-7=3，3+5=?',q:'15-7=?',a:'8',choices:['8','7','9']},
+  {t:'📝 今天学到了',c:'✅ 退位减法：个位不够减从十位借<br>✅ 破十法：拆→减→加<br>✅ 想加算减：5+?=13，?=8<br><br>攻克最难的本领！💪'}
+],
+10:[ // Day11 认识钟面
+  {t:'🕐 认识钟面',c:'乐乐，今天我们来认识时钟！<br><br>钟面上有：<br>🔢 <b>12个数字</b>：1到12围成一圈<br>📏 <b>12个大格</b>：每两个数字之间是一个大格<br>📐 <b>60个小格</b>：每个大格有5个小格',h:'钟面是圆的，数字按顺时针排列<br>12在最上面，6在最下面<br>3在右边，9在左边'},
+  {t:'🪡 时针和分针',c:'钟上有两根重要的针：<br><br>🪡 <b>时针</b>：短短粗粗的<br>→ 它指向的数字表示"几时"<br>→ 走得慢，半天才走一圈<br><br>🪡 <b>分针</b>：长长细细的<br>→ 它指向12时表示"整时"<br>→ 走得快，一小时走一圈<br><br>'+clockSVG(3,0),h:'短粗=时针（几时）<br>长细=分针（几分）<br>分针指12 → 整时'},
+  {t:'👀 读整时',c:'读整时很简单：<br><br>分针指向<b>12</b>，时针指向几就是<b>几时</b><br><br>'+clockSVG(7,0)+'<br>分针→12，时针→7 → <b>7时（7:00）</b>',h:'整时：分针永远在12<br>时针在几就是几时'},
+  {t:'🎯 小试牛刀',c:clockSVG(9,0)+'<br>分针指12，时针指9<br>这是几时？',q:'这是几时？',a:'9',choices:['9','12','3']},
+  {t:'📝 今天学到了',c:'✅ 钟面有12个数字、12个大格<br>✅ 时针短粗（几时），分针长细（几分）<br>✅ 分针指12 → 整时，时针指几就是几时<br><br>认识时钟，做时间的主人！🕐'}
+],
+11:[ // Day12 半时
+  {t:'🕝 什么是半时',c:'半时就是"几点半"！<br><br>半时的时候：<br>🪡 <b>分针</b>指向<b>6</b><br>🪡 <b>时针</b>在两个数字<b>中间</b><br><br>'+clockSVG(1,30)+'<br>分针→6，时针在1和2之间<br>→ <b>1时半（1:30）</b>',h:'半时 = 分针指6<br>时针走过了几 = 几点半'},
+  {t:'🔍 怎么看半时',c:'判断半时的技巧：<br><br>① 看分针：指向6 → 半时<br>② 看时针：走过了谁？<br>　时针在3和4之间 → 走过了3 → <b>3时半</b><br><br>'+clockSVG(8,30)+'<br>时针在8和9之间 → 走过了8 → <b>8时半</b>',h:'时针在两个数字之间<br>走过了小的那个数字<br>所以是"小数字时半"'},
+  {t:'🔄 整时 vs 半时',c:'来对比一下：<br><br>整时：分针→12，时针笔直指向一个数字<br>半时：分针→6，时针在两个数字中间<br><br>'+clockSVG(5,0)+' ← 整时（5:00）<br>'+clockSVG(5,30)+' ← 半时（5:30）<br><br>看出区别了吗？分针位置完全不同！',h:'分针位置是第一判断：<br>→12 = 整时<br>→6 = 半时'},
+  {t:'🎯 小试牛刀',c:clockSVG(11,30)+'<br>分针指6，时针在11和12之间<br>这是几时半？',q:'这是几时半？',a:'11',choices:['11','12','10']},
+  {t:'📝 今天学到了',c:'✅ 半时：分针指向6<br>✅ 时针走过了几就是几点半<br>✅ 整时看12，半时看6<br><br>半时达人！🕑'}
+],
+12:[ // Day13 大约几时
+  {t:'🤏 快到了',c:'生活中常常不说精确时间，说"快到了"：<br><br>分针<b>快到12但还没到</b>时：<br>→ "快...时了"<br><br>比如：分针在11和12之间，时针靠近8<br>→ <b>"快8时了"</b><br><br>意思就是：马上要到8点了！',h:'"快到了"=还差一点到整时<br>分针在12附近但还没到12'},
+  {t:'👉 刚过一点',c:'另一种说法是"刚过"：<br><br>分针<b>刚过12一点点</b>时：<br>→ "...时刚过"<br><br>比如：分针刚过12，时针刚过3<br>→ <b>"3时刚过"</b><br><br>意思就是：3点刚刚过去～',h:'"刚过"=整时刚过去一点点<br>分针在12附近但已经过了12'},
+  {t:'🕒 大约几时',c:'当分针在12附近（不管是快到了还是刚过）<br>我们都叫<b>"大约...时"</b><br><br>比如：<br>→ 时针在6附近，分针在12旁边<br>→ <b>"大约6时"</b><br><br>不需要精确到几分，大概就行！',h:'"大约"就是大概、差不多的意思<br>日常生活中用"大约"比精确时间更常见'},
+  {t:'🎯 小试牛刀',c:'时针靠近7，分针快走到12了<br>这是"快___时了"？',q:'快几时了？',a:'7',choices:['7','6','8']},
+  {t:'📝 今天学到了',c:'✅ "快到了"：分针快走到12<br>✅ "刚过"：分针刚过12<br>✅ "大约"：分针在12附近<br><br>生活中的时间表达！🕒'}
+],
+13:[ // Day14 时间与生活
+  {t:'🌅 一天的时间',c:'乐乐，一天24小时是这样安排的：<br><br>🌅 <b>早上</b>（6-8时）：起床、刷牙、吃早饭<br>☀️ <b>上午</b>（8-12时）：学习、活动<br>🌞 <b>中午</b>（12-14时）：吃午饭、午休<br>🌤️ <b>下午</b>（14-18时）：学习、玩耍<br>🌙 <b>晚上</b>（18-21时）：吃晚饭、洗漱、睡觉',h:'每个时间段有该做的事<br>这就是"时间安排"'},
+  {t:'📋 事情的顺序',c:'做事情有先后顺序：<br><br>早上：<br>① 🛏️ 起床<br>② 🪥 刷牙洗脸<br>③ 🍳 吃早饭<br>④ 🎒 准备学习<br><br>能先吃早饭再刷牙吗？<br>— 不行！顺序很重要！',h:'时间顺序就是什么事情先做、什么事情后做<br>有些顺序可以换，有些不能换'},
+  {t:'📅 认识日历',c:'除了钟表，日历也是时间工具：<br><br>📅 <b>一周7天</b>：一、二、三、四、五、六、日<br>📅 <b>一年12个月</b>：1月到12月<br>📅 <b>昨天→今天→明天</b><br><br>今天是周一，明天是周二<br>今天是周一，昨天是周日',h:'一周7天循环，一年12个月<br>时间一直向前走，不会倒流'},
+  {t:'🎯 小试牛刀',c:'今天是<b>周三</b>，<br><b>后天</b>是周几？',q:'今天是周三，后天是周几？',a:'周五',choices:['周四','周五','周六']},
+  {t:'📝 今天学到了',c:'✅ 一天的时间分段：早→上→中→下→晚<br>✅ 做事有先后顺序<br>✅ 一周7天，一年12个月<br><br>时间小管家！📅'}
+],
+14:[ // Day15 钟表综合
+  {t:'🔄 钟表大复习',c:'乐乐，今天来全面复习钟表知识！<br><br>📋 <b>知识清单</b>：<br>🔹 认钟面：12个数字、时针分针<br>🔹 读整时：分针→12<br>🔹 读半时：分针→6<br>🔹 大约几时：分针在12附近<br>🔹 时间先后：事情的时间顺序',h:'今天把所有钟表知识串起来<br>检验你是不是真的掌握了'},
+  {t:'⚡ 快速判断',c:'看钟说时间，要又快又准！<br><br>'+clockSVG(3,0)+' → <b>3时</b>（整时，分针指12）<br><br>'+clockSVG(7,30)+' → <b>7时半</b>（半时，分针指6）<br><br>分针看12/6，时针看过谁！',h:'第一眼看分针：在12=整时，在6=半时<br>第二眼看时针：指向几或走过几'},
+  {t:'🏆 综合挑战准备',c:'接下来闯关会混合考：<br><br>✅ 看钟写时间<br>✅ 听时间画指针方向<br>✅ 大约几时判断<br>✅ 时间顺序排列<br>✅ 时间的先后比较<br><br>准备好了吗？',h:'综合挑战 = 所有钟表知识混在一起<br>要灵活运用哦'},
+  {t:'🎯 小试牛刀',c:clockSVG(2,30)+'<br>分针指6，时针在2和3之间<br>快速说：几时半？',q:'几时半？',a:'2',choices:['2','3','1']},
+  {t:'📝 今天学到了',c:'✅ 钟表知识全面复习<br>✅ 整时半时混合判断<br>✅ 准备终极钟表闯关！<br><br>时间达人，冲刺！🏆'}
+],
+15:[ // Day16 9加几
+  {t:'➕ 9加几速算',c:'乐乐，9加几是进位加法中最常用的！<br><br><b>凑十法</b>：9差1到10<br><br>9+2：从2拿1 → 9+1=10，剩1 → <b>11</b><br>9+3：从3拿1 → 9+1=10，剩2 → <b>12</b><br>9+4：从4拿1 → 9+1=10，剩3 → <b>13</b><br>9+5：从5拿1 → 9+1=10，剩4 → <b>14</b>',h:'9加几，个位上的数字<br>比加的那个数少1<br>（因为拿了1去凑十）'},
+  {t:'🔍 发现规律',c:'聪明！看这个规律：<br><br>9+2=1<b>1</b>（个位：2-1=1）<br>9+3=1<b>2</b>（个位：3-1=2）<br>9+4=1<b>3</b>（个位：4-1=3）<br>...<br>9+9=1<b>8</b>（个位：9-1=8）<br><br><b>9加几，得数个位 = 另一个数 - 1</b>',h:'发现规律后，9加几不用凑十也能秒算<br>个位减1，十位是1'},
+  {t:'📝 生活中的9加几',c:'应用也重要：<br><br>"盒子里有<b>9块</b>糖，妈妈又放进<b>5块</b>，一共几块？"<br><br>→ 9+5=14（块）<br><br>"树上有<b>9只</b>小鸟，又飞来<b>7只</b>，一共几只？"<br><br>→ 9+7=16（只）',h:'9加几的应用题：<br>跟普通加法一样，圈数字→看关键词→列算式'},
+  {t:'🎯 小试牛刀',c:'<b>9 + 8 = ?</b><br><br>用规律：个位8-1=7，十位是1',q:'9+8=?',a:'17',choices:['17','16','18']},
+  {t:'📝 今天学到了',c:'✅ 9加几用凑十法：9+1=10，加剩下的<br>✅ 规律：个位=另一个数-1<br>✅ 生活和题目中都要会用<br><br>9加几闪电侠！⚡'}
+],
+16:[ // Day17 8/7/6加几
+  {t:'➕ 8加几',c:'8加几也是用凑十法！<br><br>8差<b>2</b>到10<br><br>8+3：从3拿2 → 8+2=10，剩1 → <b>11</b><br>8+4：从4拿2 → 8+2=10，剩2 → <b>12</b><br>8+5：从5拿2 → 8+2=10，剩3 → <b>13</b><br>8+9：从9拿2 → 8+2=10，剩7 → <b>17</b>',h:'8加几，得数个位 = 另一个数 - 2<br>因为拿了2去凑十'},
+  {t:'➕ 7加几',c:'7差<b>3</b>到10<br><br>7+4：从4拿3 → 7+3=10，剩1 → <b>11</b><br>7+5：从5拿3 → 7+3=10，剩2 → <b>12</b><br>7+6：从6拿3 → 7+3=10，剩3 → <b>13</b><br>7+8：从8拿3 → 7+3=10，剩5 → <b>15</b>',h:'7加几，得数个位 = 另一个数 - 3'},
+  {t:'➕ 6加几',c:'6差<b>4</b>到10<br><br>6+5：从5拿4 → 6+4=10，剩1 → <b>11</b><br>6+6：从6拿4 → 6+4=10，剩2 → <b>12</b><br>6+7：从7拿4 → 6+4=10，剩3 → <b>13</b>',h:'6加几，得数个位 = 另一个数 - 4<br>方法一样，差的数不同而已'},
+  {t:'🎯 小试牛刀',c:'<b>7 + 5 = ?</b><br><br>7差3到10，从5拿3',q:'7+5=?',a:'12',choices:['12','11','13']},
+  {t:'📝 今天学到了',c:'✅ 8差2、7差3、6差4到10<br>✅ 方法一样：凑十法<br>✅ 规律：个位=另一个数-差的数<br><br>进位全能王！🌟'}
+],
+17:[ // Day18 听算/闪卡
+  {t:'👀 闪卡心算',c:'乐乐，今天的练习方式不一样！<br><br>题目会<b>出现3秒然后消失</b><br>你要凭记忆和心算写出答案！<br><br>这比看着题目算更难，但更能锻炼<br>你的"心算"能力～<br><br>准备好了吗？<b>看→记→算→写</b>',h:'闪卡心算 = 用眼睛看，用脑子算<br>题目消失后不能再回头看'},
+  {t:'🧠 心算小技巧',c:'心算的时候可以：<br><br>① <b>小声读</b>："8加5等于..."<br>② <b>用手指</b>：偷偷在桌下数<br>③ <b>想凑十</b>：8+5=8+2+3=10+3=13<br>④ <b>想口诀</b>：8+5，个位5-2=3 → 13<br><br>选一个你最喜欢的方法！',h:'心算不用急，找到适合自己的方法<br>练多了就越来越快'},
+  {t:'⚡ 速度训练',c:'心算要练速度！从简单开始：<br><br>第一关：10以内的加减（闪2秒）<br>第二关：20以内进位加（闪3秒）<br>第三关：混合加减（闪3秒）<br><br>速度越快，题目闪现时间越短！<br>挑战自己的反应速度吧！',h:'先保证准确，再追求速度<br>不要为了快而乱算'},
+  {t:'🎯 小试牛刀',c:'这道题会闪3秒：<br><br><span class="big-num">6 + 7 = ?</span><br><br>心里算好，写出答案！',q:'6+7=?',a:'13',choices:['13','12','14']},
+  {t:'📝 今天学到了',c:'✅ 闪卡心算：看→记→算→写<br>✅ 用心算技巧，不用纸笔<br>✅ 先准后快<br><br>心算小达人！🧠'}
+],
+18:[ // Day19 应用题进阶
+  {t:'📊 比较类应用题',c:'今天挑战比较类应用题！<br><br>"小红有<b>12</b>朵花，小明有<b>8</b>朵花，<br>小红比小明<b>多</b>几朵？"<br><br>比多少 → <b>大数减小数</b><br>12 - 8 = <b>4</b>（朵）<br><br>注意：不管问"多多少"还是"少多少"<br>都是大减小！',h:'比较=大数-小数<br>"多多少"和"少多少"答案一样'},
+  {t:'🖼️ 图文应用题',c:'有些题目会配图：<br><br>🍎🍎🍎🍎🍎 5个苹果<br>🍎🍎🍎 3个苹果<br><br>① 一共几个？→ 5+3=<b>8</b><br>② 上面比下面多几个？→ 5-3=<b>2</b><br><br>看图要仔细：先数清楚每组有几个！',h:'图文题：先数清楚→再判断用+还是-'},
+  {t:'🧩 综合判断',c:'做应用题最重要的是<b>判断用加法还是减法</b>：<br><br>➕ 用加法：<br>一共、合起来、总共、原来有...又...<br><br>➖ 用减法：<br>还剩、多多少、少多少、比...多/少<br><br>圈出关键词，就知道用什么方法！',h:'关键词是应用题的路标<br>圈出来就不会迷路'},
+  {t:'🎯 小试牛刀',c:'"停车场有<b>15</b>辆车，开走了<b>7</b>辆，<b>还剩</b>几辆？"<br><br>加法还是减法？答案是？',q:'还剩几辆？',a:'8',choices:['8','22','7']},
+  {t:'📝 今天学到了',c:'✅ 比较题：大减小<br>✅ 图文题：先数后算<br>✅ 关键词判断加减<br><br>应用高手！📝'}
+],
+19:[ // Day20 排队与推理
+  {t:'👥 排队问题',c:'排队问题是考试难点，仔细听！<br><br>"从前面数乐乐排<b>第5</b>，<br>从后面数乐乐排<b>第3</b>，<br>一共有几人？"<br><br>前面5人 + 后面3人 - 乐乐自己（数了2次）<br>= 5+3-1 = <b>7人</b>',h:'排队公式：<br>总人数 = 前面人数 + 后面人数 - 1<br>因为自己数了两次'},
+  {t:'🗑️ 多余条件',c:'有些题目会多给一个用不上的条件！<br><br>"小红有5个苹果，小明比小红多3个，<br><b>小红今年6岁</b>，小明有几个苹果？"<br><br>"6岁"跟苹果没关系！→ <b>多余条件</b><br>只用 5+3=<b>8</b>',h:'多余条件就是题目里<br>跟问题没关系的数字<br>要会识别，不被迷惑'},
+  {t:'🧠 简单推理',c:'推理就是根据线索找答案：<br><br>"苹果比梨重，梨比橘子重。<br>谁最轻？"<br><br>→ 苹果 > 梨 > 橘子<br>→ 橘子最轻！<br><br>"小明比小红高，小刚比小明高。<br>谁最高？"<br>→ 小刚最高！',h:'推理把关系排成一行<br>用大于号/小于号连起来<br>一目了然'},
+  {t:'🎯 小试牛刀',c:'"从前面数排第4，从后面数排第2<br>一共有几人？"<br><br>4+2-1=?',q:'4+2-1=?',a:'5',choices:['5','6','7']},
+  {t:'📝 今天学到了',c:'✅ 排队公式：前+后-1<br>✅ 多余条件：跟问题没关系的忽略<br>✅ 推理：把关系排成一排<br><br>推理高手！🧩'}
+],
+20:[ // Day21 规律与推理
+  {t:'🔢 数字规律',c:'找数字规律，三个步骤：<br><br>① 看相邻两个数之间差多少<br>② 是每次加同样的数，还是减？<br>③ 按规律推出下一个数<br><br>例：<span class="big-num">1, 4, 7, 10, ?</span><br>→ 每次+3<br>→ 10+3 = <b>13</b>',h:'规律=每次做同样的变化<br>看前两个数的差，跟后面的比<br>一不一样'},
+  {t:'🔷 图形规律',c:'图形也有规律！<br><br>🔴🔵🔴🔵🔴🔵<b>?</b><br>→ 红蓝交替 → 下一个是🔴<br><br>⭐🌟⭐🌟⭐<b>?</b><br>→ 空星实星交替 → 下一个是🌟<br><br>看颜色、看形状、看大小<br>找到重复的"一组"',h:'图形规律=找到"一组"是什么<br>然后反复重复'},
+  {t:'🧩 符号推理',c:'符号推理像解谜题：<br><br>☆ + 3 = 8 → ☆ = <b>5</b><br>△ - 4 = 6 → △ = <b>10</b><br>□ + □ = 10 → □ = <b>5</b><br><br>把符号当作"失踪的数字"<br>用相反运算找出来！',h:'符号推理 = 更高级的填未知数<br>方法一样：用相反的运算'},
+  {t:'🎯 小试牛刀',c:'<b>3, 6, 9, 12, ?</b><br><br>每次加几？下一个是？',q:'3,6,9,12的下一个数是？',a:'15',choices:['15','14','13']},
+  {t:'📝 今天学到了',c:'✅ 数字规律：看每次变多少<br>✅ 图形规律：找重复的一组<br>✅ 符号推理：用相反运算<br><br>规律侦探！🔮'}
+],
+21:[ // Day22 终极挑战
+  {t:'🏆 最后一天！',c:'乐乐，恭喜你坚持到了最后一天！🎉<br><br>今天的内容是：<br>✅ 20以内加减法综合<br>✅ 钟表知识综合<br>✅ 应用题综合<br>✅ 终极数独挑战<br><br>这是对你30天努力的最终检验！',h:'今天的题目会综合前面所有知识<br>是检验也是庆祝'},
+  {t:'📋 巧算技巧总汇',c:'回顾所有巧算方法：<br><br>🔹 <b>凑十法</b>：9+4=9+1+3=13<br>🔹 <b>破十法</b>：13-5=10-5+3=8<br>🔹 <b>想加算减</b>：13-5→5+?=13→8<br>🔹 <b>找规律</b>：9+几，个位减1<br><br>选最快的方法，不局限一种！',h:'巧算没有标准答案<br>哪种快就用哪种'},
+  {t:'🧩 终极数独',c:'挑战4×4数独！<br><br>规则：每行每列填入1-4<br>每个数字在每行每列只能出现一次<br><br>1 2 3 _<br>3 4 _ 2<br>2 _ 4 1<br>_ 1 2 3<br><br>先看第一行：缺4 → 第一行填<b>4</b>',h:'数独技巧：<br>先看哪行/列只缺一个数<br>逐步推理'},
+  {t:'🎯 小试牛刀',c:'<b>15 - 8 = ?</b><br><br>选最快的方法算！',q:'15-8=?',a:'7',choices:['7','8','6']},
+  {t:'🌟 30天总结',c:'🎊 乐乐，你太棒了！<br><br>30天里你学到了：<br>✅ 数感与比大小<br>✅ 20以内加减法<br>✅ 立体图形与方位<br>✅ 钟表：整时、半时、大约几时<br>✅ 应用题：读题、比较、排队<br>✅ 找规律与推理<br>✅ 数独入门<br><br>你已经是一年级数学小达人了！🏆',h:'坚持30天本身就是最大的胜利！<br>好习惯比知识更宝贵'}
+]
+};
 
-function shakeElement(el) {
-  el.classList.add('shake');
-  setTimeout(()=>el.classList.remove('shake'),500);
-}
+// 为没有详细讲堂的天数生成默认讲堂（第11天起已有钟表内容覆盖）
+// LECTURES已有0-21全部22天
 
-function bounceElement(el) {
-  el.classList.add('bounce');
-  setTimeout(()=>el.classList.remove('bounce'),500);
-}
-
-// ============================================================
-// 学习日数据 (22天)
-// ============================================================
+// ==================== 学习日数据 ====================
 const STUDY_DAYS = [
-  { id:1, topic:'🔢 数感小达人', time:'40分钟',
-    lecture:'乐乐好！今天我们来玩"比大小"游戏～<br><br>🔹 <b>比大小</b>：看两个数字，谁大谁小？大嘴巴"＞"总是对着大数字哦！<br>🔹 <b>第几个</b>：排队的时候，从左边数你是第几个呀？<br>🔹 <b>找规律</b>：1、3、5、？——下一个是几？跳着数就对啦！',
-    example:'🐱 5 ＞ 3  （5比3大）<br>🐶 从左边数，第4个是小狗<br>🐰 2、4、6、？→ 答案是 8！',
-    levels:[{name:'比大小',type:'compare',count:5,range:[1,20]},{name:'第几个',type:'ordinal',count:4,range:[1,10]},{name:'找规律',type:'pattern',count:4}] },
-  { id:2, topic:'🧩 数字小侦探', time:'40分钟',
-    lecture:'今天乐乐来做小侦探！<br><br>🔹 <b>填未知数</b>：3 + ? = 9 —— 想想看，3加多少等于9？用减法：9 - 3 = 6！<br>🔹 <b>数字谜题</b>：每个空格填一个数字，让每行每列的数字都不重复～',
-    example:'🔍 3 + ? = 9 → ? = 6<br>🔍 ? - 4 = 5 → ? = 9<br>🔍 8 - ? = 2 → ? = 6',
-    levels:[{name:'加法填空',type:'fillAdd',count:5,range:[1,10]},{name:'减法填空',type:'fillSub',count:5,range:[1,10]},{name:'数字谜题',type:'sudoku3',count:2}] },
-  { id:3, topic:'⚡ 速算小飞侠', time:'40分钟',
-    lecture:'今天我们来练速度！<br><br>🔹 <b>连加</b>：2 + 3 + 1 = ? 先把前两个加起来：2+3=5，再加1：5+1=6！<br>🔹 <b>连减</b>：8 - 2 - 3 = ? 8-2=6，6-3=3！<br>🔹 <b>加减混合</b>：5 + 3 - 2 = ? 从左到右一步步算～',
-    example:'🚀 2+3+1=6<br>🚀 8-2-3=3<br>🚀 5+3-2=6<br>🚀 10-4+2=8',
-    levels:[{name:'连加达人',type:'chainAdd',count:5,len:3,range:[0,9]},{name:'连减小能手',type:'chainSub',count:5,len:3,range:[0,12]},{name:'混合运算',type:'chainMix',count:5,len:3,range:[0,12]}] },
-  { id:4, topic:'📖 图文小读者', time:'40分钟',
-    lecture:'今天我们来读题，把文字变成算式！<br><br>🔹 看到"一共有"→ 用加法<br>🔹 看到"还剩"→ 用减法<br>🔹 看到"比...多"→ 用加法或减法<br>🔹 <b>小窍门</b>：把题目里的数字圈出来，再想用+还是-',
-    example:'📝 小明有8块糖，吃了3块，还剩几块？→ 8-3=5<br>📝 树上有5只鸟，又飞来4只，一共有几只？→ 5+4=9',
-    levels:[{name:'图文理解',type:'wordProblem',count:4,category:'add'},{name:'还剩多少',type:'wordProblem',count:4,category:'sub'},{name:'综合应用',type:'wordProblem',count:4,category:'mix'}] },
-  { id:5, topic:'📐 形状探索家', time:'40分钟',
-    lecture:'图形王国真奇妙！<br><br>🔹 <b>长方体</b>：像盒子，有6个面<br>🔹 <b>正方体</b>：像骰子，6个面都一样大<br>🔹 <b>圆柱</b>：像水杯，上下两个圆<br>🔹 <b>球</b>：像皮球，圆滚滚',
-    example:'📦 抽屉→长方体<br>🎲 骰子→正方体<br>🥫 易拉罐→圆柱<br>⚽ 足球→球',
-    levels:[{name:'认图形',type:'shapeId',count:5,shapes:['长方体','正方体','圆柱','球']},{name:'生活中找',type:'shapeReal',count:4},{name:'拼搭达人',type:'shapeBuild',count:3}] },
-  { id:6, topic:'🧭 方位指挥官', time:'40分钟',
-    lecture:'上下左右分得清！<br><br>🔹 <b>上下</b>：天花板在上面，地板在下面<br>🔹 <b>前后</b>：肚子这面是前，背那面是后<br>🔹 <b>左右</b>：拿筷子的手是右手<br>🔹 <b>迷宫</b>：从起点走到终点！',
-    example:'✋ 右手拿筷子 → 这边是右边<br>🗺️ 起点→↑↑→→↓→终点',
-    levels:[{name:'上下前后',type:'position',count:4,dim:'updown'},{name:'左右分辨',type:'position',count:5,dim:'leftright'},{name:'迷宫挑战',type:'maze',count:3}] },
-  { id:7, topic:'🏗️ 数位小工匠', time:'40分钟',
-    lecture:'数位是个重要的新朋友！<br><br>🔹 <b>个位</b>：表示几个一，在数字的最右边<br>🔹 <b>十位</b>：表示几个十<br>🔹 比如 <b>15</b>：十位是1（1个十=10），个位是5（5个一）<br>🔹 <b>小棒法</b>：1捆小棒=10根，加上散的，就是十几！',
-    example:'📐 15=1个十+5个一<br>📐 19=1个十+9个一<br>📐 1个十和6个一=16',
-    levels:[{name:'数位认识',type:'placeValue',count:5,range:[10,20]},{name:'几个十几个一',type:'placeBreak',count:5,range:[10,20]},{name:'组数练习',type:'placeBuild',count:5,range:[10,20]}] },
-  { id:8, topic:'🔢 11-20小行家', time:'40分钟',
-    lecture:'11到20的加减法来啦！<br><br>🔹 <b>10加几</b>：10+3=13 最简单<br>🔹 <b>十几加几（不进位）</b>：13+5=18，个位3+5=8<br>🔹 <b>十几减几（不退位）</b>：17-4=13，个位7-4=3<br>🔹 <b>十几减十</b>：16-10=6',
-    example:'📏 10+5=15<br>📏 13+4=17<br>📏 18-5=13<br>📏 19-10=9',
-    levels:[{name:'十加几',type:'tenPlus',count:5},{name:'不进位加',type:'noCarryAdd',count:5,range:[11,19]},{name:'不退位减',type:'noBorrowSub',count:6,range:[11,19]}] },
-  { id:9, topic:'🎯 凑十法入门', time:'40分钟',
-    lecture:'凑十法是一年级最重要的本领！<br><br>🔹 <b>口诀</b>：看大数，分小数，凑成十，加剩数<br>🔹 比如 9+4：9差1到10，把4拆成1和3 → 9+1=10 → 10+3=13<br>🔹 <b>凑十好朋友</b>：1和9、2和8、3和7、4和6、5和5',
-    example:'🤝 9+4=? → 9差1到10 → 从4借1 → 9+1=10 → 10+3=13 ✅',
-    levels:[{name:'凑十好朋友',type:'makeTenFriend',count:5},{name:'9加几',type:'makeTen9',count:6},{name:'8加几',type:'makeTen8',count:5}] },
-  { id:10, topic:'🔄 退位减法', time:'40分钟',
-    lecture:'退位减法来啦！<br><br>🔹 <b>破十法</b>：把十几拆成10和几，用10去减，再加剩下的<br>🔹 比如 13-5：13=10+3 → 10-5=5 → 5+3=8<br>🔹 <b>想加算减</b>：13-5=? 想：5+8=13，所以13-5=8',
-    example:'💡 13-5=?<br>破十法：13=10+3 → 10-5=5 → 5+3=8 ✅<br>想加算减：5+?=13 → ?=8 ✅',
-    levels:[{name:'破十法练习',type:'breakTen',count:5,range:[11,18]},{name:'想加算减',type:'addToSub',count:5,range:[11,18]},{name:'退位综合',type:'borrowSub',count:6,range:[11,18]}] },
-  // 钟表专项 (Day 11-15)
-  { id:11, topic:'🕐 认识钟面', time:'40分钟',
-    lecture:'时钟是我们的时间朋友！<br><br>🔹 <b>钟面</b>：圆圆的表盘，上面有1-12共12个数字<br>🔹 <b>时针</b>：短短的，走得慢，它指向的数字就是"几时"<br>🔹 <b>分针</b>：长长的，走得快，分针指向12就是"整时"<br>🔹 钟面上有12个大格，每大格有5小格',
-    example:'🕐 短的是时针（几时）→ 长的是分针（几分）<br>→ 分针指向12 = 整时 → 时针指向几就是几时',
-    levels:[{name:'认指针',type:'clockPart',count:4},{name:'读整时',type:'clockReadHour',count:6},{name:'画指针',type:'clockDraw',count:4}] },
-  { id:12, topic:'🕑 认识半时', time:'40分钟',
-    lecture:'半时就是几点半！<br><br>🔹 <b>半时的指针</b>：分针指向6，时针在两个数字中间<br>🔹 <b>怎么看</b>：时针走过了几，就是几点半<br>🔹 比如：时针在3和4之间，分针在6 → 3点半（3:30）',
-    example:'🕝 分针指6 → 时针在1和2之间 → 1点半<br>分针指6 → 时针在7和8之间 → 7点半',
-    levels:[{name:'判断整时半时',type:'clockHalfId',count:5},{name:'读半时',type:'clockReadHalf',count:6},{name:'整时半时混合',type:'clockMix',count:5}] },
-  { id:13, topic:'🕒 大约几时', time:'40分钟',
-    lecture:'生活中常常说"大约几点"！<br><br>🔹 <b>快到了</b>：分针快到12但还没到 → "快...时了"<br>🔹 <b>刚过一点</b>：分针刚过12一点点 → "...时刚过"<br>🔹 <b>大约几时</b>：分针在12附近就是大约整时',
-    example:'🕐 时针接近8，分针快到12 → "快8时了"<br>时针刚过3，分针刚过12 → "3时刚过"<br>时针接近6，分针在12旁边 → "大约6时"',
-    levels:[{name:'快到了/刚过',type:'clockApprox',count:5},{name:'大约几时',type:'clockAbout',count:5},{name:'生活场景',type:'clockScene',count:4}] },
-  { id:14, topic:'📅 时间与生活', time:'40分钟',
-    lecture:'时间帮我们安排一天的生活！<br><br>🔹 <b>一天的时间</b>：早上→上午→中午→下午→晚上<br>🔹 <b>事情顺序</b>：先起床，再刷牙，然后吃早饭...<br>🔹 <b>认日历</b>：一年12个月，一周7天，昨天/今天/明天',
-    example:'🌅 早上7点→起床刷牙<br>☀️ 上午8点→上学<br>🌞 中午12点→吃午饭<br>🌤️ 下午4点→放学<br>🌙 晚上9点→睡觉',
-    levels:[{name:'时间顺序',type:'timeOrder',count:4},{name:'时间先后',type:'timeSeq',count:4},{name:'日历认识',type:'calendar',count:4}] },
-  { id:15, topic:'🏆 钟表大闯关', time:'40分钟',
-    lecture:'今天来全面检验钟表本领！<br><br>🔹 <b>总复习</b>：认钟面、读整时、读半时、大约几时<br>🔹 <b>综合练习</b>：把前面学的钟表知识都用上<br>🔹 加油乐乐，你是时间小达人！',
-    example:'🌟 认指针→读整时→读半时→大约几时→时间顺序<br>🌟 全部掌握你就是"时间管理小达人"！',
-    levels:[{name:'钟表综合一',type:'clockReview1',count:5},{name:'钟表综合二',type:'clockReview2',count:5},{name:'限时挑战',type:'clockSpeed',count:6}] },
-  // 进位加法 (Day 16-18)
-  { id:16, topic:'➕ 9加几速算', time:'40分钟',
-    lecture:'9加几是最常用的进位加法！<br><br>🔹 <b>凑十法复习</b>：9差1到10，从另一个数里拿1<br>🔹 9+2：9+1=10，还剩1→11<br>🔹 9+8：9+1=10，还剩7→17<br>🔹 <b>规律</b>：9加几，得数的个位比另一个数少1',
-    example:'🌟 9+2=11（个位：2-1=1）<br>🌟 9+3=12（个位：3-1=2）<br>🌟 9+6=15（个位：6-1=5）',
-    levels:[{name:'9加几基础',type:'add9',count:6},{name:'9加几强化',type:'add9Speed',count:8},{name:'9加几应用',type:'add9Apply',count:5}] },
-  { id:17, topic:'➕ 8/7/6加几', time:'40分钟',
-    lecture:'8加几、7加几和6加几，也是用凑十法！<br><br>🔹 <b>8加几</b>：8差2到10 → 8+5：8+2=10，剩3→13<br>🔹 <b>7加几</b>：7差3到10 → 7+4：7+3=10，剩1→11<br>🔹 <b>6加几</b>：6差4到10 → 6+5：6+4=10，剩1→11',
-    example:'🎯 8+7→8+2=10,剩5→15<br>🎯 7+5→7+3=10,剩2→12<br>🎯 6+5→6+4=10,剩1→11',
-    levels:[{name:'8加几',type:'add8',count:5},{name:'7加几',type:'add7',count:5},{name:'6/5加几',type:'add6',count:5},{name:'进位综合',type:'addCarryMix',count:5}] },
-  { id:18, topic:'🎧 听算小达人', time:'40分钟',
-    lecture:'听算就是不用眼睛看题目，用心算！<br><br>🔹 <b>听算规则</b>：看到题目闪过后，在脑子里算，然后写出答案<br>🔹 从简单的10以内开始，逐步到20以内进位加法<br>🔹 <b>小窍门</b>：闭上眼睛，用手指悄悄帮忙！',
-    example:'👂 "9加5等于多少？"<br>→ 心里想：9+1=10, 剩4, 10+4=14 → 写出：14 ✅',
-    levels:[{name:'10以内听算',type:'listenCalc',count:6,range:[0,10]},{name:'进位听算',type:'listenCalc',count:6,range:[11,20]},{name:'混合听算',type:'listenCalc',count:6,range:[0,20]}] },
-  // 应用题 (Day 19-20)
-  { id:19, topic:'📝 应用题大冒险', time:'40分钟',
-    lecture:'今天挑战更多应用题！<br><br>🔹 <b>比较类</b>：谁多谁少？多多少？<br>🔹 <b>关键词</b>："比...多"用减法（大减小）<br>🔹 <b>一共</b>用加法，"还剩"用减法',
-    example:'📝 小红有12朵花，小明有8朵花，小红比小明多几朵？→ 12-8=4',
-    levels:[{name:'比较多少',type:'wordCompare',count:4},{name:'图文应用',type:'wordPicture',count:4},{name:'综合应用',type:'wordAll',count:4}] },
-  { id:20, topic:'🧩 排队与推理', time:'40分钟',
-    lecture:'排队问题和多余条件题是考试难点！<br><br>🔹 <b>排队问题</b>："从前面数第5，从后面数第3，一共几人？"<br>　→ 5+3-1=7（自己数了两次要减1）<br>🔹 <b>多余条件</b>：有些题目里会多给一个用不上的数字',
-    example:'🧩 从前面数排第4，从后面数排第2 → 一共 4+2-1=5 人<br>🧩 "小红有5个苹果...小红今年6岁..." → "6岁"是多余条件！',
-    levels:[{name:'排队问题',type:'queue',count:5},{name:'多余条件',type:'extraCond',count:4},{name:'综合推理',type:'reason',count:4}] },
-  // 思维拓展 (Day 21-22)
-  { id:21, topic:'🔮 规律与推理', time:'40分钟',
-    lecture:'找规律和简单推理，让大脑做体操！<br><br>🔹 <b>数字规律</b>：1,4,7,10,? → 每次+3 → 13<br>🔹 <b>图形规律</b>：颜色、形状怎么重复？<br>🔹 <b>简单推理</b>：A比B大，B比C大，谁最大？',
-    example:'🔮 2,5,8,11,? → +3 → 14<br>🔮 苹果比梨重，梨比橘子重 → 苹果最重',
-    levels:[{name:'数字规律',type:'numPattern',count:5},{name:'图形规律',type:'shapePattern',count:4},{name:'简单推理',type:'logic',count:4}] },
-  { id:22, topic:'🏆 终极挑战', time:'40分钟',
-    lecture:'最后一天！来检验暑假的学习成果！<br><br>🔹 <b>综合测试</b>：涵盖所有学过内容<br>🔹 <b>巧算技巧</b>：凑十、破十、想加算减都用上<br>🔹 <b>终极数独</b>：挑战4×4完整数独<br><br>乐乐，你太棒了，30天坚持下来就是胜利！🏆',
-    example:'🏆 综合挑战：数感·加减法·图形·钟表·应用题·规律推理',
-    levels:[{name:'综合测试一',type:'final1',count:6},{name:'综合测试二',type:'final2',count:6},{name:'终极数独',type:'sudoku4',count:2}] }
+  {id:1,topic:'🔢 数感小达人',levels:[{name:'比大小',type:'compare',count:8,range:[1,20]},{name:'第几个',type:'ordinal',count:6},{name:'找规律',type:'pattern',count:8}]},
+  {id:2,topic:'🧩 数字小侦探',levels:[{name:'加法填空',type:'fillAdd',count:8},{name:'减法填空',type:'fillSub',count:8},{name:'数字谜题',type:'sudoku3',count:4}]},
+  {id:3,topic:'⚡ 速算小飞侠',levels:[{name:'连加达人',type:'chainAdd',count:10},{name:'连减小能手',type:'chainSub',count:10},{name:'混合运算',type:'chainMix',count:10}]},
+  {id:4,topic:'📖 图文小读者',levels:[{name:'图文理解',type:'wordProblem',count:8,category:'add'},{name:'还剩多少',type:'wordProblem',count:8,category:'sub'},{name:'综合应用',type:'wordProblem',count:8,category:'mix'}]},
+  {id:5,topic:'📐 形状探索家',levels:[{name:'认图形',type:'shapeId',count:8},{name:'生活中找',type:'shapeReal',count:6},{name:'拼搭达人',type:'shapeBuild',count:6}]},
+  {id:6,topic:'🧭 方位指挥官',levels:[{name:'上下前后',type:'position',count:6,dim:'updown'},{name:'左右分辨',type:'position',count:6,dim:'leftright'},{name:'迷宫挑战',type:'maze',count:4}]},
+  {id:7,topic:'🏗️ 数位小工匠',levels:[{name:'数位认识',type:'placeValue',count:8,range:[10,20]},{name:'几个十几个一',type:'placeBreak',count:8,range:[10,20]},{name:'组数练习',type:'placeBuild',count:8,range:[10,20]}]},
+  {id:8,topic:'🔢 11-20小行家',levels:[{name:'十加几',type:'tenPlus',count:8},{name:'不进位加',type:'noCarryAdd',count:10},{name:'不退位减',type:'noBorrowSub',count:10}]},
+  {id:9,topic:'🎯 凑十法入门',levels:[{name:'凑十好朋友',type:'makeTenFriend',count:8},{name:'9加几',type:'makeTen9',count:10},{name:'8加几',type:'makeTen8',count:10}]},
+  {id:10,topic:'🔄 退位减法',levels:[{name:'破十法练习',type:'breakTen',count:10},{name:'想加算减',type:'addToSub',count:10},{name:'退位综合',type:'borrowSub',count:12}]},
+  {id:11,topic:'🕐 认识钟面',levels:[{name:'认指针',type:'clockPart',count:6},{name:'读整时',type:'clockReadHour',count:10},{name:'画指针',type:'clockDraw',count:6}]},
+  {id:12,topic:'🕑 认识半时',levels:[{name:'整时半时判断',type:'clockHalfId',count:8},{name:'读半时',type:'clockReadHalf',count:10},{name:'整时半时混合',type:'clockMix',count:10}]},
+  {id:13,topic:'🕒 大约几时',levels:[{name:'快到了/刚过',type:'clockApprox',count:8},{name:'大约几时',type:'clockAbout',count:8},{name:'生活场景',type:'clockScene',count:6}]},
+  {id:14,topic:'📅 时间与生活',levels:[{name:'时间顺序',type:'timeOrder',count:6},{name:'时间先后',type:'timeSeq',count:8},{name:'日历认识',type:'calendar',count:6}]},
+  {id:15,topic:'🏆 钟表大闯关',levels:[{name:'钟表综合一',type:'clockReview1',count:10},{name:'钟表综合二',type:'clockReview2',count:10},{name:'限时挑战',type:'clockSpeed',count:12}]},
+  {id:16,topic:'➕ 9加几速算',levels:[{name:'9加几基础',type:'add9',count:10},{name:'9加几强化',type:'add9Speed',count:12},{name:'9加几应用',type:'add9Apply',count:8}]},
+  {id:17,topic:'➕ 8/7/6加几',levels:[{name:'8加几',type:'add8',count:8},{name:'7加几',type:'add7',count:8},{name:'6/5加几',type:'add6',count:8},{name:'进位综合',type:'addCarryMix',count:10}]},
+  {id:18,topic:'🧠 闪卡心算',levels:[{name:'10以内闪卡',type:'listenCalc',count:10,range:[0,10]},{name:'进位闪卡',type:'listenCalc',count:12,range:[11,20]},{name:'混合闪卡',type:'listenCalc',count:12,range:[0,20]}]},
+  {id:19,topic:'📝 应用题大冒险',levels:[{name:'比较多少',type:'wordCompare',count:8},{name:'图文应用',type:'wordPicture',count:8},{name:'综合应用',type:'wordAll',count:8}]},
+  {id:20,topic:'🧩 排队与推理',levels:[{name:'排队问题',type:'queue',count:8},{name:'多余条件',type:'extraCond',count:6},{name:'综合推理',type:'reason',count:6}]},
+  {id:21,topic:'🔮 规律与推理',levels:[{name:'数字规律',type:'numPattern',count:8},{name:'图形规律',type:'shapePattern',count:6},{name:'简单推理',type:'logic',count:8}]},
+  {id:22,topic:'🏆 终极挑战',levels:[{name:'综合测试一',type:'final1',count:10},{name:'综合测试二',type:'final2',count:10},{name:'终极数独',type:'sudoku4',count:4}]}
 ];
 
-// 8个周末生活数学日
+// 周末任务
 const WEEKEND_TASKS = [
-  { id:1, icon:'🛒', theme:'超市小当家', desc:'今天和爸爸/妈妈一起去超市吧！',
-    tasks:['爸爸妈妈给你<b>20元现金</b>，去超市选自己喜欢的零食或文具','算一算：选了几样东西？一共多少钱？','付钱的时候，自己数一数找回的零钱对不对','回家后把买的东西记下来：名称+价格+总价','<b>挑战</b>：如果换一样东西，总价会变成多少？'],
-    tip:'💡 爸爸提示：让孩子独立完成付钱和找零，在旁边看着就行' },
-  { id:2, icon:'🍪', theme:'厨房数学', desc:'穿上围裙，厨房变成数学实验室！',
-    tasks:['和爸爸妈妈一起做饼干/包饺子/做馒头','用量杯量出水或面粉：<b>半杯是多少？两杯是多少？</b>','把面团分成<b>相等的几份</b>——这就是除法哦！','每份放几个葡萄干？数一数，每份是不是一样多？','烤好后数一数：一共做了多少个？每人分几个？'],
-    tip:'💡 爸爸提示：重点在于"等分"和"计数"，不在乎做得好不好吃' },
-  { id:3, icon:'🔍', theme:'形状寻宝', desc:'在家里来一场形状大搜索！',
-    tasks:['找一个<b>长方体</b>的物品（比如：纸盒）→ 拍照！','找一个<b>正方体</b>的物品（比如：骰子）→ 拍照！','找一个<b>圆柱</b>的物品（比如：水杯）→ 拍照！','找一个<b>球</b>的物品（比如：皮球）→ 拍照！','挑战：找5个<b>正方形</b>和5个<b>长方形</b>的面'],
-    tip:'💡 爸爸提示：集齐后让孩子介绍每样东西是什么形状，为什么' },
-  { id:4, icon:'⏰', theme:'时间小管家', desc:'今天来记录自己的一天！',
-    tasks:['从起床开始，每做一件事<b>看看钟</b>，记下时间','画一条"时间线"：画一个长条，从左到右标上时间','把每件事贴在时间线上：几点起床→几点吃饭→几点玩','算一算：<b>吃饭花了多长时间？写作业花了多长时间？</b>','晚上看动画片前，先说出现在是几点'],
-    tip:'💡 爸爸提示：可以画在纸上，拍照留念。孩子会对自己一天的时间有概念' },
-  { id:5, icon:'🎲', theme:'数学桌游日', desc:'不碰平板，玩桌面对战游戏！',
-    tasks:['<b>扑克牌大战</b>：各抽一张牌，谁的牌大谁赢走两张牌','<b>骰子加法</b>：扔两个骰子，把点数加起来，先算对的得1分','<b>24点简化版</b>：抽两张牌，加起来等于几？','<b>飞行棋/大富翁</b>：走格子游戏，数步数，练加法','计分！赢一局得1分，看看谁是今天的数学王！'],
-    tip:'💡 爸爸提示：让着点孩子但也别太明显，输了也是学习。开心最重要！' },
-  { id:6, icon:'📏', theme:'测量小能手', desc:'用身体来量世界！',
-    tasks:['用手（拃）量一量：<b>餐桌有多长？</b>——几拃？','用脚（步）量一量：<b>客厅有多长？</b>——几步？','用尺子量一量：<b>你的书桌有多长？</b>——多少厘米？','比一比：<b>爸爸妈妈的手和你的手，谁的一拃更长？</b>','找一个比1米长的东西，再找一个比1米短的东西'],
-    tip:'💡 爸爸提示：让孩子理解"单位"的概念，手大的人拃长，量的次数少' },
-  { id:7, icon:'🏪', theme:'家庭小商店', desc:'把家里的玩具开成店！',
-    tasks:['挑5-10个玩具，给每个玩具标价（1元-20元）','做一些"钱"——用纸片写上1元、5元、10元、20元','爸爸妈妈当顾客，来"买"玩具','<b>买两样</b>：一共多少钱？（练加法）','<b>给20元买一样</b>：找多少钱？（练减法）'],
-    tip:'💡 爸爸提示：这个游戏孩子通常特别喜欢，可以玩很久！逐渐加大数字' },
-  { id:8, icon:'🎪', theme:'数学游园会', desc:'把所有学过的数学本领都展示出来！',
-    tasks:['🛒 <b>速算擂台</b>：爸爸出题，和妈妈比赛谁算得快','⏰ <b>认时间</b>：爸爸指钟，你说时间（整时+半时+大约）','📐 <b>图形识别</b>：家里随机找东西说形状','🔢 <b>凑十表演</b>：爸爸说一个进位加，你用凑十法讲出来','🏆 <b>颁奖</b>：回顾30天学到的所有本领，给自己鼓掌！'],
-    tip:'💡 爸爸提示：今天是庆祝日！多发奖励，回顾成长，让孩子有成就感' }
+  {id:1,icon:'🛒',theme:'超市小当家',desc:'今天和爸爸/妈妈一起去超市吧！',tasks:['给你<b>20元现金</b>，去超市选自己喜欢的零食或文具','算一算：选了几样东西？一共多少钱？','付钱时自己数找回的零钱','回家记下来：名称+价格+总价','挑战：换一样东西，总价变多少？'],tip:'让孩子独立付钱找零，你在旁边看着就行'},
+  {id:2,icon:'🍪',theme:'厨房数学',desc:'穿上围裙，厨房变成数学实验室！',tasks:['和爸妈一起做饼干/包饺子','用量杯：半杯？两杯？','把面团分成相等的几份——这就是除法！','每份放几个葡萄干？每份一样多吗？','一共做了多少个？每人分几个？'],tip:'重点在"等分"和"计数"，不在乎好不好吃'},
+  {id:3,icon:'🔍',theme:'形状寻宝',desc:'在家里来一场形状大搜索！',tasks:['找长方体物品→拍照','找正方体物品→拍照','找圆柱物品→拍照','找球→拍照','挑战：找5个正方形和5个长方形的面'],tip:'集齐后让孩子介绍每样东西是什么形状'},
+  {id:4,icon:'⏰',theme:'时间小管家',desc:'今天来记录自己的一天！',tasks:['每做一件事看钟，记下时间','画一条时间线：几点到几点做了什么','算一算：吃饭花多长时间？学习花多长时间？','晚上看动画片前先说出现在几点'],tip:'画在纸上拍照留念，孩子会对时间有概念'},
+  {id:5,icon:'🎲',theme:'数学桌游日',desc:'不碰平板，玩桌面对战游戏！',tasks:['扑克牌大战：各抽一张比大小','骰子加法：扔两个骰子加点数','24点简化版：抽两张牌加起来','飞行棋/大富翁：走格子数步数','计分！谁是今天的数学王？'],tip:'让着点但也别太明显，开心最重要'},
+  {id:6,icon:'📏',theme:'测量小能手',desc:'用身体来量世界！',tasks:['用手（拃）量餐桌有多长','用脚（步）量客厅有多长','用尺子量书桌多少厘米','比一比：爸妈的手和你的手谁一拃更长？','找一个比1米长的东西和一个比1米短的'],tip:'让孩子理解"单位"——手大的人量得次数少'},
+  {id:7,icon:'🏪',theme:'家庭小商店',desc:'把家里的玩具开成店！',tasks:['挑5-10个玩具，标价1-20元','做"钱"：纸片写1元5元10元20元','爸妈当顾客来买玩具','买两样：一共多少钱？（加法）','给20元买一样：找多少？（减法）'],tip:'这个游戏孩子特别喜欢，可以玩很久'},
+  {id:8,icon:'🎪',theme:'数学游园会',desc:'把所有学过的数学本领都展示出来！',tasks:['速算擂台：爸妈出题比赛','认时间：指钟说时间','图形识别：家里随机找东西说形状','凑十表演：用凑十法讲一道题','颁奖：回顾30天，给自己鼓掌！'],tip:'今天是庆祝日！多发奖励，回顾成长'}
 ];
 
-// 30天地图数据
-const MAP_DAYS = [];
-const WEEK_PATTERN = [
-  'study','study','study','study','study','weekend','weekend',
-  'study','study','study','study','study','weekend','weekend',
-  'study','study','study','study','study','weekend','weekend',
-  'study','study','study','study','study','weekend','weekend',
-  'study','study'
-];
-let sd=0,wd=0;
-WEEK_PATTERN.forEach((type,i)=>{
-  if(type==='study'){ MAP_DAYS.push({index:i,type:'study',data:STUDY_DAYS[sd],dayNum:sd+1}); sd++; }
-  else { MAP_DAYS.push({index:i,type:'weekend',data:WEEKEND_TASKS[wd],dayNum:wd+1}); wd++; }
-});
+// 地图数据
+const MAP_DAYS=[];
+const WP=['study','study','study','study','study','weekend','weekend','study','study','study','study','study','weekend','weekend','study','study','study','study','study','weekend','weekend','study','study','study','study','study','weekend','weekend','study','study'];
+let si=0,wi=0;
+WP.forEach((t,i)=>{if(t==='study'){MAP_DAYS.push({index:i,type:'study',data:STUDY_DAYS[si],dayNum:si});si++;}else{MAP_DAYS.push({index:i,type:'weekend',data:WEEKEND_TASKS[wi],dayNum:wi});wi++;}});
 
-// 徽章
-const BADGES = [
+// 徽章（精确条件）
+const BADGES=[
   {id:'first',icon:'🌟',name:'初次闯关',desc:'完成第1天',cond:s=>s.completedDays>=1},
   {id:'week1',icon:'🔥',name:'坚持一周',desc:'完成前7天',cond:s=>s.completedDays>=7},
   {id:'week2',icon:'💪',name:'坚持两周',desc:'完成前14天',cond:s=>s.completedDays>=14},
@@ -859,566 +594,565 @@ const BADGES = [
   {id:'star50',icon:'⭐',name:'星星收集者',desc:'累计50颗星',cond:s=>s.totalStars>=50},
   {id:'star100',icon:'💫',name:'星星大师',desc:'累计100颗星',cond:s=>s.totalStars>=100},
   {id:'star150',icon:'✨',name:'星星传奇',desc:'累计150颗星',cond:s=>s.totalStars>=150},
-  {id:'clock',icon:'🕐',name:'时间达人',desc:'完成钟表学习日',cond:s=>[10,11,12,13,14].some(i=>s.dayStars[i]>0)},
+  {id:'clock',icon:'🕐',name:'时间达人',desc:'5天钟表日均星≥2',cond:s=>{const d=[10,11,12,13,14];return d.every(i=>(s.dayStars[i]||0)>=2);}},
   {id:'arena',icon:'⚡',name:'擂台冠军',desc:'擂台累计超100分',cond:s=>s.arenaTotal>=100},
-  {id:'perfect',icon:'💎',name:'满分日',desc:'某天获全部星星',cond:s=>Object.values(s.dayStars).some(v=>v>=3)},
+  {id:'perfect',icon:'💎',name:'满分日',desc:'某天获3颗星',cond:s=>Object.values(s.dayStars).some(v=>v>=3)},
   {id:'sudoku',icon:'🧩',name:'数独小天才',desc:'完成终极数独',cond:s=>(s.dayStars[21]||0)>=2},
 ];
 
-// ============================================================
-// 状态
-// ============================================================
-const STATE = {
-  currentDay:0, completedDays:0, totalStars:0, totalScore:0,
-  dayStars:{}, arenaTotal:0, badges:{},
-  learnPhase:'lecture', currentLevel:0, levelCorrect:0, levelWrong:0, levelTotal:0,
-  currentQuestion:null, arenaActive:false, arenaScore:0, arenaTimer:null, arenaSeconds:120,
-  arenaQuestion:null, arenaCorrect:0,
-  _mapIndex:null, _studyDay:null, _weekendDay:null, _modalCallback:null, _levelStars:[0,0,0]
+// ==================== 状态管理 ====================
+const STATE={
+  currentDay:0,completedDays:0,totalStars:0,totalScore:0,dayStars:{},arenaTotal:0,badges:{},
+  learnPhase:'lecture',currentLevel:0,_levelStars:[0,0,0],levelCorrect:0,levelWrong:0,levelTotal:0,
+  currentQuestion:null,arenaActive:false,arenaScore:0,arenaTimer:null,arenaSeconds:120,
+  lectureStep:0,streakCount:0,streakBest:0,selectedChoice:null,
+  _mapIndex:null,_studyDay:null,_previewMode:false,_parentAuth:false
 };
-
 function loadState(){
-  try{const s=JSON.parse(localStorage.getItem('math_summer_v2'));if(s)Object.assign(STATE,s);}
-  catch(e){}
-  STATE.arenaActive=false; STATE.arenaTimer=null; STATE.currentQuestion=null;
-  STATE.learnPhase='lecture'; STATE.currentLevel=0; STATE._levelStars=[0,0,0];
+  try{const s=JSON.parse(localStorage.getItem('math_summer_v3'));if(s)Object.assign(STATE,s);STATE._parentAuth=!!localStorage.getItem('parent_pin');}catch(e){}
+  STATE.arenaActive=false;STATE.arenaTimer=null;STATE.currentQuestion=null;
+  STATE.learnPhase='lecture';STATE.currentLevel=0;STATE._levelStars=[0,0,0];
+  STATE.lectureStep=0;STATE.streakCount=0;STATE.selectedChoice=null;STATE._previewMode=false;
 }
 function saveState(){
-  try{localStorage.setItem('math_summer_v2',JSON.stringify({
-    currentDay:STATE.currentDay,completedDays:STATE.completedDays,
-    totalStars:STATE.totalStars,totalScore:STATE.totalScore,
-    dayStars:STATE.dayStars,arenaTotal:STATE.arenaTotal,badges:STATE.badges
+  try{localStorage.setItem('math_summer_v3',JSON.stringify({
+    currentDay:STATE.currentDay,completedDays:STATE.completedDays,totalStars:STATE.totalStars,
+    totalScore:STATE.totalScore,dayStars:STATE.dayStars,arenaTotal:STATE.arenaTotal,badges:STATE.badges,
+    streakBest:STATE.streakBest
   }));}catch(e){}
 }
 
-// ============================================================
-// 题目生成
-// ============================================================
+// ==================== 题目生成 ====================
 function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
 function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=rand(0,i);[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
 
-function generateQuestion(dayId, levelIdx){
-  const day=STUDY_DAYS[dayId]; if(!day) return {q:'?',a:0};
+function genQ(dayId,levelIdx){
+  const day=STUDY_DAYS[dayId];if(!day)return{q:'?',a:0};
   const lvl=day.levels[Math.min(levelIdx,day.levels.length-1)];
   const t=lvl.type;
   switch(t){
-    case 'compare':{const a=rand(1,20),b=rand(1,20);return{q:`哪个数更大？<br><span style="font-size:40px;">${a} 和 ${b}</span>`,a:Math.max(a,b)};}
-    case 'ordinal':{
-      const n=rand(5,10),pos=rand(1,n);
+    case'compare':{const a=rand(1,20),b=rand(1,20);return{q:`哪个数更大？<br><span style="font-size:40px">${a} 和 ${b}</span>`,a:Math.max(a,b)};}
+    case'ordinal':{
       const animals=['🐱小猫','🐶小狗','🐰小兔','🐻小熊','🐸青蛙','🐵小猴','🦊狐狸','🐼熊猫','🐨考拉','🐯老虎'];
-      const list=shuffle([...animals]).slice(0,n);
+      const n=rand(5,10),pos=rand(1,n),list=shuffle([...animals]).slice(0,n);
       return{q:`小动物排队：<br>${list.join(' ')}<br><br><b>${list[pos-1]}</b>从左边数是第几个？`,a:pos};
     }
-    case 'pattern':{
-      const ps=[[1,3,5,7,9],[2,4,6,8,10],[10,8,6,4,2],[5,10,15,20,25],[1,4,7,10,13],[20,17,14,11,8],[3,6,9,12,15]];
-      const p=ps[rand(0,ps.length-1)];
-      return{q:`找规律：${p.slice(0,4).join(', ')}, ? <br>下一个是几？`,a:p[4]};
-    }
-    case 'fillAdd':{const b=rand(1,9),ans=rand(1,10-b);return{q:`${b} + ? = ${b+ans}`,a:ans};}
-    case 'fillSub':{const a=rand(3,10),ans=rand(1,a-1);return{q:`${a} - ? = ${a-ans}`,a:ans};}
-    case 'sudoku3':{
-      const ps=[{q:'1 _<br>_ 2<br>空格填几？',a:2},{q:'_ 2<br>1 _<br>空格填几？',a:2},{q:'1 _<br>2 _<br>第二行空格填几？',a:1}];
-      return ps[rand(0,ps.length-1)];
-    }
-    case 'chainAdd':{const a=rand(0,5),b=rand(0,5),c=rand(1,5);return{q:`${a}+${b}+${c}=?`,a:a+b+c};}
-    case 'chainSub':{const a=rand(6,12),b=rand(1,a-2),c=rand(1,a-b-1);return{q:`${a}-${b}-${c}=?`,a:a-b-c};}
-    case 'chainMix':{
-      const r=rand(0,1);
-      if(r===0){const a=rand(2,8),b=rand(1,12-a),c=rand(1,a+b-1);return{q:`${a}+${b}-${c}=?`,a:a+b-c};}
-      else{const a=rand(5,12),b=rand(1,a-1),c=rand(1,6);return{q:`${a}-${b}+${c}=?`,a:a-b+c};}
-    }
-    case 'wordProblem':{
+    case'pattern':{const ps=[[1,3,5,7,9],[2,4,6,8,10],[10,8,6,4,2],[5,10,15,20,25],[1,4,7,10,13],[20,17,14,11,8],[3,6,9,12,15],[18,15,12,9,6]];const p=ps[rand(0,ps.length-1)];return{q:`找规律：${p.slice(0,4).join(', ')}, ? <br>下一个是几？`,a:p[4]};}
+    case'fillAdd':{const b=rand(1,9),ans=rand(1,10-b);return{q:`${b} + ? = ${b+ans}`,a:ans};}
+    case'fillSub':{const a=rand(3,10),ans=rand(1,a-1);return{q:`${a} - ? = ${a-ans}`,a:ans};}
+    case'sudoku3':{const ps=[{q:'每行每列不能重复<br>1 _<br>_ 2<br>空格填几？',a:2},{q:'每行每列不能重复<br>_ 2<br>1 _<br>空格填几？',a:2},{q:'每行每列不能重复<br>1 _<br>2 _<br>第二行空格填几？',a:1}];return ps[rand(0,ps.length-1)];}
+    case'chainAdd':{const a=rand(0,5),b=rand(0,5),c=rand(1,5);return{q:`${a}+${b}+${c}=?`,a:a+b+c};}
+    case'chainSub':{const a=rand(6,12),b=rand(1,a-2),c=rand(1,a-b-1);return{q:`${a}-${b}-${c}=?`,a:a-b-c};}
+    case'chainMix':{if(rand(0,1)){const a=rand(2,8),b=rand(1,12-a),c=rand(1,a+b-1);return{q:`${a}+${b}-${c}=?`,a:a+b-c};}else{const a=rand(5,12),b=rand(1,a-1),c=rand(1,6);return{q:`${a}-${b}+${c}=?`,a:a-b+c};}}
+    case'wordProblem':{
       const cat=lvl.category==='mix'?(rand(0,1)?'add':'sub'):lvl.category;
-      if(cat==='add'){const a=rand(3,10),b=rand(2,10);const ss=[`树上有${a}只小鸟，又飞来${b}只，一共几只？`,`小明有${a}块糖，妈妈又给${b}块，一共几块？`];return{q:ss[rand(0,ss.length-1)],a:a+b};}
-      else{const a=rand(4,15),b=rand(1,a-1);const ss=[`妈妈买${a}个苹果，吃${b}个，剩几个？`,`池塘有${a}条鱼，游走${b}条，剩几条？`];return{q:ss[rand(0,ss.length-1)],a:a-b};}
+      if(cat==='add'){const ss=[`树上有${rand(3,10)}只鸟，又飞来${rand(2,9)}只，一共几只？`,`小明有${rand(3,9)}块糖，妈妈又给${rand(2,8)}块，一共几块？`,`花丛里有${rand(3,9)}只蝴蝶，又飞来${rand(2,8)}只，一共几只？`,`桌上有${rand(3,8)}本书，又放${rand(2,7)}本，一共几本？`];const s=ss[rand(0,ss.length-1)];const nums=s.match(/\d+/g);return{q:s,a:parseInt(nums[0])+parseInt(nums[1])};}
+      else{const ss=[`妈妈买${rand(4,15)}个苹果，吃${rand(1,3)}个，剩几个？`,`池塘有${rand(4,14)}条鱼，游走${rand(1,3)}条，剩几条？`,`小明有${rand(4,15)}支铅笔，用掉${rand(1,3)}支，剩几支？`,`书架有${rand(4,15)}本书，借走${rand(1,3)}本，剩几本？`];const s=ss[rand(0,ss.length-1)];const nums=s.match(/\d+/g);return{q:s,a:parseInt(nums[0])-parseInt(nums[1])};}
     }
-    case 'shapeId':{
-      const s=lvl.shapes[rand(0,lvl.shapes.length-1)];
-      return{q:`哪个是<b>${s}</b>？`,a:s,type:'choice',choices:[{label:'A',val:lvl.shapes[0]},{label:'B',val:lvl.shapes[1]},{label:'C',val:lvl.shapes[2]},{label:'D',val:lvl.shapes[3]}]};
+    case'shapeId':{const ss=lvl.shapes,shape=ss[rand(0,ss.length-1)];return{q:`哪个是<b>${shape}</b>？`,a:shape,type:'choice',choices:[{l:'A',v:ss[0]},{l:'B',v:ss[1]},{l:'C',v:ss[2]},{l:'D',v:ss[3]}]};}
+    case'shapeReal':{const its=[['冰箱','长方体'],['骰子','正方体'],['水杯','圆柱'],['篮球','球'],['鞋盒','长方体'],['魔方','正方体'],['铅笔','圆柱'],['地球仪','球']];const it=its[rand(0,its.length-1)];return{q:`<b>${it[0]}</b>是什么形状？`,a:it[1],type:'choice',choices:[{l:'A',v:'长方体'},{l:'B',v:'正方体'},{l:'C',v:'圆柱'},{l:'D',v:'球'}]};}
+    case'shapeBuild':{const qs=[{q:'2个正方体拼一起是什么体？',a:'长方体',choices:[{l:'A',v:'长方体'},{l:'B',v:'正方体'},{l:'C',v:'圆柱'},{l:'D',v:'球'}]},{q:'至少几个小正方体拼成大正方体？',a:'8',choices:[{l:'A',v:'4'},{l:'B',v:'6'},{l:'C',v:'8'},{l:'D',v:'10'}]}];return qs[rand(0,qs.length-1)];}
+    case'position':{
+      const objs=['🍎苹果','📚书','🧸玩具熊','🚗小车','⚽皮球'];const sh=shuffle([...objs]).slice(0,5);
+      if(lvl.dim==='updown'){const ref=rand(0,4);const ans=2<ref?'上面':'下面';return{q:`架子上：<br>🔝${sh[0]}<br>　${sh[1]}<br>　${sh[2]}<br>　${sh[3]}<br>🔚${sh[4]}<br><br><b>${sh[2]}</b>在<b>${sh[ref]}</b>的上面还是下面？`,a:ans,type:'choice',choices:[{l:'A',v:'上面'},{l:'B',v:'下面'}]};}
+      const hand=rand(0,1)?'左手':'右手',ans=hand==='左手'?'左边':'右边';return{q:`你的<b>${hand}</b>在哪边？`,a:ans,type:'choice',choices:[{l:'A',v:'左边'},{l:'B',v:'右边'}]};
     }
-    case 'shapeReal':{
-      const its=[['冰箱','长方体'],['骰子','正方体'],['水杯','圆柱'],['篮球','球'],['鞋盒','长方体'],['魔方','正方体']];
-      const it=its[rand(0,its.length-1)];
-      return{q:`<b>${it[0]}</b>是什么形状？`,a:it[1],type:'choice',choices:[{label:'A',val:'长方体'},{label:'B',val:'正方体'},{label:'C',val:'圆柱'},{label:'D',val:'球'}]};
-    }
-    case 'shapeBuild':{
-      const qs=[{q:'2个正方体拼一起是什么体？',a:'长方体',choices:[{label:'A',val:'长方体'},{label:'B',val:'正方体'},{label:'C',val:'圆柱'},{label:'D',val:'球'}]},{q:'至少几个小正方体拼成大正方体？',a:8,choices:[{label:'A',val:4},{label:'B',val:6},{label:'C',val:8},{label:'D',val:10}]}];
-      return qs[rand(0,qs.length-1)];
-    }
-    case 'position':{
-      const objs=['🍎苹果','📚书','🧸玩具熊','🚗小车','⚽皮球'];
-      const sh=shuffle([...objs]).slice(0,5);
-      if(lvl.dim==='updown'){
-        const refIdx=rand(0,4),targetIdx=2;
-        const ans=targetIdx<refIdx?'上面':'下面';
-        return{q:`架子上：<br>🔝${sh[0]}<br>　${sh[1]}<br>　${sh[2]}<br>　${sh[3]}<br>🔚${sh[4]}<br><br><b>${sh[2]}</b>在<b>${sh[refIdx]}</b>的上面还是下面？`,a:ans,type:'choice',choices:[{label:'A',val:'上面'},{label:'B',val:'下面'}]};
-      }else{
-        const hand=rand(0,1)?'左手':'右手',ans=hand==='左手'?'左边':'右边';
-        return{q:`你的<b>${hand}</b>在哪边？`,a:ans,type:'choice',choices:[{label:'A',val:'左边'},{label:'B',val:'右边'}]};
-      }
-    }
-    case 'maze':{
-      return{q:'从起点：→→↑↑→ 到了起点的什么方向？',a:'右边',type:'choice',choices:[{label:'A',val:'右边'},{label:'B',val:'上面'},{label:'C',val:'左边'},{label:'D',val:'下面'}]};
-    }
-    case 'placeValue':{const n=rand(10,20);return{q:`${n} 十位是几？个位是几？<br>（输入十位个位，如12输入12）`,a:`${Math.floor(n/10)}${n%10}`,displayAns:`十位=${Math.floor(n/10)},个位=${n%10}`};}
-    case 'placeBreak':{const n=rand(10,20);return{q:`${n}=?个十+?个一<br>（输入如16表示1个十6个一）`,a:`${Math.floor(n/10)}${n%10}`,displayAns:`${Math.floor(n/10)}个十+${n%10}个一`};}
-    case 'placeBuild':{const t=rand(1,1),o=rand(0,9);return{q:`${t}个十和${o}个一，合起来是几？`,a:t*10+o};}
-    case 'tenPlus':{const n=rand(1,9);return{q:`10+${n}=?`,a:10+n};}
-    case 'noCarryAdd':{const a=rand(11,18),b=rand(1,19-a);return{q:`${a}+${b}=?`,a:a+b};}
-    case 'noBorrowSub':{const a=rand(11,19),b=rand(1,a%10);return{q:`${a}-${b}=?`,a:a-b};}
-    case 'makeTenFriend':{const n=rand(1,9);return{q:`${n}+?=10`,a:10-n};}
-    case 'makeTen9':{const n=rand(2,9);return{q:`9+${n}=?`,a:9+n};}
-    case 'makeTen8':{const n=rand(3,9);return{q:`8+${n}=?`,a:8+n};}
-    case 'breakTen':{const a=rand(11,18),b=rand(a%10+1,9);return{q:`${a}-${b}=?`,a:a-b};}
-    case 'addToSub':{const a=rand(11,18),b=rand(a%10+1,9);return{q:`${a}-${b}=?<br><span style="font-size:14px;">（想：${b}+?=${a}）</span>`,a:a-b};}
-    case 'borrowSub':{const a=rand(11,18),b=rand(a%10+1,9);return{q:`${a}-${b}=?`,a:a-b};}
-    case 'clockPart':{
-      const qs=[{q:'短短粗粗的指针叫什么？',a:'时针',choices:[{label:'A',val:'时针'},{label:'B',val:'分针'},{label:'C',val:'秒针'}]},{q:'长长细细的指针叫什么？',a:'分针',choices:[{label:'A',val:'时针'},{label:'B',val:'分针'},{label:'C',val:'秒针'}]},{q:'分针指向12表示什么？',a:'整时',choices:[{label:'A',val:'整时'},{label:'B',val:'半时'},{label:'C',val:'大约'}]}];
-      return qs[rand(0,qs.length-1)];
-    }
-    case 'clockReadHour':{const h=rand(1,12);return{q:`分针指向12，时针指向<b>${h}</b>，这是几时？`,a:h};}
-    case 'clockDraw':{const h=rand(1,12);return{q:`"<b>${h}时</b>"的时候，分针指向数字几？`,a:12};}
-    case 'clockHalfId':{const h=rand(1,11),isHalf=rand(0,1);return isHalf?{q:`分针指向6，时针在${h}和${h+1}之间 → 几时？`,a:h,displayAns:`${h}时半`}:{q:`分针指向12，时针指向${h} → 几时？`,a:h,displayAns:`${h}时`};}
-    case 'clockReadHalf':{const h=rand(1,11);return{q:`分针指向6，时针在<b>${h}</b>和<b>${h+1}</b>之间<br>这是几时半？`,a:h,displayAns:`${h}时半`};}
-    case 'clockMix':{const isHalf=rand(0,1),h=rand(1,11);return isHalf?{q:`分针指6，时针在${h}和${h+1}之间→?`,a:h,displayAns:`${h}时半`}:{q:`分针指12，时针指${h}→?`,a:h,displayAns:`${h}时`};}
-    case 'clockApprox':{const h=rand(1,11),q=rand(0,1);return q?{q:`时针接近<b>${h}</b>，分针快到12了<br>这是"快___时了"？`,a:h,displayAns:`快${h}时了`}:{q:`时针刚过<b>${h}</b>，分针刚过12<br>这是"___时刚过"？`,a:h,displayAns:`${h}时刚过`};}
-    case 'clockAbout':{const h=rand(1,11);return{q:`时针靠近${h}，分针在12附近<br>这"大约"是几时？`,a:h,displayAns:`大约${h}时`};}
-    case 'clockScene':{const ss=[{q:'早上太阳出来大约是几时？',a:7},{q:'中午吃饭大约是几时？',a:12},{q:'下午放学大约是几时？',a:16}];return ss[rand(0,ss.length-1)];}
-    case 'timeOrder':{
-      const acts=[['起床刷牙','吃早饭','上午学习'],['吃早饭','上午学习','吃午饭']];
-      const a=acts[rand(0,acts.length-1)];
-      return{q:`排序：1.${a[0]} 2.${a[1]} 3.${a[2]}<br>最早的是第几个？`,a:1};
-    }
-    case 'timeSeq':{const a=rand(1,6),b=rand(2,7);return{q:`现在是<b>${a}时</b>，<b>${b}小时</b>后是几时？`,a:(a+b)%12||12};}
-    case 'calendar':{const qs=[{q:'一周有几天？',a:7},{q:'今天是周一，后天是周几？',a:'周三',choices:[{label:'A',val:'周二'},{label:'B',val:'周三'},{label:'C',val:'周四'}]},{q:'一年有几个月？',a:12}];return qs[rand(0,qs.length-1)];}
-    case 'clockReview1':{const h=rand(1,12);return{q:`分针指向12，时针指向${h}，几时？`,a:h};}
-    case 'clockReview2':{const h=rand(1,11),isHalf=rand(0,1);return isHalf?{q:`分针指6，时针在${h}和${h+1}之间→?`,a:h,displayAns:`${h}时半`}:{q:`分针指12，时针指${h}→?`,a:h,displayAns:`${h}时`};}
-    case 'clockSpeed':{const h=rand(1,11),isHalf=rand(0,1);return isHalf?{q:`分针指6，时针在${h}和${h+1}之间→?`,a:h,displayAns:`${h}时半`}:{q:`分针指12，时针指${h}→?`,a:h,displayAns:`${h}时`};}
-    case 'add9':{const n=rand(2,9);return{q:`9+${n}=?`,a:9+n};}
-    case 'add9Speed':{const n=rand(2,9);return{q:`9+${n}=?`,a:9+n};}
-    case 'add9Apply':{const n=rand(2,9);return{q:`盒子里有9块糖，又放${n}块，一共几块？`,a:9+n};}
-    case 'add8':{const n=rand(3,9);return{q:`8+${n}=?`,a:8+n};}
-    case 'add7':{const n=rand(4,9);return{q:`7+${n}=?`,a:7+n};}
-    case 'add6':{const a=rand(5,6),b=rand(4,8);return{q:`${a}+${b}=?`,a:a+b};}
-    case 'addCarryMix':{const a=rand(6,9),b=rand(2,9);return{q:`${a}+${b}=?`,a:a+b};}
-    case 'listenCalc':{const a=rand(0,20),b=rand(0,a),op=rand(0,1)?'+':'-';return{q:`${a} ${op} ${b} = ?`,a:op==='+'?a+b:a-b};}
-    case 'wordCompare':{const a=rand(6,15),b=rand(3,a-1);return{q:`小红有${a}颗糖，小明有${b}颗，小红比小明多几颗？`,a:a-b};}
-    case 'wordPicture':{
-      const a=rand(3,10),b=rand(2,12);
-      return rand(0,1)?{q:`🍎🍎🍎🍎🍎 + 🍎🍎🍎 = 一共几个？`,a:8}:{q:`左边${a}朵花，右边${b}朵花，一共几朵？`,a:a+b};
-    }
-    case 'wordAll':{
+    case'maze':{return{q:'从起点：→→↑↑→ 到了什么方向？',a:'右边',type:'choice',choices:[{l:'A',v:'右边'},{l:'B',v:'上面'},{l:'C',v:'左边'},{l:'D',v:'下面'}],hint:'跟着箭头走：先右右，再上上，再右'};}
+    case'placeValue':{const n=rand(10,20);return{q:`${n}<br>十位是几？个位是几？<br>（输入如12表示1和2）`,a:`${Math.floor(n/10)}${n%10}`,disp:`十位=${Math.floor(n/10)}, 个位=${n%10}`};}
+    case'placeBreak':{const n=rand(10,20);return{q:`${n} = ?个十 + ?个一<br>（输入如16）`,a:`${Math.floor(n/10)}${n%10}`,disp:`${Math.floor(n/10)}个十+${n%10}个一`};}
+    case'placeBuild':{const t=rand(1,1),o=rand(0,9);return{q:`${t}个十和${o}个一，合起来是几？`,a:t*10+o};}
+    case'tenPlus':{const n=rand(1,9);return{q:`10 + ${n} = ?`,a:10+n};}
+    case'noCarryAdd':{const a=rand(11,18),b=rand(1,19-a);return{q:`${a} + ${b} = ?`,a:a+b};}
+    case'noBorrowSub':{const a=rand(11,19),b=rand(1,a%10||1);return{q:`${a} - ${b} = ?`,a:a-b};}
+    case'makeTenFriend':{const n=rand(1,9);return{q:`${n} + ? = 10`,a:10-n};}
+    case'makeTen9':{const n=rand(2,9);return{q:`9 + ${n} = ?`,a:9+n};}
+    case'makeTen8':{const n=rand(3,9);return{q:`8 + ${n} = ?`,a:8+n};}
+    case'breakTen':{const a=rand(11,18),b=rand(a%10+1,9);return{q:`${a} - ${b} = ?`,a:a-b};}
+    case'addToSub':{const a=rand(11,18),b=rand(a%10+1,9);return{q:`${a} - ${b} = ?<br><span style="font-size:13px">想：${b}+?=${a}</span>`,a:a-b};}
+    case'borrowSub':{const a=rand(11,18),b=rand(a%10+1,9);return{q:`${a} - ${b} = ?`,a:a-b};}
+    case'clockPart':{const qs=[{q:'短短粗粗的指针叫什么？',a:'时针',choices:[{l:'A',v:'时针'},{l:'B',v:'分针'},{l:'C',v:'秒针'}]},{q:'长长细细的指针叫什么？',a:'分针',choices:[{l:'A',v:'时针'},{l:'B',v:'分针'},{l:'C',v:'秒针'}]},{q:'分针指向12表示什么？',a:'整时',choices:[{l:'A',v:'整时'},{l:'B',v:'半时'},{l:'C',v:'大约'}]}];return qs[rand(0,qs.length-1)];}
+    case'clockReadHour':{const h=rand(1,12);return{q:clockSVG(h,0)+`<br>分针指向12，时针指向<b>${h}</b><br>这是几时？`,a:h};}
+    case'clockDraw':{const h=rand(1,12);return{q:`"<b>${h}时</b>"的时候<br>分针指向数字几？`,a:12};}
+    case'clockHalfId':{const h=rand(1,11),isHalf=rand(0,1);return isHalf?{q:clockSVG(h,30)+`<br>分针指向6，时针在${h}和${h+1}之间<br>这是几时？`,a:h,disp:`${h}时半`}:{q:clockSVG(h,0)+`<br>分针指向12，时针指向${h}<br>这是几时？`,a:h,disp:`${h}时`};}
+    case'clockReadHalf':{const h=rand(1,11);return{q:clockSVG(h,30)+`<br>分针指向6，时针在<b>${h}</b>和<b>${h+1}</b>之间<br>这是几时半？`,a:h,disp:`${h}时半`};}
+    case'clockMix':{const h=rand(1,11),isHalf=rand(0,1);return isHalf?{q:clockSVG(h,30)+'<br>分针6，时针在中间→几时半？',a:h,disp:`${h}时半`}:{q:clockSVG(h,0)+'<br>分针12，时针指数字→几时？',a:h,disp:`${h}时`};}
+    case'clockApprox':{const h=rand(1,11),qType=rand(0,1);return qType?{q:`时针靠近<b>${h}</b>，分针快走到12了<br>这是"快___时了"？`,a:h,disp:`快${h}时了`}:{q:`时针刚过<b>${h}</b>，分针刚过12<br>这是"___时刚过"？`,a:h,disp:`${h}时刚过`};}
+    case'clockAbout':{const h=rand(1,11);return{q:`时针靠近${h}，分针在12附近<br>这大约是几时？`,a:h,disp:`大约${h}时`};}
+    case'clockScene':{const ss=[{q:'早上太阳刚出来大约是几时？',a:7},{q:'中午吃饭大约是几时？',a:12},{q:'下午放学大约是几时？',a:16},{q:'晚上睡觉大约是几时？',a:9}];return ss[rand(0,ss.length-1)];}
+    case'timeOrder':{const acts=[['起床刷牙','吃早饭','学习'],['吃早饭','学习','吃午饭'],['下午玩耍','吃晚饭','洗漱睡觉']];const a=acts[rand(0,acts.length-1)];return{q:`排序：1.${a[0]} 2.${a[1]} 3.${a[2]}<br>最早的是第几个？`,a:1};}
+    case'timeSeq':{const a=rand(1,6),b=rand(2,7);return{q:`现在是<b>${a}时</b>，<b>${b}小时</b>后是几时？`,a:(a+b)%12||12};}
+    case'calendar':{const qs=[{q:'一周有几天？',a:7},{q:'今天是周一，后天是周几？',a:'周三',choices:[{l:'A',v:'周二'},{l:'B',v:'周三'},{l:'C',v:'周四'}]},{q:'一年有几个月？',a:12}];return qs[rand(0,qs.length-1)];}
+    case'clockReview1':{const h=rand(1,12);return{q:clockSVG(h,0)+`<br>分针12，时针${h}，几时？`,a:h};}
+    case'clockReview2':{const h=rand(1,11),isHalf=rand(0,1);return isHalf?{q:clockSVG(h,30)+'<br>几时半？',a:h,disp:`${h}时半`}:{q:clockSVG(h,0)+'<br>几时？',a:h,disp:`${h}时`};}
+    case'clockSpeed':{const h=rand(1,11),isHalf=rand(0,1);return isHalf?{q:`分针6，时针${h}和${h+1}之间→？`,a:h,disp:`${h}时半`}:{q:`分针12，时针${h}→？`,a:h,disp:`${h}时`};}
+    case'add9':{const n=rand(2,9);return{q:`9 + ${n} = ?`,a:9+n};}
+    case'add9Speed':{const n=rand(2,9);return{q:`9 + ${n} = ?`,a:9+n};}
+    case'add9Apply':{const n=rand(2,9);const ss=[`盒子里有9块糖，又放${n}块，一共几块？`,`树上有9只鸟，又飞来${n}只，一共几只？`];return{q:ss[rand(0,ss.length-1)],a:9+n};}
+    case'add8':{const n=rand(3,9);return{q:`8 + ${n} = ?`,a:8+n};}
+    case'add7':{const n=rand(4,9);return{q:`7 + ${n} = ?`,a:7+n};}
+    case'add6':{const a=rand(5,6),b=rand(4,8);return{q:`${a} + ${b} = ?`,a:a+b};}
+    case'addCarryMix':{const a=rand(6,9),b=rand(2,9);return{q:`${a} + ${b} = ?`,a:a+b};}
+    case'listenCalc':{const a=rand(0,19),b=rand(0,Math.min(a,9)),op=rand(0,1)?'+':'-';return{q:`<span style="font-size:32px">${a} ${op} ${b} = ?</span><br><span style="font-size:13px;color:var(--text-light)">3秒后题目消失！用心算！</span>`,a:op==='+'?a+b:a-b,flash:true};}
+    case'wordCompare':{const a=rand(6,15),b=rand(3,a-1);const ss=[`小红有${a}颗糖，小明有${b}颗，小红比小明多几颗？`,`树上有${a}个苹果，树下有${b}个，树上比树下多几个？`,`小红有${a}朵花，小明有${b}朵，小红比小明多几朵？`];return{q:ss[rand(0,ss.length-1)],a:a-b};}
+    case'wordPicture':{const a=rand(3,10),b=rand(2,12);return rand(0,1)?{q:`🍎×5 + 🍎×3 = 一共几个？`,a:8}:{q:`左边${a}朵花，右边${b}朵花，一共几朵？`,a:a+b};}
+    case'wordAll':{
       const type=rand(0,2);
       if(type===0){const a=rand(5,12),b=rand(3,10);return{q:`停车场有${a}辆车，开走${b}辆，剩几辆？`,a:a-b};}
       if(type===1){const a=rand(6,15),b=rand(2,a-1);return{q:`小明${a}本故事书，小红${b}本，小明比小红多几本？`,a:a-b};}
-      return{q:`花丛先飞来${rand(3,9)}只蝴蝶，又飞来${rand(2,8)}只，一共几只？`,a:rand(3,9)+rand(2,8)};
+      const a=rand(3,9),b=rand(2,8);return{q:`花丛先飞来${a}只蝴蝶，又飞来${b}只，一共几只？`,a:a+b};
     }
-    case 'queue':{const f=rand(3,8),b=rand(2,6);return{q:`排队：从前面数排第${f}，从后面数排第${b}，一共几人？`,a:f+b-1,hint:`${f}+${b}-1=${f+b-1}（自己数了两次要减1）`};}
-    case 'extraCond':{
-      const a=rand(3,10),b=rand(2,8),extras=['今年6岁了','穿红衣服','喜欢吃苹果'];
-      return rand(0,1)?{q:`小红有${a}支铅笔，小明比小红多${b}支，小红${extras[rand(0,2)]}。小明几支？`,a:a+b}:{q:`妈妈买${a}个橘子，吃${b}个，妈妈${extras[rand(0,2)]}。剩几个？`,a:a-b};
-    }
-    case 'reason':{
-      const qs=[{q:'苹果比梨重，梨比橘子重。谁最轻？',a:'橘子',choices:[{label:'A',val:'苹果'},{label:'B',val:'梨'},{label:'C',val:'橘子'}]},{q:'小明比小红高，小刚比小明高。谁最高？',a:'小刚',choices:[{label:'A',val:'小明'},{label:'B',val:'小红'},{label:'C',val:'小刚'}]}];
-      return qs[rand(0,qs.length-1)];
-    }
-    case 'numPattern':{
-      const ps=[[1,4,7,10,13],[2,6,10,14,18],[20,16,12,8,4],[3,6,9,12,15],[5,10,15,20,25]];
-      const p=ps[rand(0,ps.length-1)];
-      return{q:`找规律：${p.slice(0,4).join(', ')}, ? 下一个是几？`,a:p[4]};
-    }
-    case 'shapePattern':{
-      const ps=['🔴🔵🔴🔵?','⭐🌟⭐🌟?','🔺🔻🔺🔻?','🍎🍏🍎🍏?'];
-      const ansMap={0:'🔵',1:'🌟',2:'🔻',3:'🍏'};
-      const idx=rand(0,ps.length-1);
-      return{q:`图形规律：${ps[idx]}<br>下一个是什么？`,a:idx,type:'choice',choices:[{label:'A',val:0},{label:'B',val:1},{label:'C',val:2},{label:'D',val:3}]};
-    }
-    case 'logic':{
-      const qs=[{q:'☆+3=8，☆=?',a:5},{q:'△-4=6，△=?',a:10},{q:'□+□=10，□=?',a:5},{q:'○+5=12，○=?',a:7}];
-      return qs[rand(0,qs.length-1)];
-    }
-    case 'final1':{const a=rand(5,9),b=rand(3,9);return rand(0,1)?{q:`${a}+${b}=?`,a:a+b}:{q:`${a+10}-${b}=?`,a:a+10-b};}
-    case 'final2':{const a=rand(6,9),b=rand(3,9);return{q:`${a}+${b}=?`,a:a+b};}
-    case 'sudoku4':{return{q:'🧩 4×4数独：每行每列填入1-4不重复<br><br>1 2 3 _<br>3 4 _ 2<br>2 _ 4 1<br>_ 1 2 3<br><br>第一行最后一个填几？',a:4};}
+    case'queue':{const f=rand(3,8),b=rand(2,6);return{q:`排队：从前面数排第${f}，从后面数排第${b}<br>一共几人？`,a:f+b-1,hint:`${f}+${b}-1=${f+b-1}（自己数了2次要减1）`};}
+    case'extraCond':{const a=rand(3,10),b=rand(2,8),extras=['今年6岁','穿红衣服','喜欢吃苹果'];return rand(0,1)?{q:`小红${a}支铅笔，小明比小红多${b}支，小红${extras[rand(0,2)]}，小明几支？`,a:a+b}:{q:`妈妈买${a}个橘子，吃${b}个，妈妈${extras[rand(0,2)]}，剩几个？`,a:a-b};}
+    case'reason':{const qs=[{q:'苹果比梨重，梨比橘子重。<br>谁最轻？',a:'橘子',choices:[{l:'A',v:'苹果'},{l:'B',v:'梨'},{l:'C',v:'橘子'}]},{q:'小明比小红高，小刚比小明高。<br>谁最高？',a:'小刚',choices:[{l:'A',v:'小明'},{l:'B',v:'小红'},{l:'C',v:'小刚'}]},{q:'A>B>C，谁最小？',a:'C',choices:[{l:'A',v:'A'},{l:'B',v:'B'},{l:'C',v:'C'}]}];return qs[rand(0,qs.length-1)];}
+    case'numPattern':{const ps=[[1,4,7,10,13],[2,6,10,14,18],[20,16,12,8,4],[3,6,9,12,15],[5,10,15,20,25]];const p=ps[rand(0,ps.length-1)];return{q:`找规律：${p.slice(0,4).join(', ')}, ? <br>下一个是几？`,a:p[4]};}
+    case'shapePattern':{const ps=['🔴🔵🔴🔵?','⭐🌟⭐🌟?','🔺🔻🔺🔻?','🍎🍏🍎🍏?'];const idx=rand(0,ps.length-1);return{q:`图形规律：${ps[idx]}<br>下一个是什么？`,a:idx,type:'choice',choices:[{l:'A',v:0},{l:'B',v:1},{l:'C',v:2},{l:'D',v:3}]};}
+    case'logic':{const qs=[{q:'☆+3=8，☆=?',a:5},{q:'△-4=6，△=?',a:10},{q:'□+□=10，□=?',a:5},{q:'○+5=12，○=?',a:7}];return qs[rand(0,qs.length-1)];}
+    case'final1':{const a=rand(5,9),b=rand(3,9);return rand(0,1)?{q:`${a} + ${b} = ?`,a:a+b}:{q:`${a+10} - ${b} = ?`,a:a+10-b};}
+    case'final2':{const a=rand(6,9),b=rand(3,9);return{q:`${a} + ${b} = ?`,a:a+b};}
+    case'sudoku4':{return{q:'🧩 每行每列填入1-4不重复<br><br>1 2 3 _<br>3 4 _ 2<br>2 _ 4 1<br>_ 1 2 3<br><br>第一行最后填几？',a:4};}
     default:return{q:'?',a:0};
   }
 }
 
-// ============================================================
-// 渲染
-// ============================================================
+// ==================== 擂台题目（关联当天知识点） ====================
+function genArenaQ(dayId){
+  const day=STUDY_DAYS[dayId];const t=day.levels[0].type;let a,b;
+  switch(t){
+    case'compare':a=rand(1,20);b=rand(1,20);return{q:`${a}和${b}谁大？`,a:Math.max(a,b)};
+    case'ordinal':return{q:`从左边数，第${rand(1,10)}个是谁？（看图）<br>🐱🐶🐰🐻🐸🐵<br>答数字`,a:rand(1,6)};
+    case'pattern':{const start=rand(1,5),step=rand(1,3);return{q:`${start},${start+step},${start+step*2},?`,a:start+step*3};}
+    case'fillAdd':case'fillSub':a=rand(1,9);b=rand(1,9-a);return{q:`${a}+?=${a+b}`,a:b};
+    case'chainAdd':case'chainSub':case'chainMix':a=rand(2,8);b=rand(1,8);const c=rand(1,5);return{q:`${a}+${b}+${c}=?`,a:a+b+c};
+    case'wordProblem':a=rand(3,12);b=rand(2,10);return rand(0,1)?{q:`${a}只鸟+${b}只鸟=？`,a:a+b}:{q:`${a}个苹果-${b}个=？`,a:a-b};
+    case'shapeId':return{q:`长方体有几个面？`,a:'6',choices:[{l:'A',v:'4'},{l:'B',v:'6'},{l:'C',v:'8'}]};
+    case'placeValue':case'placeBreak':case'placeBuild':a=rand(10,19);return{q:`${a}的十位是几？`,a:Math.floor(a/10)};
+    case'tenPlus':case'noCarryAdd':case'noBorrowSub':a=rand(11,18);b=rand(1,19-a);return{q:`${a}+${b}=?`,a:a+b};
+    case'makeTenFriend':case'makeTen9':case'makeTen8':a=rand(6,9);b=rand(2,9);return{q:`${a}+${b}=?`,a:a+b};
+    case'breakTen':case'addToSub':case'borrowSub':a=rand(11,18);b=rand(a%10+1,9);return{q:`${a}-${b}=?`,a:a-b};
+    case'clockPart':case'clockReadHour':case'clockDraw':case'clockHalfId':case'clockReadHalf':case'clockMix':case'clockApprox':case'clockAbout':case'clockScene':case'clockReview1':case'clockReview2':case'clockSpeed':{
+      const h=rand(1,12),isHalf=rand(0,1);return isHalf?{q:clockSVG(h,30)+'<br>几时半？',a:h,disp:`${h}时半`}:{q:clockSVG(h,0)+'<br>几时？',a:h,disp:`${h}时`};
+    }
+    default:a=rand(1,20);b=rand(1,9);return rand(0,1)?{q:`${a}+${b}=?`,a:a+b}:{q:`${Math.max(a,b)}-${Math.min(a,b)}=?`,a:Math.abs(a-b)};
+  }
+}
+
+// ==================== 渲染 ====================
 function renderMap(){
-  const grid=document.getElementById('daysGrid'); grid.innerHTML='';
+  const grid=document.getElementById('daysGrid');grid.innerHTML='';
   MAP_DAYS.forEach((d,i)=>{
-    const cell=document.createElement('div');
-    cell.className='day-cell '+d.type;
-    const completed=STATE.dayStars[i]!==undefined;
-    const unlocked=i<=STATE.currentDay;
-    const isCurrent=i===STATE.currentDay&&!completed;
-    if(completed)cell.classList.add('done');
-    else if(isCurrent)cell.classList.add('current');
+    const cell=document.createElement('div');cell.className='day-cell '+d.type;
+    const done=STATE.dayStars[i]!==undefined;
+    const unlocked=i<=STATE.currentDay||STATE._parentAuth;
+    const isCur=i===STATE.currentDay&&!done;
+    if(done)cell.classList.add('done');
+    else if(isCur)cell.classList.add('current');
     else if(!unlocked)cell.classList.add('locked');
     const stars=STATE.dayStars[i]||0;
-    const starStr=completed?'⭐'.repeat(stars)+'☆'.repeat(3-stars):'';
-    cell.innerHTML=`
-      <div class="day-num">${d.type==='study'?'📖':'🎪'}</div>
-      <div style="font-size:11px;">第${i+1}天</div>
-      <div class="day-label">${d.type==='study'?d.data.topic.split(' ')[1]:d.data.theme}</div>
-      ${starStr?`<div class="stars-row">${starStr}</div>`:''}
-      ${!unlocked?'<div style="font-size:18px;">🔒</div>':''}
-    `;
-    if(unlocked)cell.onclick=()=>{if(d.type==='study')openStudyDay(i);else openWeekendDay(i);};
+    const starStr=done?'⭐'.repeat(stars)+'☆'.repeat(3-stars):'';
+    cell.innerHTML=`<div class="day-num">${d.type==='study'?'📖':'🎪'}</div><div style="font-size:11px">第${i+1}天</div><div class="day-label">${d.type==='study'?d.data.topic.split(' ')[1]:d.data.theme}</div>${starStr?`<div class="stars-row">${starStr}</div>`:''}${!unlocked?'<div style="font-size:16px">🔒</div>':''}`;
+    if(unlocked)cell.onclick=()=>{sfxClick();if(d.type==='study')openStudyDay(i);else openWeekendDay(i);};
     grid.appendChild(cell);
   });
   document.getElementById('totalStars').textContent=STATE.totalStars;
   document.getElementById('totalScore').textContent=STATE.totalScore;
 }
 
-function openStudyDay(mapIndex){
-  STATE._mapIndex=mapIndex;
-  const day=MAP_DAYS[mapIndex]; STATE._studyDay=day;
-  document.getElementById('learnTitle').textContent=`📖 第${mapIndex+1}天 · ${day.data.topic}`;
-  document.getElementById('teacherContent').innerHTML=day.data.lecture;
-  document.getElementById('exampleContent').innerHTML=day.data.example;
+function openStudyDay(mapIdx){
+  STATE._mapIndex=mapIdx;STATE._previewMode=!!STATE._parentAuth;
+  const day=MAP_DAYS[mapIdx];STATE._studyDay=day;
+  document.getElementById('learnTitle').textContent=`📖 第${mapIdx+1}天 · ${day.data.topic}`;
   document.getElementById('learnProgress').style.width='0%';
-  document.getElementById('levelTitle').textContent='🎯 第1关：'+day.data.levels[0].name;
-  document.getElementById('questionBox').innerHTML='准备好了吗？<br>点击确认开始闯关！';
-  document.getElementById('answerInput').value=''; document.getElementById('answerInput').style.display='inline-block';
-  document.getElementById('feedbackBox').className='feedback-box';
-  document.getElementById('submitBtn').disabled=false;
   document.getElementById('finishDayBtn').style.display='none';
+  STATE.learnPhase='lecture';STATE.currentLevel=0;STATE.lectureStep=0;
+  STATE._levelStars=[0,0,0];STATE.levelCorrect=0;STATE.levelWrong=0;STATE.levelTotal=0;
+  STATE.streakCount=0;STATE.selectedChoice=null;
+  // 阶段标签
+  ['phaseTab0','phaseTab1','phaseTab2'].forEach((id,i)=>{document.getElementById(id).classList.remove('active','done');if(i===0)document.getElementById(id).classList.add('active');});
+  // 初始化讲堂轮播
+  renderLecture(day.data.id-1);
+  // 初始化练习区
+  resetPractice();
+  // 初始化擂区
+  resetArenaUI();
+  switchPage('page-learn');updateLearnStats();
+  setTimeout(()=>document.getElementById('lectureCarousel').scrollIntoView({behavior:'smooth'}),200);
+}
+
+function renderLecture(dayIdx){
+  const steps=LECTURES[dayIdx]||[{t:'📖 小老师讲堂',c:'今天的学习内容准备好了！<br><br>乐乐，翻到下一页开始学习吧～'}];
+  const carousel=document.getElementById('lectureCarousel');
+  const step=STATE.lectureStep;
+  const s=steps[step];
+  let html='';
+  steps.forEach((st,i)=>{
+    html+=`<div class="lecture-slide${i===step?' active':''}" id="lectureSlide${i}">
+      <h3>${st.t}</h3>
+      <div class="slide-content">${st.c}</div>
+      ${st.h?`<div class="highlight-box">${st.h}</div>`:''}
+      ${st.q?`<div class="interact-box"><p style="margin-bottom:8px;font-weight:600;">${st.q}</p>${(st.choices||[]).map(c=>`<button class="btn-choice" onclick="lectureAnswer('${c}',this)" style="margin:4px">${c}</button>`).join('')}<p id="lectureResult" style="margin-top:8px;font-weight:700;min-height:24px;"></p></div>`:''}
+    </div>`;
+  });
+  carousel.innerHTML=html+`
+    <div class="lecture-nav">
+      <button class="btn-sm" id="lecturePrev" onclick="navigateLecture(-1)"${step===0?' disabled':''}>← 上一步</button>
+      <div class="lecture-dots">${steps.map((_,i)=>`<div class="lecture-dot${i===step?' active':''}"></div>`).join('')}</div>
+      <button class="btn-sm primary" id="lectureNext" onclick="navigateLecture(1)">${step>=steps.length-1?'开始闯关！':'下一步 →'}</button>
+    </div>`;
+  // 滚动到当前slide
+  setTimeout(()=>{const el=document.getElementById('lectureSlide'+step);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},100);
+}
+
+function lectureAnswer(ans,btn){
+  const steps=LECTURES[STATE._studyDay.data.id-1];
+  const correct=ans===steps[STATE.lectureStep].a;
+  document.getElementById('lectureResult').innerHTML=correct?'✅ 答对了！太棒了！':'❌ 不对哦～正确答案是 <b>'+steps[STATE.lectureStep].a+'</b>';
+  document.getElementById('lectureResult').style.color=correct?'#2D6A4F':'#8B3A3A';
+  if(correct)sfxCorrect();else sfxWrong();
+  // 禁用所有选择按钮
+  btn.parentElement.querySelectorAll('.btn-choice').forEach(b=>b.disabled=true);
+}
+
+function navigateLecture(dir){
+  const steps=LECTURES[STATE._studyDay.data.id-1];
+  const newStep=STATE.lectureStep+dir;
+  if(newStep<0||newStep>=steps.length){
+    if(newStep>=steps.length){startPractice();return;}
+    return;
+  }
+  sfxClick();STATE.lectureStep=newStep;renderLecture(STATE._studyDay.data.id-1);
+}
+
+function resetPractice(){
+  document.getElementById('levelTitle').textContent='🎯 第1关：'+STATE._studyDay.data.levels[0].name;
+  document.getElementById('questionBox').innerHTML='准备开始！';
+  document.getElementById('answerRow').innerHTML='';
+  document.getElementById('feedbackBox').className='feedback-box';
+  document.getElementById('hintBox').className='hint-box';
   document.getElementById('levelStars').textContent='⭐⭐⭐';
-  document.getElementById('answerRow').style.display='flex';
-  document.getElementById('answerRow').innerHTML=`
-    <input class="answer-input" type="number" id="answerInput" placeholder="?" autocomplete="off" inputmode="numeric">
-    <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()">确认 ✓</button>
-  `;
-  resetArena();
-  document.getElementById('arenaTimer').textContent='2:00';
-  document.getElementById('arenaTimer').classList.remove('urgent');
-  document.getElementById('arenaScoreDisplay').textContent='得分：0';
-  document.getElementById('arenaQuestion').innerHTML='准备好了吗？';
-  document.getElementById('arenaInput').value='';
-  document.getElementById('arenaSubmit').disabled=false;
-  document.getElementById('arenaSubmit').textContent='开始挑战！';
-  document.getElementById('arenaFeedback').className='feedback-box';
-  // 重置阶段标签
-  ['phaseTab0','phaseTab1','phaseTab2'].forEach(id=>document.getElementById(id).classList.remove('active','done'));
-  document.getElementById('phaseTab0').classList.add('active');
-  STATE.learnPhase='lecture'; STATE.currentLevel=0; STATE._levelStars=[0,0,0];
-  STATE.levelCorrect=0; STATE.levelWrong=0; STATE.levelTotal=0; STATE.currentQuestion=null;
-  switchPage('page-learn'); updateLearnStats();
-  setTimeout(()=>document.getElementById('lectureCard').scrollIntoView({behavior:'smooth'}),200);
+}
+
+function resetArenaUI(){
+  document.getElementById('arenaTimer').textContent='2:00';document.getElementById('arenaTimer').classList.remove('urgent');
+  document.getElementById('arenaScoreDisplay').textContent='得分：0';document.getElementById('arenaQuestion').innerHTML='准备好了吗？';
+  document.getElementById('arenaInput').value='';document.getElementById('arenaSubmit').disabled=false;
+  document.getElementById('arenaSubmit').textContent='开始挑战！';document.getElementById('arenaFeedback').className='feedback-box';
+  if(STATE.arenaTimer)clearInterval(STATE.arenaTimer);STATE.arenaActive=false;STATE.arenaScore=0;STATE.arenaSeconds=120;
+}
+
+function startPractice(){
+  STATE.learnPhase='level';STATE.currentLevel=0;updatePhaseTabs();updateProgress();
+  nextLevel(STATE._studyDay);document.getElementById('practiceArea').scrollIntoView({behavior:'smooth'});
 }
 
 function updatePhaseTabs(){
   ['phaseTab0','phaseTab1','phaseTab2'].forEach((id,i)=>{
-    const el=document.getElementById(id); el.classList.remove('active','done');
+    const el=document.getElementById(id);el.classList.remove('active','done');
     if(STATE.learnPhase==='lecture'){if(i===0)el.classList.add('active');}
-    else if(STATE.learnPhase==='level'){if(i===0)el.classList.add('done'); if(i===1)el.classList.add('active');}
-    else if(STATE.learnPhase==='arena'){el.classList.add(i<2?'done':''); if(i===2)el.classList.add('active');}
+    else if(STATE.learnPhase==='level'){if(i===0)el.classList.add('done');if(i===1)el.classList.add('active');}
+    else if(STATE.learnPhase==='arena'){el.classList.add(i<2?'done':'');if(i===2)el.classList.add('active');}
     else if(STATE.learnPhase==='done'){el.classList.add('done');}
   });
 }
 
 function nextLevel(day){
   const lvl=day.data.levels[STATE.currentLevel];
-  STATE.levelTotal=0; STATE.levelCorrect=0; STATE.levelWrong=0;
-  STATE.currentQuestion=generateQuestion(day.data.id-1,STATE.currentLevel);
-  document.getElementById('levelTitle').textContent=`🎯 第${STATE.currentLevel+1}关：${lvl.name}`;
-  document.getElementById('questionBox').innerHTML=STATE.currentQuestion.q;
-  document.getElementById('answerInput').value='';
+  STATE.levelTotal=0;STATE.levelCorrect=0;STATE.levelWrong=0;STATE.streakCount=0;STATE.selectedChoice=null;
+  STATE.currentQuestion=genQ(day.data.id-1,STATE.currentLevel);
+  document.getElementById('levelTitle').textContent=`🎯 第${STATE.currentLevel+1}关：${lvl.name}（${lvl.count}题）`;
+  renderQuestion(STATE.currentQuestion);
   document.getElementById('feedbackBox').className='feedback-box';
+  document.getElementById('hintBox').className='hint-box';
   document.getElementById('levelStars').textContent='⭐⭐⭐';
-  const row=document.getElementById('answerRow');
-  if(STATE.currentQuestion.type==='choice'){
-    renderChoices(STATE.currentQuestion,row);
-    document.getElementById('answerInput').style.display='none';
+}
+
+function renderQuestion(q){
+  document.getElementById('questionBox').innerHTML=q.q;
+  document.getElementById('questionBox').classList.remove('shake','bounce');
+  document.getElementById('answerRow').innerHTML='';
+  document.getElementById('hintBox').className='hint-box';
+  if(q.type==='choice'){
+    const row=document.getElementById('answerRow');
+    q.choices.forEach(c=>{
+      const btn=document.createElement('button');btn.className='btn-choice';btn.textContent=c.l+'. '+c.v;
+      btn.onclick=()=>{STATE.selectedChoice=c.v;row.querySelectorAll('.btn-choice').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');};
+      if(STATE.selectedChoice===c.v)btn.classList.add('selected');
+      row.appendChild(btn);
+    });
+    const confirmBtn=document.createElement('button');confirmBtn.className='btn btn-primary';confirmBtn.textContent='确认 ✓';
+    confirmBtn.onclick=()=>{if(STATE.selectedChoice!==null)submitChoice(STATE.selectedChoice,q);};
+    row.appendChild(confirmBtn);
   }else{
-    row.innerHTML=`
+    document.getElementById('answerRow').innerHTML=`
       <input class="answer-input" type="number" id="answerInput" placeholder="?" autocomplete="off" inputmode="numeric">
       <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()">确认 ✓</button>
     `;
-    document.getElementById('answerInput').style.display='inline-block';
-    setTimeout(()=>document.getElementById('answerInput').focus(),300);
+    setTimeout(()=>{const inp=document.getElementById('answerInput');if(inp)inp.focus();},300);
+    // 闪卡模式：3秒后模糊题目
+    if(q.flash){setTimeout(()=>{document.getElementById('questionBox').style.filter='blur(6px)';document.getElementById('questionBox').style.opacity='0.2';},3000);}
   }
-  document.getElementById('submitBtn').disabled=false;
-}
-
-function renderChoices(q,row){
-  row.innerHTML='';
-  q.choices.forEach(c=>{
-    const btn=document.createElement('button');
-    btn.className='btn btn-secondary'; btn.textContent=c.label+'. '+c.val;
-    btn.style.margin='4px'; btn.onclick=()=>submitChoice(c.val,q);
-    row.appendChild(btn);
-  });
+  // 提示按钮
+  if(q.hint){const row=document.getElementById('answerRow');const hintBtn=document.createElement('button');hintBtn.className='btn-sm';hintBtn.textContent='💡 提示';hintBtn.style.marginLeft='4px';hintBtn.onclick=()=>{document.getElementById('hintBox').innerHTML=q.hint;document.getElementById('hintBox').classList.add('show');};row.appendChild(hintBtn);}
 }
 
 function submitChoice(val,q){
-  STATE.levelTotal++;
-  if(val===q.a){STATE.levelCorrect++;showFeedback(true,q.displayAns||q.a);spawnStars(2);}
-  else{STATE.levelWrong++;showFeedback(false,q.displayAns||q.a);shakeElement(document.getElementById('questionBox'));}
-  nextAfterFeedback();
+  STATE.levelTotal++;STATE.selectedChoice=null;
+  const correct=val===q.a;
+  if(correct){STATE.levelCorrect++;STATE.streakCount++;showFB(true,q.disp||q.a);sfxCorrect();spawnStars(2);bounceElement(document.getElementById('questionBox'));}
+  else{STATE.levelWrong++;STATE.streakCount=0;showFB(false,q.disp||q.a);sfxWrong();shakeElement(document.getElementById('questionBox'));}
+  checkStreak();
+  nextAfterFB();
 }
 
 function submitAnswer(){
-  if(STATE.learnPhase==='lecture'){
-    STATE.learnPhase='level'; STATE.currentLevel=0; updatePhaseTabs(); updateProgress();
-    nextLevel(STATE._studyDay); return;
-  }
+  if(STATE.learnPhase==='lecture'){startPractice();return;}
   if(STATE.learnPhase==='done')return;
-  const input=document.getElementById('answerInput');
-  if(!input)return;
-  const ans=input.value.trim(); if(ans==='')return;
-  const q=STATE.currentQuestion; if(q.type==='choice')return;
+  const inp=document.getElementById('answerInput');if(!inp)return;
+  const ans=inp.value.trim();if(ans==='')return;
+  const q=STATE.currentQuestion;if(q.type==='choice')return;
   STATE.levelTotal++;
   const correct=String(ans)===String(q.a);
-  if(correct){STATE.levelCorrect++;showFeedback(true,q.displayAns||q.a);spawnStars(2);bounceElement(document.getElementById('questionBox'));}
-  else{STATE.levelWrong++;showFeedback(false,q.displayAns||q.a);shakeElement(document.getElementById('questionBox'));}
-  nextAfterFeedback();
+  if(correct){STATE.levelCorrect++;STATE.streakCount++;showFB(true,q.disp||q.a);sfxCorrect();spawnStars(2);bounceElement(document.getElementById('questionBox'));}
+  else{STATE.levelWrong++;STATE.streakCount=0;showFB(false,q.disp||q.a);sfxWrong();shakeElement(document.getElementById('questionBox'));}
+  checkStreak();
+  nextAfterFB();
 }
 
-function nextAfterFeedback(){
+function checkStreak(){
+  if(STATE.streakCount>STATE.streakBest)STATE.streakBest=STATE.streakCount;
+  if(STATE.streakCount>0&&STATE.streakCount%3===0){sfxStar();spawnStars(1);}
+}
+
+function showFB(correct,answer){
+  const fb=document.getElementById('feedbackBox');
+  fb.className='feedback-box show '+(correct?'correct':'wrong');
+  fb.innerHTML=correct?['✅ 太棒了！','🌟 真厉害！','👏 答对了！','💪 非常棒！','🎯 正确！'][rand(0,4)]:`❌ 不对哦～答案是 <b>${answer}</b>，加油！`;
+  // 恢复闪卡模糊
+  document.getElementById('questionBox').style.filter='';document.getElementById('questionBox').style.opacity='';
+}
+
+function nextAfterFB(){
   setTimeout(()=>{
-    const day=STATE._studyDay; const lvl=day.data.levels[STATE.currentLevel];
+    const day=STATE._studyDay;const lvl=day.data.levels[STATE.currentLevel];
     if(STATE.levelTotal>=lvl.count){
-      const accuracy=STATE.levelCorrect/Math.max(STATE.levelTotal,1);
-      const stars=accuracy>=0.9?3:accuracy>=0.7?2:1;
+      const acc=STATE.levelCorrect/Math.max(STATE.levelTotal,1);
+      const stars=acc>=0.9?3:acc>=0.7?2:1;
       STATE._levelStars[STATE.currentLevel]=stars;
-      const starDisplay='⭐'.repeat(stars)+'☆'.repeat(3-stars);
-      document.getElementById('levelStars').textContent=starDisplay;
+      document.getElementById('levelStars').textContent='⭐'.repeat(stars)+'☆'.repeat(3-stars);
       document.getElementById('feedbackBox').className='feedback-box show correct';
-      document.getElementById('feedbackBox').innerHTML=`🎉 第${STATE.currentLevel+1}关完成！获得 ${stars} 颗星！`;
-      spawnConfetti(25);
+      document.getElementById('feedbackBox').innerHTML=`🎉 第${STATE.currentLevel+1}关完成！${stars}颗星！`;
+      sfxLevelUp();spawnConfetti(20);
       if(STATE.currentLevel<day.data.levels.length-1){
-        STATE.currentLevel++; updatePhaseTabs(); updateProgress();
-        setTimeout(()=>nextLevel(day),1400);
+        STATE.currentLevel++;updatePhaseTabs();updateProgress();
+        setTimeout(()=>nextLevel(day),1500);
       }else{
-        STATE.learnPhase='arena'; updatePhaseTabs(); updateProgress();
-        document.getElementById('phaseTab1').classList.add('done');
-        document.getElementById('phaseTab2').classList.add('active');
+        STATE.learnPhase='arena';updatePhaseTabs();updateProgress();
+        document.getElementById('phaseTab1').classList.add('done');document.getElementById('phaseTab2').classList.add('active');
         document.getElementById('questionBox').innerHTML='🎊 三关全过！来趣味擂台挑战吧！';
-        document.getElementById('answerRow').style.display='none';
-        document.getElementById('submitBtn').disabled=true;
+        document.getElementById('answerRow').innerHTML='';
         setTimeout(()=>document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'}),500);
       }
     }else{
-      STATE.currentQuestion=generateQuestion(day.data.id-1,STATE.currentLevel);
-      document.getElementById('questionBox').innerHTML=STATE.currentQuestion.q;
-      document.getElementById('answerInput').value='';
+      STATE.currentQuestion=genQ(day.data.id-1,STATE.currentLevel);
+      renderQuestion(STATE.currentQuestion);
       document.getElementById('feedbackBox').className='feedback-box';
-      const row=document.getElementById('answerRow');
-      if(STATE.currentQuestion.type==='choice'){
-        renderChoices(STATE.currentQuestion,row);
-      }else{
-        row.innerHTML=`
-          <input class="answer-input" type="number" id="answerInput" placeholder="?" autocomplete="off" inputmode="numeric">
-          <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()">确认 ✓</button>
-        `;
-        setTimeout(()=>document.getElementById('answerInput').focus(),200);
-      }
-      document.getElementById('submitBtn').disabled=false;
+      document.getElementById('hintBox').className='hint-box';
     }
   },1000);
 }
 
-function showFeedback(correct,answer){
-  const fb=document.getElementById('feedbackBox');
-  fb.className='feedback-box show '+(correct?'correct':'wrong');
-  fb.innerHTML=correct?['✅ 太棒了！','🌟 真厉害！','👏 答对了！','💪 非常棒！','🎯 正确！'][rand(0,4)]:`❌ 不对哦～答案是 <b>${answer}</b>，加油！`;
-}
-
 function updateProgress(){
-  const totalLevels=STATE._studyDay.data.levels.length;
-  let p=0;
+  const tl=STATE._studyDay.data.levels.length;let p=0;
   if(STATE.learnPhase==='lecture')p=0;
-  else if(STATE.learnPhase==='level')p=((STATE.currentLevel)/(totalLevels+1))*100;
-  else if(STATE.learnPhase==='arena')p=(totalLevels/(totalLevels+1))*100;
+  else if(STATE.learnPhase==='level')p=((STATE.currentLevel)/(tl+1))*100;
+  else if(STATE.learnPhase==='arena')p=(tl/(tl+1))*100;
   else if(STATE.learnPhase==='done')p=100;
   document.getElementById('learnProgress').style.width=p+'%';
 }
 
 function updateLearnStats(){
   const stars=STATE.dayStars[STATE._mapIndex]||0;
-  document.getElementById('learnStats').innerHTML=`<span class="stat"><span class="icon">⭐</span>${stars}/3</span>`;
+  document.getElementById('learnStats').innerHTML=`<span class="stat"><span>⭐</span>${stars}/3</span>`;
 }
 
-// ========== 擂台 ==========
-function resetArena(){
-  if(STATE.arenaTimer)clearInterval(STATE.arenaTimer);
-  STATE.arenaActive=false; STATE.arenaScore=0; STATE.arenaCorrect=0; STATE.arenaSeconds=120; STATE.arenaTimer=null;
-}
+// ==================== 擂台 (关联知识点) ====================
 function submitArena(){
   if(!STATE.arenaActive){
-    STATE.arenaActive=true; STATE.arenaScore=0; STATE.arenaCorrect=0; STATE.arenaSeconds=120;
-    document.getElementById('arenaSubmit').textContent='GO!';
-    document.getElementById('arenaScoreDisplay').textContent='得分：0';
+    STATE.arenaActive=true;STATE.arenaScore=0;STATE.arenaSeconds=120;
+    document.getElementById('arenaSubmit').textContent='GO!';document.getElementById('arenaScoreDisplay').textContent='得分：0';
     document.getElementById('arenaTimer').classList.remove('urgent');
-    startArenaTimer(); nextArenaQuestion(); return;
+    startArenaTimer();nextArenaQ();return;
   }
-  const input=document.getElementById('arenaInput'); if(!input)return;
-  const ans=input.value.trim(); if(ans===''||!STATE.arenaQuestion)return;
-  const correct=String(ans)===String(STATE.arenaQuestion.a);
+  const inp=document.getElementById('arenaInput');if(!inp)return;
+  const ans=inp.value.trim();if(ans===''||!STATE.arenaQuestion)return;
+  const q=STATE.arenaQuestion;
+  let correct=false;
+  if(q.type==='choice'){correct=STATE.selectedChoice===q.a;STATE.selectedChoice=null;}
+  else correct=String(ans)===String(q.a);
   const fb=document.getElementById('arenaFeedback');
-  if(correct){
-    STATE.arenaCorrect++; STATE.arenaScore+=10;
-    fb.className='feedback-box show correct'; fb.innerHTML='✅ +10分！';
-    document.getElementById('arenaScoreDisplay').textContent=`得分：${STATE.arenaScore}`;
-    spawnStars(1);
-  }else{
-    fb.className='feedback-box show wrong';
-    fb.innerHTML=`❌ 答案是 ${STATE.arenaQuestion.displayAns||STATE.arenaQuestion.a}`;
-    shakeElement(document.getElementById('arenaQuestion'));
-  }
-  input.value='';
-  setTimeout(()=>{fb.className='feedback-box'; nextArenaQuestion();},500);
+  if(correct){STATE.arenaScore+=10;fb.className='feedback-box show correct';fb.innerHTML='✅ +10分！';document.getElementById('arenaScoreDisplay').textContent=`得分：${STATE.arenaScore}`;sfxCorrect();spawnStars(1);}
+  else{fb.className='feedback-box show wrong';fb.innerHTML=`❌ 答案是 ${q.disp||q.a}`;sfxWrong();shakeElement(document.getElementById('arenaQuestion'));}
+  inp.value='';setTimeout(()=>{fb.className='feedback-box';nextArenaQ();},500);
 }
 function startArenaTimer(){
-  STATE.arenaTimer=setInterval(()=>{
-    STATE.arenaSeconds--;
-    const m=Math.floor(STATE.arenaSeconds/60),s=STATE.arenaSeconds%60;
-    document.getElementById('arenaTimer').textContent=m+':'+String(s).padStart(2,'0');
-    if(STATE.arenaSeconds<=15)document.getElementById('arenaTimer').classList.add('urgent');
-    if(STATE.arenaSeconds<=0)endArena();
-  },1000);
+  STATE.arenaTimer=setInterval(()=>{STATE.arenaSeconds--;const m=Math.floor(STATE.arenaSeconds/60),s=STATE.arenaSeconds%60;document.getElementById('arenaTimer').textContent=m+':'+String(s).padStart(2,'0');if(STATE.arenaSeconds<=15){document.getElementById('arenaTimer').classList.add('urgent');sfxTick();}if(STATE.arenaSeconds<=0)endArena();},1000);
 }
-function nextArenaQuestion(){
+function nextArenaQ(){
   if(!STATE.arenaActive)return;
-  const a=rand(1,20),b=rand(1,9),op=rand(0,1)?'+':'-';
-  STATE.arenaQuestion=op==='+'?{q:`${a}+${b}=?`,a:a+b}:{q:`${Math.max(a,b)}-${Math.min(a,b)}=?`,a:Math.abs(a-b)};
-  document.getElementById('arenaQuestion').innerHTML=`<span style="font-size:28px;">${STATE.arenaQuestion.q}</span>`;
-  document.getElementById('arenaInput').value=''; document.getElementById('arenaInput').focus();
+  STATE.arenaQuestion=genArenaQ(STATE._studyDay.data.id-1);
+  const q=STATE.arenaQuestion;
+  if(q.type==='choice'){
+    document.getElementById('arenaQuestion').innerHTML=q.q;
+    document.getElementById('arenaInput').style.display='none';
+    const row=document.getElementById('answerRow');
+    // reuse answerRow for arena choices
+    const arenaRow=document.getElementById('arenaCard').querySelector('.answer-row');
+    if(arenaRow)arenaRow.innerHTML=q.choices.map(c=>`<button class="btn-choice" onclick="STATE.selectedChoice='${c.v}';submitArena()">${c.l}. ${c.v}</button>`).join('');
+  }else{
+    document.getElementById('arenaQuestion').innerHTML=`<span style="font-size:26px">${q.q}</span>`;
+    document.getElementById('arenaInput').style.display='inline-block';
+    document.getElementById('arenaInput').value='';document.getElementById('arenaInput').focus();
+  }
 }
 function endArena(){
-  STATE.arenaActive=false; if(STATE.arenaTimer)clearInterval(STATE.arenaTimer);
+  STATE.arenaActive=false;if(STATE.arenaTimer)clearInterval(STATE.arenaTimer);
   STATE.arenaTotal+=STATE.arenaScore;
-  document.getElementById('arenaTimer').textContent='0:00';
-  document.getElementById('arenaTimer').classList.remove('urgent');
-  document.getElementById('arenaQuestion').innerHTML='🏁 时间到！';
-  document.getElementById('arenaSubmit').disabled=true;
+  document.getElementById('arenaTimer').textContent='0:00';document.getElementById('arenaTimer').classList.remove('urgent');
+  document.getElementById('arenaQuestion').innerHTML='🏁 时间到！';document.getElementById('arenaSubmit').disabled=true;
   document.getElementById('arenaFeedback').className='feedback-box show correct';
-  document.getElementById('arenaFeedback').innerHTML=`⚡ 擂台得分：<b>${STATE.arenaScore}</b> 分！`;
-  document.getElementById('finishDayBtn').style.display='inline-block';
-  STATE.learnPhase='done'; updatePhaseTabs(); updateProgress();
-  document.getElementById('learnProgress').style.width='100%';
-  spawnConfetti(50); saveState(); renderMap();
-}
-function finishDay(){
-  const mapIdx=STATE._mapIndex;
-  // 综合三关星星
-  const levelAvg=STATE._levelStars.reduce((a,b)=>a+b,0)/3;
-  let dayStars=STATE.arenaScore>=30?3:STATE.arenaScore>=10?2:1;
-  dayStars=Math.max(dayStars,Math.round(levelAvg));
-  STATE.dayStars[mapIdx]=dayStars;
-  STATE.totalStars=Object.values(STATE.dayStars).reduce((a,b)=>a+b,0);
-  STATE.totalScore+=STATE.arenaScore+dayStars*5;
-  STATE.completedDays=Object.keys(STATE.dayStars).length;
-  if(mapIdx===STATE.currentDay&&STATE.currentDay<29)STATE.currentDay=mapIdx+1;
-  checkBadges(); saveState(); updateLearnStats();
-  showModal('🎉','太棒了！',`今天获得 <b>${dayStars}</b> 颗星 ⭐<br>擂台得分 <b>${STATE.arenaScore}</b> 分 ⚡<br><br>第${mapIdx+1}天挑战完成！`,()=>{goMap();});
+  document.getElementById('arenaFeedback').innerHTML=`擂台得分：<b>${STATE.arenaScore}</b> 分！`;
+  sfxComplete();spawnConfetti(50);
+  if(!STATE._previewMode){document.getElementById('finishDayBtn').style.display='inline-block';}
+  STATE.learnPhase='done';updatePhaseTabs();updateProgress();document.getElementById('learnProgress').style.width='100%';
+  if(!STATE._previewMode){saveState();renderMap();}
 }
 
-// ========== 周末 ==========
-function openWeekendDay(mapIndex){
-  STATE._mapIndex=mapIndex; const d=MAP_DAYS[mapIndex]; STATE._weekendDay=d;
-  document.getElementById('weekendTitle').textContent=`🎪 第${mapIndex+1}天 · ${d.data.theme}`;
-  document.getElementById('taskCard').innerHTML=`
-    <div class="task-icon">${d.data.icon}</div>
-    <h2>${d.data.theme}</h2><div class="task-theme">${d.data.desc}</div>
-    <div class="task-desc"><ol class="task-checklist">${d.data.tasks.map(t=>`<li>${t}</li>`).join('')}</ol></div>
-    <div style="margin-top:14px;padding:12px;background:linear-gradient(135deg,#F0F4FF,#F5F8FF);border-radius:12px;font-size:14px;text-align:left;">${d.data.tip}</div>`;
-  document.getElementById('finishWeekendBtn').style.display=STATE.dayStars[mapIndex]!==undefined?'none':'inline-block';
+function finishDay(){
+  if(STATE._previewMode){alert('预览模式不计分');goMap();return;}
+  const mi=STATE._mapIndex;
+  const avg=STATE._levelStars.reduce((a,b)=>a+b,0)/3;
+  let ds=STATE.arenaScore>=30?3:STATE.arenaScore>=10?2:1;ds=Math.max(ds,Math.round(avg));
+  STATE.dayStars[mi]=ds;STATE.totalStars=Object.values(STATE.dayStars).reduce((a,b)=>a+b,0);
+  STATE.totalScore+=STATE.arenaScore+ds*5;STATE.completedDays=Object.keys(STATE.dayStars).length;
+  if(mi===STATE.currentDay&&STATE.currentDay<29)STATE.currentDay=mi+1;
+  checkBadges();saveState();updateLearnStats();
+  showModal('🎉','太棒了！`今天获得 <b>${ds}</b> 颗星 ⭐<br>擂台得分 <b>${STATE.arenaScore}</b> 分<br>最长连对 <b>${STATE.streakBest}</b> 题<br><br>第${mi+1}天挑战完成！',()=>{goMap();});
+}
+
+function confirmLeaveLearn(){
+  if(STATE.learnPhase!=='done'&&STATE.levelTotal>0&&!STATE._previewMode){
+    showModal('🤔','确定要离开吗？','当前进度会被保存<br>下次回来可以继续～',()=>{saveState();goMap();});
+  }else{goMap();}
+}
+
+// ==================== 周末 ====================
+function openWeekendDay(mi){
+  STATE._mapIndex=mi;const d=MAP_DAYS[mi];STATE._weekendDay=d;
+  document.getElementById('weekendTitle').textContent=`🎪 第${mi+1}天 · ${d.data.theme}`;
+  document.getElementById('taskCard').innerHTML=`<div class="task-icon">${d.data.icon}</div><h2>${d.data.theme}</h2><p style="color:var(--text-light);margin-bottom:12px">${d.data.desc}</p><div style="background:linear-gradient(135deg,#FFF8DC,#FFFDF5);border-radius:14px;padding:16px;text-align:left;line-height:1.8"><ol class="task-checklist">${d.data.tasks.map(t=>`<li>${t}</li>`).join('')}</ol></div><div style="margin-top:12px;padding:10px;background:linear-gradient(135deg,#F0F4FF,#F5F8FF);border-radius:12px;font-size:13px;text-align:left">${d.data.tip}</div>`;
+  document.getElementById('finishWeekendBtn').style.display=STATE.dayStars[mi]!==undefined?'none':'inline-block';
   switchPage('page-weekend');
 }
 function finishWeekend(){
-  const mapIdx=STATE._mapIndex;
-  STATE.dayStars[mapIdx]=3; STATE.totalStars=Object.values(STATE.dayStars).reduce((a,b)=>a+b,0);
-  STATE.totalScore+=20; STATE.completedDays=Object.keys(STATE.dayStars).length;
-  if(mapIdx===STATE.currentDay&&STATE.currentDay<29)STATE.currentDay=mapIdx+1;
-  checkBadges(); saveState();
-  document.getElementById('finishWeekendBtn').style.display='none';
+  const mi=STATE._mapIndex;
+  // 家长验证
+  if(!STATE._parentAuth){
+    const pin=prompt('🔐 请家长输入密码确认：');
+    const savedPin=localStorage.getItem('parent_pin')||'1234';
+    if(pin!==savedPin){alert('密码错误！');return;}
+  }
+  STATE.dayStars[mi]=3;STATE.totalStars=Object.values(STATE.dayStars).reduce((a,b)=>a+b,0);
+  STATE.totalScore+=20;STATE.completedDays=Object.keys(STATE.dayStars).length;
+  if(mi===STATE.currentDay&&STATE.currentDay<29)STATE.currentDay=mi+1;
+  checkBadges();saveState();document.getElementById('finishWeekendBtn').style.display='none';
   showModal('🌟','生活数学日完成！','和爸爸妈妈一起学数学<br>是最开心的事！<br><br>获得 <b>3</b> 颗星 ⭐',()=>goMap());
 }
 
-// ========== 徽章 ==========
+// ==================== 徽章 ====================
 function checkBadges(){
-  BADGES.forEach(b=>{
-    if(!STATE.badges[b.id]&&b.cond(STATE)){
-      STATE.badges[b.id]=true;
-      setTimeout(()=>showModal(b.icon,'新徽章解锁！',b.name+'<br>'+b.desc),800);
-    }
-  });
+  BADGES.forEach(b=>{if(!STATE.badges[b.id]&&b.cond(STATE)){STATE.badges[b.id]=true;setTimeout(()=>showModal(b.icon,'🏅 新徽章！',b.name+'<br>'+b.desc),600);}});
 }
 function renderBadges(){
-  const grid=document.getElementById('badgesGrid'); grid.innerHTML='';
-  BADGES.forEach(b=>{
-    const div=document.createElement('div');
-    div.className='badge-item'+(STATE.badges[b.id]?'':' locked');
-    div.innerHTML=`<div class="badge-icon">${b.icon}</div><div>${b.name}</div>`;
-    grid.appendChild(div);
-  });
+  const grid=document.getElementById('badgesGrid');grid.innerHTML='';
+  BADGES.forEach(b=>{const d=document.createElement('div');d.className='badge-item'+(STATE.badges[b.id]?'':' locked');d.innerHTML=`<div class="badge-icon">${b.icon}</div><div>${b.name}</div>`;grid.appendChild(d);});
 }
 
-// ========== 弹窗 ==========
-function showModal(icon,title,msg,onClose){
-  document.getElementById('modalBox').innerHTML=`
-    <div class="big-emoji">${icon}</div><h2>${title}</h2>
-    <p style="line-height:1.8;font-size:16px;">${msg}</p>
-    <button class="btn btn-primary" style="margin-top:16px;font-size:17px;padding:12px 36px;" onclick="closeModal()">好的！</button>`;
-  document.getElementById('modalOverlay').classList.add('show');
-  STATE._modalCallback=onClose;
+// ==================== 弹窗 ====================
+function showModal(icon,title,msg,cb){
+  document.getElementById('modalBox').innerHTML=`<div class="big-emoji">${icon}</div><h2>${title}</h2><p style="line-height:1.8;font-size:15px">${msg}</p><button class="btn btn-primary" style="margin-top:14px;font-size:16px;padding:10px 32px" onclick="closeModal()">好的！</button>`;
+  document.getElementById('modalOverlay').classList.add('show');STATE._modalCallback=cb;
 }
-function closeModal(){
-  document.getElementById('modalOverlay').classList.remove('show');
-  if(STATE._modalCallback){const cb=STATE._modalCallback;STATE._modalCallback=null;cb();}
-}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show');if(STATE._modalCallback){const cb=STATE._modalCallback;STATE._modalCallback=null;cb();}}
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
-// ========== 页面切换 ==========
-function switchPage(pageId){
+// ==================== 页面切换 ====================
+function switchPage(pid){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(pageId).classList.add('active');
-  document.querySelectorAll('.bottom-nav .nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===pageId));
-  if(pageId==='page-map')renderMap();
-  if(pageId==='page-badges')renderBadges();
-  const hideNav=['page-learn','page-weekend'];
-  document.getElementById('bottomNav').style.display=hideNav.includes(pageId)?'none':'flex';
+  document.getElementById(pid).classList.add('active');
+  document.querySelectorAll('.bottom-nav .nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===pid));
+  if(pid==='page-map')renderMap();if(pid==='page-badges')renderBadges();if(pid==='page-parent')renderParentPanel();
+  const hide=['page-learn','page-weekend'];document.getElementById('bottomNav').style.display=hide.includes(pid)?'none':'flex';
 }
 function goMap(){switchPage('page-map');renderMap();}
 
-// ========== PWA ==========
+// ==================== 家长模式 ====================
+function renderParentPanel(){
+  if(STATE._parentAuth){showParentDashboard();}
+  else{document.getElementById('parentLogin').style.display='block';document.getElementById('parentDashboard').style.display='none';}
+}
+function parentLogin(){
+  const pin=document.getElementById('parentPin').value;
+  const saved=localStorage.getItem('parent_pin')||'1234';
+  if(pin===saved){STATE._parentAuth=true;document.getElementById('parentLogin').style.display='none';showParentDashboard();}
+  else{document.getElementById('pinError').style.display='block';}
+}
+function showParentDashboard(){
+  const dash=document.getElementById('parentDashboard');dash.style.display='block';
+  document.getElementById('pdDays').textContent=STATE.completedDays+'/30';
+  document.getElementById('pdStars').textContent=STATE.totalStars;
+  document.getElementById('pdScore').textContent=STATE.totalScore;
+  document.getElementById('pdArena').textContent=STATE.arenaTotal;
+  document.getElementById('pdBadges').textContent=Object.values(STATE.badges).filter(Boolean).length;
+  // 预览网格
+  const pg=document.getElementById('previewGrid');pg.innerHTML='';
+  MAP_DAYS.forEach((d,i)=>{
+    const btn=document.createElement('button');btn.className='btn-sm';
+    btn.textContent=(i+1);btn.style.padding='6px 10px';btn.style.minWidth='0';
+    btn.onclick=()=>{
+      if(d.type==='study'){STATE._parentAuth=true;openStudyDay(i);}
+      else openWeekendDay(i);
+    };
+    if(STATE.dayStars[i]!==undefined)btn.style.background='var(--success)';
+    pg.appendChild(btn);
+  });
+}
+function parentUnlockAll(){STATE.currentDay=29;STATE._parentAuth=true;saveState();renderMap();showParentDashboard();alert('✅ 已解锁全部天数！');}
+function parentReset(){if(confirm('⚠️ 确定要重置所有学习进度吗？此操作不可恢复！')){localStorage.removeItem('math_summer_v3');location.reload();}}
+function parentChangePin(){
+  const np=prompt('请输入新密码（4-6位数字）：');
+  if(np&&np.length>=4&&/^\d+$/.test(np)){localStorage.setItem('parent_pin',np);alert('✅ 密码已修改：'+np);}
+  else if(np)alert('密码需4-6位数字');
+}
+function parentLogout(){STATE._parentAuth=false;STATE._previewMode=false;switchPage('page-map');renderMap();}
+window.parentLogin=parentLogin;window.parentUnlockAll=parentUnlockAll;window.parentReset=parentReset;window.parentChangePin=parentChangePin;window.parentLogout=parentLogout;
+
+// ==================== PWA ====================
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBanner').style.display='block';});
-window.installApp=function(){
-  if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(r=>{if(r.outcome==='accepted')document.getElementById('installBanner').style.display='none';});}
-  else{alert('📲 请点击浏览器菜单中的"添加到主屏幕"或"安装"按钮～');}
-};
+window.installApp=function(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(r=>{if(r.outcome==='accepted')document.getElementById('installBanner').style.display='none';});}else{alert('📲 点击浏览器菜单→"添加到主屏幕"');}};
 window.addEventListener('appinstalled',()=>{document.getElementById('installBanner').style.display='none';});
 
-// ========== 键盘事件 ==========
+// ==================== 键盘 ====================
 document.addEventListener('keydown',function(e){
   if(e.key==='Enter'){
-    const arenaInput=document.getElementById('arenaInput');
-    if(arenaInput&&document.activeElement===arenaInput){submitArena();return;}
-    const answerInput=document.getElementById('answerInput');
-    if(answerInput&&document.activeElement===answerInput){submitAnswer();return;}
+    const ai=document.getElementById('arenaInput');if(ai&&document.activeElement===ai){submitArena();return;}
+    const ans=document.getElementById('answerInput');if(ans&&document.activeElement===ans){submitAnswer();return;}
   }
 });
 
-// 弹窗遮罩关闭
-document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
-
-// ========== 初始化 ==========
-loadState(); renderMap();
-
-// Service Worker
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').then(r=>console.log('✅ SW已注册')).catch(()=>{});
-}
-
-console.log('🌻 乐乐的数学冒险 加载完成！');
-console.log('📖 '+STUDY_DAYS.length+' 天学习内容  🎪 '+WEEKEND_TASKS.length+' 个周末任务');
-console.log('⭐ 护眼粉色系 · 玻璃拟态 · 粒子动画 · PWA离线可用');
+// ==================== 初始化 ====================
+loadState();renderMap();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
+console.log('🌻 乐乐的数学冒险 v3 加载完成');
+console.log('📖 22天互动讲堂 · 🎪 8个周末任务 · 🔊 音效 · 👨‍👧 家长模式 · ⚡ 擂台关联');
 </script>
-</body>
-</html>
+</body></html>
