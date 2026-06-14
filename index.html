@@ -162,11 +162,18 @@ body{font-family:var(--font);background:linear-gradient(170deg,#FFF5F5 0%,#FFF0F
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
 @media(max-width:480px){.days-grid{gap:7px}.day-cell{font-size:10px;border-radius:14px}.day-cell .day-num{font-size:15px}.question-box{font-size:24px;padding:14px}}
 /* 拼音注音样式 */
-.pinyin-enabled .slide-content ruby, .pinyin-enabled .highlight-box ruby, .pinyin-enabled .interact-box ruby{ruby-align:center;ruby-position:over}
-.pinyin-enabled .slide-content rt, .pinyin-enabled .highlight-box rt, .pinyin-enabled .interact-box rt{font-size:0.45em;color:#999;font-family:Arial,Helvetica,sans-serif;letter-spacing:0.02em;user-select:none;-webkit-user-select:none}
+.pinyin-enabled .slide-content ruby, .pinyin-enabled .highlight-box ruby, .pinyin-enabled .interact-box ruby{ruby-align:center;-webkit-ruby-align:center;ruby-position:over;-webkit-ruby-position:before}
+.pinyin-enabled .slide-content rt, .pinyin-enabled .highlight-box rt, .pinyin-enabled .interact-box rt{font-size:0.42em;color:#999;font-family:Arial,Helvetica,sans-serif;letter-spacing:0.02em;user-select:none;-webkit-user-select:none;transform:translateY(-0.15em)}
 .pinyin-enabled .slide-content rp, .pinyin-enabled .highlight-box rp, .pinyin-enabled .interact-box rp{display:none}
 .pinyin-toggle{position:fixed;top:128px;right:14px;z-index:110;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.8);border:2px solid var(--pink-light);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;box-shadow:var(--shadow-sm);transition:all 0.3s}
 .pinyin-toggle.off{opacity:0.5;border-color:#ddd}
+/* 数字序列防止换行 */
+.num-seq{white-space:nowrap;display:inline-block}
+/* 错题回顾模式 */
+body.review-mode .topbar{background:linear-gradient(135deg,rgba(255,200,160,0.85),rgba(255,225,190,0.85));border-bottom:1px solid rgba(255,150,80,0.4)}
+body.review-mode .topbar .title{color:#D4642A}
+body.review-mode .phase-tabs{opacity:0.5;pointer-events:none}
+body.review-mode .progress-fill{background:linear-gradient(90deg,#FF8C42,#FFB088,#FFC4A0)}
 </style>
 </head>
 <body>
@@ -305,6 +312,7 @@ body{font-family:var(--font);background:linear-gradient(170deg,#FFF5F5 0%,#FFF0F
       </div>
       <h3 style="margin-top:16px;">⚙️ 管理</h3>
       <button class="btn btn-secondary" onclick="parentUnlockAll()" style="margin:4px;">🔓 解锁全部天数</button>
+      <button class="btn btn-secondary" id="restoreProgressBtn" onclick="parentRestoreProgress()" style="margin:4px;display:none;">↩️ 恢复解锁前进度</button>
       <button class="btn btn-secondary" onclick="parentReset()" style="margin:4px;">🔄 重置所有进度</button>
       <button class="btn btn-secondary" onclick="parentChangePin()" style="margin:4px;">🔑 修改密码</button>
       <button class="btn btn-secondary" onclick="parentLogout()" style="margin:4px;">🚪 退出家长模式</button>
@@ -358,44 +366,66 @@ window.toggleSound=toggleSound;
 function pinyinAvailable(){return typeof pinyinPro!=='undefined'&&typeof pinyinPro.pinyin==='function';}
 
 function processPinyin(el){
-  // 遍历 DOM 文本节点，给汉字包 <ruby> 注音
-  if(!el||!pinyinAvailable())return;
+  // 全局上下文注音：先收集完整文本 → pinyin-pro 一次处理 → 按偏移量映射回各文本节点
+  if(!el||!pinyinAvailable()||el.hasAttribute('data-pinyin-done'))return;
   const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,null,false);
   const textNodes=[];
   while(walker.nextNode())textNodes.push(walker.currentNode);
-  textNodes.forEach(node=>{
-    const text=node.textContent;
-    if(!text||!/[一-鿿]/.test(text))return;
-    try{
-      const pys=pinyinPro.pinyin(text,{type:'array',toneType:'symbol'});
-      let html='',pyIdx=0;
-      for(const char of text){
-        if(/[一-鿿]/.test(char)){
-          const py=pys[pyIdx]||'';
-          html+=`<ruby>${char}<rp>(</rp><rt>${py}</rt><rp>)</rp></ruby>`;
-          pyIdx++;
-        }else{html+=char;}
+  if(!textNodes.length)return;
+
+  // 获取完整纯文本（上下文连贯，多音字更准）
+  const fullText=el.textContent||'';
+  if(!fullText||!/[一-鿿]/.test(fullText)){el.setAttribute('data-pinyin-done','1');return;}
+
+  try{
+    // 一次性跑 pinyin-pro，利用完整上下文提升多音字识别率
+    const fullPinyin=pinyinPro.pinyin(fullText,{type:'array',toneType:'symbol'});
+
+    // 建立全文字符偏移→拼音的映射（只映射汉字）
+    const pyMap=new Map();let pyIdx=0;
+    for(let i=0;i<fullText.length;i++){
+      if(/[一-鿿]/.test(fullText[i])){
+        pyMap.set(i,fullPinyin[pyIdx]||'');pyIdx++;
       }
-      const span=document.createElement('span');
-      span.innerHTML=html;
-      node.parentNode.replaceChild(span,node);
-    }catch(e){/* 注音失败静默跳过 */}
-  });
+    }
+
+    // 按偏移量替换各文本节点
+    let offset=0;
+    textNodes.forEach(node=>{
+      const text=node.textContent;
+      const base=offset;
+      let html='';
+      for(let i=0;i<text.length;i++){
+        const c=text[i];
+        if(pyMap.has(base+i)){
+          html+=`<ruby>${c}<rp>(</rp><rt>${pyMap.get(base+i)}</rt><rp>)</rp></ruby>`;
+        }else{html+=c;}
+      }
+      offset+=text.length;
+      if(html!==text){
+        const span=document.createElement('span');
+        span.innerHTML=html;
+        node.parentNode.replaceChild(span,node);
+      }
+    });
+  }catch(e){/* 注音失败静默跳过 */}
+  el.setAttribute('data-pinyin-done','1');
 }
 
 function applyPinyinToSlides(){
-  // 给所有可见的讲堂 slide 内容注音
   const carousel=document.getElementById('lectureCarousel');
   if(!carousel)return;
   if(STATE.pinyinEnabled&&pinyinAvailable()){
     carousel.classList.add('pinyin-enabled');
-    carousel.querySelectorAll('.lecture-slide .slide-content, .lecture-slide .highlight-box, .lecture-slide .interact-box').forEach(el=>{
-      // 跳过已处理的（有ruby标签的跳过重新处理）
-      if(!el.querySelector('ruby'))processPinyin(el);
-    });
+    carousel.querySelectorAll('.lecture-slide .slide-content, .lecture-slide .highlight-box, .lecture-slide .interact-box').forEach(el=>processPinyin(el));
   }else{
     carousel.classList.remove('pinyin-enabled');
   }
+}
+
+function clearPinyinCache(){
+  // 切换拼音开关时清除缓存，强制重新处理
+  document.querySelectorAll('[data-pinyin-done]').forEach(el=>el.removeAttribute('data-pinyin-done'));
 }
 
 function togglePinyin(){
@@ -403,11 +433,11 @@ function togglePinyin(){
   localStorage.setItem('pinyin_enabled',STATE.pinyinEnabled?'1':'0');
   const btn=document.getElementById('pinyinToggle');
   if(btn){
-    btn.textContent=STATE.pinyinEnabled?'🔤':'🔤';
     btn.classList.toggle('off',!STATE.pinyinEnabled);
+    btn.title=STATE.pinyinEnabled?'拼音：开（点击关闭）':'拼音：关（点击开启）';
   }
-  // 重新渲染当前讲堂以应用/取消拼音
   if(STATE._studyDay&&STATE.learnPhase==='lecture'){
+    if(STATE.pinyinEnabled){clearPinyinCache();}
     renderLecture(STATE._studyDay.data.id-1);
   }
   sfxClick();
@@ -417,7 +447,6 @@ window.togglePinyin=togglePinyin;
 function initPinyinToggle(){
   const btn=document.getElementById('pinyinToggle');
   if(btn){
-    btn.textContent='🔤';
     btn.classList.toggle('off',!STATE.pinyinEnabled);
     btn.title=STATE.pinyinEnabled?'拼音：开（点击关闭）':'拼音：关（点击开启）';
   }
@@ -729,13 +758,13 @@ function genQ(dayId,levelIdx){
 function _genQRaw(dayId,levelIdx,day,lvl){
   const t=lvl.type;
   switch(t){
-    case'compare':{const a=rand(1,20),b=rand(1,20);return{q:`哪个数更大？<br><span style="font-size:40px">${a} 和 ${b}</span>`,a:Math.max(a,b)};}
+    case'compare':{const a=rand(1,20);let b=rand(1,20);while(b===a)b=rand(1,20);const qTypes=['哪个数更大？','哪个数更小？'];const qt=qTypes[rand(0,1)];const ans=qt.includes('更小')?Math.min(a,b):Math.max(a,b);return{q:`${qt}<br><span style="font-size:40px"><span class="num-seq">${a}</span> 和 <span class="num-seq">${b}</span></span>`,a:ans};}
     case'ordinal':{
       const animals=['🐱小猫','🐶小狗','🐰小兔','🐻小熊','🐸青蛙','🐵小猴','🦊狐狸','🐼熊猫','🐨考拉','🐯老虎'];
       const n=rand(5,10),pos=rand(1,n),list=shuffle([...animals]).slice(0,n);
       return{q:`小动物排队：<br>${list.join(' ')}<br><br><b>${list[pos-1]}</b>从左边数是第几个？`,a:pos};
     }
-    case'pattern':{const ps=[[1,3,5,7,9],[2,4,6,8,10],[10,8,6,4,2],[5,10,15,20,25],[1,4,7,10,13],[20,17,14,11,8],[3,6,9,12,15],[18,15,12,9,6]];const p=ps[rand(0,ps.length-1)];return{q:`找规律：${p.slice(0,4).join(', ')}, ? <br>下一个是几？`,a:p[4]};}
+    case'pattern':{const ps=[[1,3,5,7,9],[2,4,6,8,10],[10,8,6,4,2],[5,10,15,20,25],[1,4,7,10,13],[20,17,14,11,8],[3,6,9,12,15],[18,15,12,9,6]];const p=ps[rand(0,ps.length-1)];return{q:`找规律：<span class="num-seq">${p.slice(0,4).join(', ')}</span>, ? <br>下一个是几？`,a:p[4]};}
     case'fillAdd':{const b=rand(1,9),ans=rand(1,10-b);return{q:`${b} + ? = ${b+ans}`,a:ans};}
     case'fillSub':{const a=rand(3,10),ans=rand(1,a-1);return{q:`${a} - ? = ${a-ans}`,a:ans};}
     case'sudoku3':{const ps=[{q:'每行每列不能重复<br>1 _<br>_ 2<br>空格填几？',a:2},{q:'每行每列不能重复<br>_ 2<br>1 _<br>空格填几？',a:2},{q:'每行每列不能重复<br>1 _<br>2 _<br>第二行空格填几？',a:1}];return ps[rand(0,ps.length-1)];}
@@ -802,7 +831,7 @@ function _genQRaw(dayId,levelIdx,day,lvl){
     case'queue':{const f=rand(3,8),b=rand(2,6);return{q:`排队：从前面数排第${f}，从后面数排第${b}<br>一共几人？`,a:f+b-1,hint:`${f}+${b}-1=${f+b-1}（自己数了2次要减1）`};}
     case'extraCond':{const a=rand(3,10),b=rand(2,8),extras=['今年6岁','穿红衣服','喜欢吃苹果'];return rand(0,1)?{q:`小红${a}支铅笔，小明比小红多${b}支，小红${extras[rand(0,2)]}，小明几支？`,a:a+b}:{q:`妈妈买${a}个橘子，吃${b}个，妈妈${extras[rand(0,2)]}，剩几个？`,a:a-b};}
     case'reason':{const qs=[{q:'苹果比梨重，梨比橘子重。<br>谁最轻？',a:'橘子',type:'choice',choices:[{l:'A',v:'苹果'},{l:'B',v:'梨'},{l:'C',v:'橘子'}]},{q:'小明比小红高，小刚比小明高。<br>谁最高？',a:'小刚',type:'choice',choices:[{l:'A',v:'小明'},{l:'B',v:'小红'},{l:'C',v:'小刚'}]},{q:'A>B>C，谁最小？',a:'C',type:'choice',choices:[{l:'A',v:'A'},{l:'B',v:'B'},{l:'C',v:'C'}]}];return qs[rand(0,qs.length-1)];}
-    case'numPattern':{const ps=[[1,4,7,10,13],[2,6,10,14,18],[20,16,12,8,4],[3,6,9,12,15],[5,10,15,20,25]];const p=ps[rand(0,ps.length-1)];return{q:`找规律：${p.slice(0,4).join(', ')}, ? <br>下一个是几？`,a:p[4]};}
+    case'numPattern':{const ps=[[1,4,7,10,13],[2,6,10,14,18],[20,16,12,8,4],[3,6,9,12,15],[5,10,15,20,25]];const p=ps[rand(0,ps.length-1)];return{q:`找规律：<span class="num-seq">${p.slice(0,4).join(', ')}</span>, ? <br>下一个是几？`,a:p[4]};}
     case'shapePattern':{const ps=['🔴🔵🔴🔵?','⭐🌟⭐🌟?','🔺🔻🔺🔻?','🍎🍏🍎🍏?'];const idx=rand(0,ps.length-1);return{q:`图形规律：${ps[idx]}<br>下一个是什么？`,a:idx,type:'choice',choices:[{l:'A',v:0},{l:'B',v:1},{l:'C',v:2},{l:'D',v:3}]};}
     case'logic':{const qs=[{q:'☆+3=8，☆=?',a:5},{q:'△-4=6，△=?',a:10},{q:'□+□=10，□=?',a:5},{q:'○+5=12，○=?',a:7}];return qs[rand(0,qs.length-1)];}
     case'final1':{const a=rand(5,9),b=rand(3,9);return rand(0,1)?{q:`${a} + ${b} = ?`,a:a+b}:{q:`${a+10} - ${b} = ?`,a:a+10-b};}
@@ -816,7 +845,7 @@ function _genQRaw(dayId,levelIdx,day,lvl){
 function genArenaQ(dayId){
   const day=STUDY_DAYS[dayId];const t=day.levels[0].type;let a,b;
   switch(t){
-    case'compare':a=rand(1,20);b=rand(1,20);return{q:`${a}和${b}谁大？`,a:Math.max(a,b)};
+    case'compare':a=rand(1,20);b=rand(1,20);while(b===a)b=rand(1,20);return{q:`${a}和${b}谁大？`,a:Math.max(a,b)};
     case'ordinal':return{q:`从左边数，第${rand(1,10)}个是谁？（看图）<br>🐱🐶🐰🐻🐸🐵<br>答数字`,a:rand(1,6)};
     case'pattern':{const start=rand(1,5),step=rand(1,3);return{q:`${start},${start+step},${start+step*2},?`,a:start+step*3};}
     case'fillAdd':case'fillSub':a=rand(1,9);b=rand(1,9-a);return{q:`${a}+?=${a+b}`,a:b};
@@ -1068,9 +1097,13 @@ function nextAfterFB(){
       }else{
         STATE.learnPhase='arena';updatePhaseTabs();updateProgress();
         document.getElementById('phaseTab1').classList.add('done');document.getElementById('phaseTab2').classList.add('active');
-        document.getElementById('questionBox').innerHTML='🎊 三关全过！来趣味擂台挑战吧！';
-        document.getElementById('answerRow').innerHTML='';
-        setTimeout(()=>document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'}),500);
+        document.getElementById('feedbackBox').className='feedback-box'; // 清除过关反馈
+        document.getElementById('questionBox').innerHTML='🎊 三关全部通过！';
+        document.getElementById('answerRow').innerHTML=`
+          <button class="btn btn-yellow" style="font-size:18px;padding:14px 32px;animation:iconBounce 1s ease-in-out infinite" onclick="document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'});document.getElementById('arenaSubmit').focus();">⚡ 开始趣味擂台</button>
+        `;
+        document.getElementById('hintBox').className='hint-box';
+        setTimeout(()=>document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'}),600);
       }
     }else{
       STATE.currentQuestion=genQ(day.data.id-1,STATE.currentLevel);
@@ -1165,24 +1198,57 @@ function endArena(){
 }
 
 // ==================== 错题回顾 ====================
+function enterReviewMode(){
+  document.body.classList.add('review-mode');
+  document.getElementById('learnTitle').textContent='📋 错题回顾';
+  document.getElementById('learnProgress').style.width='0%';
+  document.getElementById('levelTitle').textContent='📋 错题回顾';
+  // 阶段标签淡化
+  ['phaseTab0','phaseTab1','phaseTab2'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.classList.remove('active');el.classList.add('done');
+  });
+  // 擂台折叠提示
+  document.getElementById('arenaCard').style.opacity='0.4';
+  document.getElementById('arenaCard').style.pointerEvents='none';
+}
+
+function exitReviewMode(){
+  document.body.classList.remove('review-mode');
+  document.getElementById('arenaCard').style.opacity='1';
+  document.getElementById('arenaCard').style.pointerEvents='auto';
+  const day=STATE._studyDay;
+  if(day){
+    document.getElementById('learnTitle').textContent=`📖 第${STATE._mapIndex+1}天 · ${day.data.topic}`;
+  }
+}
+
 function startMistakeReview(){
   STATE._mistakeReviewIdx=0;
-  document.getElementById('arenaCard').style.display='none';
-  document.getElementById('phaseTab2').classList.add('done');
+  enterReviewMode();
+  // 擂台区域提示
+  document.getElementById('arenaQuestion').innerHTML='📋 错题回顾中，擂台暂不可用';
+  document.getElementById('arenaInput').style.display='none';
+  document.getElementById('arenaSubmit').disabled=true;
+  document.getElementById('arenaSubmit').textContent='回顾中…';
+  document.getElementById('arenaFeedback').className='feedback-box';
+
   const qb=document.getElementById('questionBox');
-  qb.innerHTML=`<div style="text-align:center">📋<br><b>错题回顾</b><br><br>今天有 <b style="color:var(--pink-deep);font-size:28px">${STATE._todayWrong.length}</b> 道错题<br>我们来重新做一遍吧！<br><br>做对了✅就过关<br>做错了❌留到错题本下次再练</div>`;
+  qb.innerHTML=`<div style="text-align:center">📋<br><b>错题回顾</b><br><br>今天有 <b style="color:#E07030;font-size:28px">${STATE._todayWrong.length}</b> 道错题<br>我们来重新做一遍吧！<br><br>做对了✅就过关<br>做错了❌留到错题本下次再练</div>`;
   document.getElementById('answerRow').innerHTML=`
     <button class="btn btn-primary" onclick="renderMistakeQ()" style="font-size:16px;padding:12px 28px">开始回顾 📋</button>
     <button class="btn-sm" onclick="skipMistakeReview()" style="margin-left:8px">跳过回顾 →</button>`;
   document.getElementById('feedbackBox').className='feedback-box';
-  document.getElementById('levelTitle').textContent='📋 错题回顾';
 }
 
 function skipMistakeReview(){
-  // 错题保留在错题本，直接完成今天学习
+  exitReviewMode();
   document.getElementById('questionBox').innerHTML='📋 错题已保存到错题本<br>可以之后在家长面板中复习';
   document.getElementById('answerRow').innerHTML='';
-  document.getElementById('arenaCard').style.display='block';
+  document.getElementById('arenaQuestion').innerHTML='准备好了吗？';
+  document.getElementById('arenaInput').style.display='inline-block';
+  document.getElementById('arenaSubmit').disabled=false;
+  document.getElementById('arenaSubmit').textContent='开始挑战！';
   document.getElementById('finishDayBtn').style.display='inline-block';
   saveState();renderMap();
 }
@@ -1192,6 +1258,8 @@ function renderMistakeQ(){
     finishMistakeReview();return;
   }
   const entry=STATE._todayWrong[STATE._mistakeReviewIdx];
+  const pct=Math.round((STATE._mistakeReviewIdx/STATE._todayWrong.length)*100);
+  document.getElementById('learnProgress').style.width=pct+'%';
   document.getElementById('levelTitle').textContent=`📋 错题 ${STATE._mistakeReviewIdx+1}/${STATE._todayWrong.length}`;
   const qb=document.getElementById('questionBox');
   qb.innerHTML=entry.qHTML;
@@ -1232,12 +1300,17 @@ function submitMistake(){
 }
 
 function finishMistakeReview(){
+  document.getElementById('learnProgress').style.width='100%';
+  exitReviewMode();
   document.getElementById('questionBox').innerHTML='🎊 错题回顾完成！<br><br>做对的题目已从错题本消除<br>还不会的留到下次再练～';
   document.getElementById('answerRow').innerHTML=`
     <button class="btn btn-primary" onclick="showFinishDayBtn()" style="font-size:16px;padding:12px 28px">✅ 确认完成</button>`;
   document.getElementById('feedbackBox').className='feedback-box show correct';
   document.getElementById('feedbackBox').innerHTML='错题本中共有 <b>'+STATE.wrongBook.length+'</b> 道待复习题目';
-  document.getElementById('arenaCard').style.display='block';
+  document.getElementById('arenaQuestion').innerHTML='准备好了吗？';
+  document.getElementById('arenaInput').style.display='inline-block';
+  document.getElementById('arenaSubmit').disabled=false;
+  document.getElementById('arenaSubmit').textContent='开始挑战！';
   saveState();renderMap();
 }
 
@@ -1260,6 +1333,7 @@ function finishDay(){
 }
 
 function confirmLeaveLearn(){
+  exitReviewMode(); // 清理错题回顾样式
   if(STATE.learnPhase!=='done'&&STATE.levelTotal>0&&!STATE._previewMode){
     showModal('🤔','确定要离开吗？','当前进度会被保存<br>下次回来可以继续～',()=>{saveState();goMap();});
   }else{goMap();}
@@ -1336,6 +1410,9 @@ function showParentDashboard(){
   document.getElementById('pdScore').textContent=STATE.totalScore;
   document.getElementById('pdArena').textContent=STATE.arenaTotal;
   document.getElementById('pdBadges').textContent=Object.values(STATE.badges).filter(Boolean).length;
+  // 恢复按钮：有保存进度时显示
+  const rb=document.getElementById('restoreProgressBtn');
+  if(rb)rb.style.display=(STATE._savedBeforeUnlock!==undefined)?'inline-block':'none';
   // 预览网格
   const pg=document.getElementById('previewGrid');pg.innerHTML='';
   MAP_DAYS.forEach((d,i)=>{
@@ -1373,11 +1450,19 @@ function showParentDashboard(){
 }
 function parentClearWrongBook(){if(confirm('确定要清空所有错题记录吗？')){STATE.wrongBook=[];saveState();showParentDashboard();}}
 function parentUnlockAll(){
-  // 保存解锁前的进度
-  if(!STATE._savedDay)savedDay=STATE.currentDay;
   STATE._savedBeforeUnlock=STATE.currentDay;
   STATE.currentDay=29;STATE._parentAuth=true;saveState();renderMap();showParentDashboard();
-  alert('✅ 已解锁全部天数！\n退出家长模式后自动恢复到解锁前的进度。');
+  document.getElementById('restoreProgressBtn').style.display='inline-block';
+  alert('✅ 已解锁全部天数！\n点击「↩️ 恢复解锁前进度」可恢复原进度。');
+}
+function parentRestoreProgress(){
+  if(STATE._savedBeforeUnlock!==undefined){
+    STATE.currentDay=STATE._savedBeforeUnlock;
+    STATE._savedBeforeUnlock=undefined;
+    saveState();renderMap();showParentDashboard();
+    document.getElementById('restoreProgressBtn').style.display='none';
+    alert('✅ 已恢复到解锁前的进度（第'+(STATE.currentDay+1)+'天）。');
+  }
 }
 function parentReset(){if(confirm('⚠️ 确定要重置所有学习进度吗？此操作不可恢复！')){localStorage.removeItem('math_summer_v3');location.reload();}}
 function parentChangePin(){
@@ -1386,10 +1471,11 @@ function parentChangePin(){
   else if(np)alert('密码需4-6位数字');
 }
 function parentLogout(){
-  // 恢复解锁前的进度
+  // 退出时自动恢复解锁前的进度
   if(STATE._savedBeforeUnlock!==undefined){
     STATE.currentDay=STATE._savedBeforeUnlock;
     STATE._savedBeforeUnlock=undefined;
+    saveState();
   }
   STATE._parentAuth=false;STATE._previewMode=false;switchPage('page-map');renderMap();
 }
