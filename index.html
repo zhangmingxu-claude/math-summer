@@ -160,6 +160,9 @@ body{font-family:var(--font);background:linear-gradient(170deg,#FFF5F5 0%,#FFF0F
 .install-banner{display:none;background:linear-gradient(135deg,var(--pink-deep),#FFB6C1);color:#fff;text-align:center;padding:12px;font-weight:600;cursor:pointer;font-size:14px;animation:slideDown 0.4s ease}
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
 @media(max-width:480px){.days-grid{gap:7px}.day-cell{font-size:10px;border-radius:14px}.day-cell .day-num{font-size:15px}.question-box{font-size:24px;padding:14px}}
+/* 擂台锁定 */
+.arena-card.locked{opacity:0.45;pointer-events:none}
+.arena-card.locked .btn-yellow{background:#ccc!important;color:#999!important}
 /* 内置数字键盘 */
 .num-pad{display:none;margin:8px 0;user-select:none;-webkit-user-select:none}
 .num-pad.show{display:block}
@@ -227,7 +230,7 @@ const PINYIN_MAP={一:'yī',七:'qī',三:'sān',上:'shàng',下:'xià',不:'b�
   </div>
   <div class="map-header">
     <h1>🗺️ 30天闯关地图</h1>
-    <div style="font-size:10px;color:var(--text-light);margin-bottom:2px;">v3.5 · 休息提醒 · 护眼 · 周末闭环 · 彩蛋</div>
+    <div style="font-size:10px;color:var(--text-light);margin-bottom:2px;">v3.6 · 线性锁定 · 键盘跟随 · 休息护眼</div>
     <div style="font-size:12px;color:var(--text-light);">点击格子开始冒险 · 每天40分钟</div>
     <div class="legend">
       <span><span class="dot" style="background:#FFE8EA;border:2px solid #FFB6C1"></span>学习日</span>
@@ -293,14 +296,14 @@ const PINYIN_MAP={一:'yī',七:'qī',三:'sān',上:'shàng',下:'xià',不:'b�
     </div>
 
     <!-- 趣味擂台 -->
-    <div class="arena-card" id="arenaCard">
+    <div class="arena-card locked" id="arenaCard">
       <h3>⚡ 趣味擂台</h3>
       <p style="color:var(--text-light);font-size:13px;">限时2分钟，题目来自今天知识点</p>
       <div class="timer" id="arenaTimer">2:00</div>
       <div class="question-box" id="arenaQuestion" style="font-size:24px;min-height:50px;">准备好了吗？</div>
       <div class="answer-row" style="justify-content:center;">
         <input class="answer-input" type="number" id="arenaInput" placeholder="?" autocomplete="off" inputmode="numeric">
-        <button class="btn btn-yellow" id="arenaSubmit" onclick="submitArena()">开始挑战！</button>
+        <button class="btn btn-yellow" id="arenaSubmit" onclick="submitArena()" disabled>🔒 先完成闯关</button>
       </div>
       <div class="feedback-box" id="arenaFeedback"></div>
       <div style="margin-top:8px;font-weight:700;font-size:17px;" id="arenaScoreDisplay">得分：0</div>
@@ -490,10 +493,18 @@ let _numPadTarget=null; // 'practice'|'mistake'|'arena'
 
 function showNumPad(target){
   _numPadTarget=target;
-  document.getElementById('numPad').classList.add('show');
+  const pad=document.getElementById('numPad');
+  // 键盘搬家：擂台→arenaCard，练习/错题→answerRow
+  if(target==='arena'){
+    const ac=document.getElementById('arenaCard');
+    if(ac&&pad.parentNode!==ac)ac.appendChild(pad);
+  }else{
+    const ar=document.getElementById('answerRow');
+    if(ar&&pad.parentNode!==ar)ar.appendChild(pad);
+  }
+  pad.classList.add('show');
   document.getElementById('numDisplay').textContent='';
   document.getElementById('hiddenInput').value='';
-  // 隐藏系统输入框（如果存在）
   const oldInp=document.getElementById('answerInput');
   if(oldInp)oldInp.style.display='none';
   const arenaInp=document.getElementById('arenaInput');
@@ -1076,9 +1087,13 @@ function resetPractice(){
 function resetArenaUI(){
   document.getElementById('arenaTimer').textContent='2:00';document.getElementById('arenaTimer').classList.remove('urgent');
   document.getElementById('arenaScoreDisplay').textContent='得分：0';document.getElementById('arenaQuestion').innerHTML='准备好了吗？';
-  document.getElementById('arenaInput').value='';document.getElementById('arenaSubmit').disabled=false;
-  document.getElementById('arenaSubmit').textContent='开始挑战！';document.getElementById('arenaFeedback').className='feedback-box';
+  document.getElementById('arenaInput').value='';document.getElementById('arenaFeedback').className='feedback-box';
   if(STATE.arenaTimer)clearInterval(STATE.arenaTimer);STATE.arenaActive=false;STATE.arenaScore=0;STATE.arenaSeconds=120;
+  // 默认锁定擂台，三关完成后解锁
+  const arenaCard=document.getElementById('arenaCard');
+  arenaCard.classList.add('locked');
+  document.getElementById('arenaSubmit').disabled=true;
+  document.getElementById('arenaSubmit').textContent='🔒 先完成闯关';
 }
 
 function startPractice(){
@@ -1263,7 +1278,13 @@ function nextAfterFB(){
       }else{
         STATE.learnPhase='arena';updatePhaseTabs();updateProgress();
         document.getElementById('phaseTab1').classList.add('done');document.getElementById('phaseTab2').classList.add('active');
-        document.getElementById('feedbackBox').className='feedback-box'; // 清除过关反馈
+        document.getElementById('feedbackBox').className='feedback-box';
+        // 解锁擂台
+        const arenaCard=document.getElementById('arenaCard');
+        arenaCard.classList.remove('locked');
+        const arenaBtn=document.getElementById('arenaSubmit');
+        arenaBtn.disabled=false;arenaBtn.textContent='开始挑战！';
+        hideNumPad();
         document.getElementById('questionBox').innerHTML='🎊 三关全部通过！';
         document.getElementById('answerRow').innerHTML=`
           <button class="btn btn-yellow" style="font-size:18px;padding:14px 32px;animation:iconBounce 1s ease-in-out infinite" onclick="document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'});document.getElementById('arenaSubmit').focus();">⚡ 开始趣味擂台</button>
@@ -1300,7 +1321,7 @@ function submitArena(){
     STATE.arenaActive=true;STATE.arenaScore=0;STATE.arenaSeconds=120;
     document.getElementById('arenaSubmit').textContent='GO!';document.getElementById('arenaScoreDisplay').textContent='得分：0';
     document.getElementById('arenaTimer').classList.remove('urgent');
-    startArenaTimer();nextArenaQ();return;
+    hideNumPad();startArenaTimer();nextArenaQ();return;
   }
   const inp=document.getElementById('arenaInput');if(!inp)return;
   const ans=inp.value.trim();if(ans===''||!STATE.arenaQuestion)return;
