@@ -160,11 +160,10 @@ body{font-family:var(--font);background:linear-gradient(170deg,#FFF5F5 0%,#FFF0F
 .install-banner{display:none;background:linear-gradient(135deg,var(--pink-deep),#FFB6C1);color:#fff;text-align:center;padding:12px;font-weight:600;cursor:pointer;font-size:14px;animation:slideDown 0.4s ease}
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
 @media(max-width:480px){.days-grid{gap:7px}.day-cell{font-size:10px;border-radius:14px}.day-cell .day-num{font-size:15px}.question-box{font-size:24px;padding:14px}}
-/* 内置数字键盘 — 固定底部，练习/擂台通用 */
-.num-pad{display:none;position:fixed;bottom:0;left:0;right:0;z-index:120;background:rgba(255,250,248,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:10px 14px 14px;border-top:2px solid var(--pink-light);box-shadow:0 -4px 20px rgba(180,140,140,0.1);user-select:none;-webkit-user-select:none}
-.num-pad.show{display:block}
-/* 键盘显示时给底部导航留空 */
-.num-pad.show ~ .bottom-nav{display:none}
+/* 内置数字键盘 — 跟随题目区域，不遮挡内容 */
+.num-pad{display:none;margin-top:12px;user-select:none;-webkit-user-select:none}
+.num-pad.show{display:block;animation:slideUp 0.25s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .num-display{background:rgba(255,255,255,0.9);border:3px solid var(--pink-light);border-radius:16px;padding:12px;text-align:center;font-size:42px;font-weight:800;min-height:60px;color:var(--text);letter-spacing:4px;margin-bottom:10px;transition:all 0.2s;word-break:break-all}
 .num-display.flash{border-color:var(--pink-deep);box-shadow:0 0 0 8px rgba(255,154,162,0.15)}
 .num-pad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:360px;margin:0 auto}
@@ -492,10 +491,18 @@ let _numPadTarget=null; // 'practice'|'mistake'|'arena'
 
 function showNumPad(target){
   _numPadTarget=target;
-  document.getElementById('numPad').classList.add('show');
+  const pad=document.getElementById('numPad');
+  // 动态挂载：练习→answerRow，擂台→arenaCard底部
+  if(target==='arena'){
+    const arenaCard=document.getElementById('arenaCard');
+    if(arenaCard&&pad.parentNode!==arenaCard)arenaCard.appendChild(pad);
+  }else{
+    const answerRow=document.getElementById('answerRow');
+    if(answerRow&&pad.parentNode!==answerRow)answerRow.appendChild(pad);
+  }
+  pad.classList.add('show');
   document.getElementById('numDisplay').textContent='';
   document.getElementById('hiddenInput').value='';
-  document.getElementById('page-learn').style.paddingBottom='310px';
   const oldInp=document.getElementById('answerInput');
   if(oldInp)oldInp.style.display='none';
   const arenaInp=document.getElementById('arenaInput');
@@ -504,10 +511,10 @@ function showNumPad(target){
 
 function hideNumPad(){
   _numPadTarget=null;
-  document.getElementById('numPad').classList.remove('show');
+  const pad=document.getElementById('numPad');
+  pad.classList.remove('show');
   document.getElementById('numDisplay').textContent='';
   document.getElementById('hiddenInput').value='';
-  document.getElementById('page-learn').style.paddingBottom='';
 }
 
 function numPadInput(digit){
