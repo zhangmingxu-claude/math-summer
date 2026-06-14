@@ -866,32 +866,40 @@ function nextLevel(day){
 }
 
 function renderQuestion(q){
-  document.getElementById('questionBox').innerHTML=q.q;
-  document.getElementById('questionBox').classList.remove('shake','bounce');
-  document.getElementById('answerRow').innerHTML='';
+  const qb=document.getElementById('questionBox');if(!qb)return;
+  qb.innerHTML=q.q;qb.classList.remove('shake','bounce');qb.style.filter='';qb.style.opacity='';
+  const row=document.getElementById('answerRow');if(!row)return;
+  row.innerHTML='';
   document.getElementById('hintBox').className='hint-box';
-  if(q.type==='choice'){
-    const row=document.getElementById('answerRow');
+  STATE.selectedChoice=null;
+
+  if(q.type==='choice'&&q.choices){
     q.choices.forEach(c=>{
       const btn=document.createElement('button');btn.className='btn-choice';btn.textContent=c.l+'. '+c.v;
       btn.onclick=()=>{STATE.selectedChoice=c.v;row.querySelectorAll('.btn-choice').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');};
-      if(STATE.selectedChoice===c.v)btn.classList.add('selected');
       row.appendChild(btn);
     });
     const confirmBtn=document.createElement('button');confirmBtn.className='btn btn-primary';confirmBtn.textContent='确认 ✓';
     confirmBtn.onclick=()=>{if(STATE.selectedChoice!==null)submitChoice(STATE.selectedChoice,q);};
     row.appendChild(confirmBtn);
   }else{
-    document.getElementById('answerRow').innerHTML=`
+    row.innerHTML=`
       <input class="answer-input" type="number" id="answerInput" placeholder="?" autocomplete="off" inputmode="numeric">
       <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()">确认 ✓</button>
     `;
     setTimeout(()=>{const inp=document.getElementById('answerInput');if(inp)inp.focus();},300);
-    // 闪卡模式：3秒后模糊题目
-    if(q.flash){setTimeout(()=>{document.getElementById('questionBox').style.filter='blur(6px)';document.getElementById('questionBox').style.opacity='0.2';},3000);}
+    // 闪卡模式：5秒后模糊，可点按钮恢复
+    if(q.flash){
+      let flashTimer=setTimeout(()=>{
+        const qb2=document.getElementById('questionBox');if(qb2){qb2.style.filter='blur(6px)';qb2.style.opacity='0.2';}
+      },5000);
+      const flashBtn=document.createElement('button');flashBtn.className='btn-sm';flashBtn.textContent='💡 显示题目';
+      flashBtn.style.marginLeft='6px';flashBtn.onclick=()=>{clearTimeout(flashTimer);const qb3=document.getElementById('questionBox');if(qb3){qb3.style.filter='';qb3.style.opacity='1';}};
+      row.appendChild(flashBtn);
+    }
   }
   // 提示按钮
-  if(q.hint){const row=document.getElementById('answerRow');const hintBtn=document.createElement('button');hintBtn.className='btn-sm';hintBtn.textContent='💡 提示';hintBtn.style.marginLeft='4px';hintBtn.onclick=()=>{document.getElementById('hintBox').innerHTML=q.hint;document.getElementById('hintBox').classList.add('show');};row.appendChild(hintBtn);}
+  if(q.hint){const hintBtn=document.createElement('button');hintBtn.className='btn-sm';hintBtn.textContent='💡 提示';hintBtn.style.marginLeft='4px';hintBtn.onclick=()=>{document.getElementById('hintBox').innerHTML=q.hint;document.getElementById('hintBox').classList.add('show');};row.appendChild(hintBtn);}
 }
 
 function submitChoice(val,q){
@@ -994,23 +1002,32 @@ function submitArena(){
   inp.value='';setTimeout(()=>{fb.className='feedback-box';nextArenaQ();},500);
 }
 function startArenaTimer(){
-  STATE.arenaTimer=setInterval(()=>{STATE.arenaSeconds--;const m=Math.floor(STATE.arenaSeconds/60),s=STATE.arenaSeconds%60;document.getElementById('arenaTimer').textContent=m+':'+String(s).padStart(2,'0');if(STATE.arenaSeconds<=15){document.getElementById('arenaTimer').classList.add('urgent');sfxTick();}if(STATE.arenaSeconds<=0)endArena();},1000);
+  STATE.arenaTimer=setInterval(()=>{STATE.arenaSeconds--;const m=Math.floor(STATE.arenaSeconds/60),s=STATE.arenaSeconds%60;document.getElementById('arenaTimer').textContent=m+':'+String(s).padStart(2,'0');if(STATE.arenaSeconds<=10&&STATE.arenaSeconds>0&&STATE.arenaSeconds%2===0){document.getElementById('arenaTimer').classList.add('urgent');sfxTick();}if(STATE.arenaSeconds<=0)endArena();},1000);
 }
 function nextArenaQ(){
   if(!STATE.arenaActive)return;
   STATE.arenaQuestion=genArenaQ(STATE._studyDay.data.id-1);
   const q=STATE.arenaQuestion;
-  if(q.type==='choice'){
-    document.getElementById('arenaQuestion').innerHTML=q.q;
-    document.getElementById('arenaInput').style.display='none';
-    const row=document.getElementById('answerRow');
-    // reuse answerRow for arena choices
+  const aq=document.getElementById('arenaQuestion');
+  const ai=document.getElementById('arenaInput');
+  // 清理旧的arena选项按钮
+  const oldBtns=document.querySelectorAll('.arena-choice-btn');
+  oldBtns.forEach(b=>b.remove());
+  if(q.type==='choice'&&q.choices){
+    aq.innerHTML=q.q;
+    if(ai)ai.style.display='none';
     const arenaRow=document.getElementById('arenaCard').querySelector('.answer-row');
-    if(arenaRow)arenaRow.innerHTML=q.choices.map(c=>`<button class="btn-choice" onclick="STATE.selectedChoice='${c.v}';submitArena()">${c.l}. ${c.v}</button>`).join('');
+    if(arenaRow){
+      q.choices.forEach(c=>{
+        const btn=document.createElement('button');btn.className='btn-choice arena-choice-btn';btn.textContent=c.l+'. '+c.v;
+        btn.onclick=()=>{STATE.selectedChoice=c.v;arenaRow.querySelectorAll('.arena-choice-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');submitArena();};
+        arenaRow.appendChild(btn);
+      });
+    }
   }else{
-    document.getElementById('arenaQuestion').innerHTML=`<span style="font-size:26px">${q.q}</span>`;
-    document.getElementById('arenaInput').style.display='inline-block';
-    document.getElementById('arenaInput').value='';document.getElementById('arenaInput').focus();
+    aq.innerHTML=`<span style="font-size:26px">${q.q}</span>`;
+    if(ai)ai.style.display='inline-block';
+    if(ai){ai.value='';ai.focus();}
   }
 }
 function endArena(){
