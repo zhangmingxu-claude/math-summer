@@ -160,9 +160,11 @@ body{font-family:var(--font);background:linear-gradient(170deg,#FFF5F5 0%,#FFF0F
 .install-banner{display:none;background:linear-gradient(135deg,var(--pink-deep),#FFB6C1);color:#fff;text-align:center;padding:12px;font-weight:600;cursor:pointer;font-size:14px;animation:slideDown 0.4s ease}
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
 @media(max-width:480px){.days-grid{gap:7px}.day-cell{font-size:10px;border-radius:14px}.day-cell .day-num{font-size:15px}.question-box{font-size:24px;padding:14px}}
-/* 内置数字键盘 */
-.num-pad{display:none;margin:8px 0;user-select:none;-webkit-user-select:none}
+/* 内置数字键盘 — 固定底部，练习/擂台通用 */
+.num-pad{display:none;position:fixed;bottom:0;left:0;right:0;z-index:120;background:rgba(255,250,248,0.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:10px 14px 14px;border-top:2px solid var(--pink-light);box-shadow:0 -4px 20px rgba(180,140,140,0.1);user-select:none;-webkit-user-select:none}
 .num-pad.show{display:block}
+/* 键盘显示时给底部导航留空 */
+.num-pad.show ~ .bottom-nav{display:none}
 .num-display{background:rgba(255,255,255,0.9);border:3px solid var(--pink-light);border-radius:16px;padding:12px;text-align:center;font-size:42px;font-weight:800;min-height:60px;color:var(--text);letter-spacing:4px;margin-bottom:10px;transition:all 0.2s;word-break:break-all}
 .num-display.flash{border-color:var(--pink-deep);box-shadow:0 0 0 8px rgba(255,154,162,0.15)}
 .num-pad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:360px;margin:0 auto}
@@ -266,25 +268,6 @@ const PINYIN_MAP={一:'yī',七:'qī',三:'sān',上:'shàng',下:'xià',不:'b�
       <div class="answer-row" id="answerRow"></div>
       <div class="hint-box" id="hintBox"></div>
       <div class="feedback-box" id="feedbackBox"></div>
-      <!-- 内置数字键盘 -->
-      <div class="num-pad" id="numPad">
-        <div class="num-display" id="numDisplay"></div>
-        <div class="num-pad-grid">
-          <button class="num-key num" onclick="numPadInput('1')">1</button>
-          <button class="num-key num" onclick="numPadInput('2')">2</button>
-          <button class="num-key num" onclick="numPadInput('3')">3</button>
-          <button class="num-key del" onclick="numPadDelete()">⌫</button>
-          <button class="num-key num" onclick="numPadInput('4')">4</button>
-          <button class="num-key num" onclick="numPadInput('5')">5</button>
-          <button class="num-key num" onclick="numPadInput('6')">6</button>
-          <button class="num-key ok" onclick="numPadConfirm()">✓<br>确认</button>
-          <button class="num-key num" onclick="numPadInput('7')">7</button>
-          <button class="num-key num" onclick="numPadInput('8')">8</button>
-          <button class="num-key num" onclick="numPadInput('9')">9</button>
-          <button class="num-key num zero" onclick="numPadInput('0')">0</button>
-        </div>
-        <input type="number" id="hiddenInput" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px" autocomplete="off" inputmode="numeric">
-      </div>
       <div style="text-align:center;margin-top:10px;">
         <span style="font-size:13px;color:var(--text-light);">本关星星：</span>
         <span id="levelStars" style="font-size:20px;">⭐⭐⭐</span>
@@ -310,6 +293,25 @@ const PINYIN_MAP={一:'yī',七:'qī',三:'sān',上:'shàng',下:'xià',不:'b�
       <button class="btn btn-success" id="finishDayBtn" onclick="finishDay()" style="display:none;font-size:17px;padding:12px 36px;">🎉 完成今天的学习！</button>
     </div>
     <div class="spacer"></div>
+    <!-- 内置数字键盘：固定底部，练习/擂台通用 -->
+    <div class="num-pad" id="numPad">
+      <div class="num-display" id="numDisplay"></div>
+      <div class="num-pad-grid">
+        <button class="num-key num" onclick="numPadInput('1')">1</button>
+        <button class="num-key num" onclick="numPadInput('2')">2</button>
+        <button class="num-key num" onclick="numPadInput('3')">3</button>
+        <button class="num-key del" onclick="numPadDelete()">⌫</button>
+        <button class="num-key num" onclick="numPadInput('4')">4</button>
+        <button class="num-key num" onclick="numPadInput('5')">5</button>
+        <button class="num-key num" onclick="numPadInput('6')">6</button>
+        <button class="num-key ok" onclick="numPadConfirm()">✓<br>确认</button>
+        <button class="num-key num" onclick="numPadInput('7')">7</button>
+        <button class="num-key num" onclick="numPadInput('8')">8</button>
+        <button class="num-key num" onclick="numPadInput('9')">9</button>
+        <button class="num-key num zero" onclick="numPadInput('0')">0</button>
+      </div>
+      <input type="number" id="hiddenInput" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px" autocomplete="off" inputmode="numeric">
+    </div>
   </div>
 </div>
 
@@ -493,7 +495,7 @@ function showNumPad(target){
   document.getElementById('numPad').classList.add('show');
   document.getElementById('numDisplay').textContent='';
   document.getElementById('hiddenInput').value='';
-  // 隐藏系统输入框（如果存在）
+  document.getElementById('page-learn').style.paddingBottom='310px';
   const oldInp=document.getElementById('answerInput');
   if(oldInp)oldInp.style.display='none';
   const arenaInp=document.getElementById('arenaInput');
@@ -505,6 +507,7 @@ function hideNumPad(){
   document.getElementById('numPad').classList.remove('show');
   document.getElementById('numDisplay').textContent='';
   document.getElementById('hiddenInput').value='';
+  document.getElementById('page-learn').style.paddingBottom='';
 }
 
 function numPadInput(digit){
