@@ -160,6 +160,7 @@ body{font-family:var(--font);background:linear-gradient(170deg,#FFF5F5 0%,#FFF0F
 .install-banner{display:none;background:linear-gradient(135deg,var(--pink-deep),#FFB6C1);color:#fff;text-align:center;padding:12px;font-weight:600;cursor:pointer;font-size:14px;animation:slideDown 0.4s ease}
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
 @media(max-width:480px){.days-grid{gap:7px}.day-cell{font-size:10px;border-radius:14px}.day-cell .day-num{font-size:15px}.question-box{font-size:24px;padding:14px}}
+@media(orientation:landscape){.learn-container{max-width:900px;display:grid;grid-template-columns:1fr 1fr;gap:14px}.learn-container .lecture-carousel{grid-column:1}.learn-container .practice-area{grid-column:2}.phase-tabs{grid-column:1/-1}.progress-wrap{grid-column:1/-1}.days-grid{max-width:900px;grid-template-columns:repeat(10,1fr)}}
 /* 拼音注音样式 */
 .pinyin-enabled .slide-content ruby, .pinyin-enabled .highlight-box ruby, .pinyin-enabled .interact-box ruby{display:inline ruby;ruby-align:center;-webkit-ruby-align:center;ruby-position:over;-webkit-ruby-position:before;vertical-align:baseline}
 .pinyin-enabled .slide-content rt, .pinyin-enabled .highlight-box rt, .pinyin-enabled .interact-box rt{font-size:0.4em;color:#999;font-family:Arial,Helvetica,sans-serif;letter-spacing:0;user-select:none;-webkit-user-select:none;line-height:1;speak:none}
@@ -376,7 +377,7 @@ function playTone(freq,dur,type='sine',vol=0.15){
   try{const ctx=getCtx();const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,ctx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+dur)}catch(e){}
 }
 function sfxCorrect(){playTone(660,0.12);setTimeout(()=>playTone(880,0.15),100)}
-function sfxWrong(){playTone(200,0.25,'triangle',0.1)}
+function sfxWrong(){playTone(200,0.2,'triangle',0.06)}
 function sfxLevelUp(){playTone(523,0.1);setTimeout(()=>playTone(659,0.1),100);setTimeout(()=>playTone(784,0.1),200);setTimeout(()=>playTone(1047,0.2),300)}
 function sfxStar(){playTone(1200,0.08,'sine',0.1);setTimeout(()=>playTone(1600,0.1,'sine',0.12),80)}
 function sfxClick(){playTone(440,0.05,'sine',0.05)}
@@ -490,7 +491,7 @@ function clockSVG(hour,minute=0){
 // ==================== 小老师讲堂数据 (22天 × 多步骤) ====================
 const LECTURES = {
 0:[ // Day1 比大小+序数+找规律
-  {t:'📖 鳄鱼的大嘴巴',c:'乐乐好！今天我们来认识"大于号"和"小于号"～<br><br>🐊 有一只<b>贪吃的鳄鱼</b>，它的嘴巴总是<b>张开朝向更大的数字</b>！<br><br><span class="big-num">5</span> 和 <span class="big-num">3</span> —— 鳄鱼要吃谁？',h:'<b>5 > 3</b> 读作"5大于3"<br><b>3 < 5</b> 读作"3小于5"<br>鳄鱼嘴巴永远朝着大的数！'},
+  {t:'📖 鳄鱼的大嘴巴',c:'乐乐好！今天我们来认识"大于号"和"小于号"～<br><br>🐊 有一只<b>贪吃的鳄鱼</b>，它的嘴巴总是<b>张开朝向更大的数字</b>！<br><br><span class="big-num">5</span> 和 <span class="big-num">3</span> —— 鳄鱼要吃谁？',h:'<b>5 > 3</b> 读作"5大于3"<br><b>3 < 5</b> 读作"3小于5"<br>鳄鱼嘴巴永远朝着大的数！<br>💡 家长可以随手拿两个水果，问孩子"哪个多？"练大小比较'},
   {t:'✋ 第几个？',c:'乐乐，你在排队的时候，从左边数你是第几个？<br><br>这就是"<b>序数</b>"——第1、第2、第3...<br><br>🐱🐶🐰🐻🐸<br>从左边数，🐰小兔是<b>第3个</b><br>从右边数，🐰小兔是<b>第3个</b>',h:'数第几个时，先确定从哪边开始数<br>然后"第1、第2、第3..."一个一个数'},
   {t:'🔍 找规律',c:'数字宝宝有时候会"排队"哦！<br><br>看看这排数字：<span class="big-num">1, 3, 5, 7, ?</span><br><br>发现了什么？每次跳2个！<br>1(+2)=3(+2)=5(+2)=7(+2)=<b>9</b>',h:'规律就是每次都做同样的变化<br>看相邻两个数字之间差几'},
   {t:'🎯 小试牛刀',c:'<b>哪个数字更大？</b><br><br><span class="big-num">8</span> 和 <span class="big-num">6</span><br><br>鳄鱼嘴巴应该朝向谁？',q:'8和6谁更大？',a:'8',choices:['6','8']},
@@ -513,13 +514,13 @@ const LECTURES = {
 3:[ // Day4 图文应用题
   {t:'📖 读懂题目',c:'乐乐，应用题就是把数学藏在故事里！<br><br>读题三步法：<br>1️⃣ <b>圈数字</b>：把题目里的数字找出来<br>2️⃣ <b>找关键词</b>："一共"→加，"还剩"→减<br>3️⃣ <b>列算式</b>：把数字和符号写成算式',h:'应用题不难，关键是读懂题目在说什么'},
   {t:'➕ "一共"用加法',c:'例题：<br>"树上有<b>5</b>只小鸟，又飞来<b>4</b>只，<b>一共</b>有几只？"<br><br>圈数字：5 和 4<br>关键词：一共 → 用加法<br>算式：5 + 4 = <b>9</b>（只）',h:'看到"一共""合起来""总共"→ 用加法'},
-  {t:'➖ "还剩"用减法',c:'例题：<br>"小明有<b>8</b>块糖，吃了<b>3</b>块，<b>还剩</b>几块？"<br><br>圈数字：8 和 3<br>关键词：还剩 → 用减法<br>算式：8 - 3 = <b>5</b>（块）',h:'看到"还剩""剩下""还有"→ 用减法'},
+  {t:'➖ "还剩"用减法',c:'例题：<br>"小明有<b>8</b>块糖，吃了<b>3</b>块，<b>还剩</b>几块？"<br><br>圈数字：8 和 3<br>关键词：还剩 → 用减法<br>算式：8 - 3 = <b>5</b>（块）',h:'看到"还剩""剩下""还有"→ 用减法<br>💡 家长可以在吃饭时说"盘子里有8个饺子，吃了3个，还剩几个？"让孩子在真实场景中学'},
   {t:'🎯 小试牛刀',c:'"池塘里有<b>7</b>条鱼，游走了<b>2</b>条，<b>还剩</b>几条？"<br><br>用加法还是减法？',q:'7条鱼游走2条，剩几条？',a:'5',choices:['5','9','7']},
   {t:'📝 今天学到了',c:'✅ 圈数字 + 找关键词 + 列算式<br>✅ "一共"→ 加法<br>✅ "还剩"→ 减法<br><br>你已经是读题小能手了！📖'}
 ],
 4:[ // Day5 图形
   {t:'📦 立体图形王国',c:'今天来认识立体图形！<br><br>🔹 <b>长方体</b>：像鞋盒，6个面，对面一样大<br>🔹 <b>正方体</b>：像骰子🎲，6个面<b>都一样大</b><br>🔹 <b>圆柱</b>：像水杯🥤，上下两个圆面<br>🔹 <b>球</b>：像皮球⚽，圆滚滚没有平面',h:'关键区分：<br>正方体所有面一样大<br>长方体有对面一样大（但不是全部一样）'},
-  {t:'🔍 找一找',c:'在生活中找图形：<br><br>📦 冰箱 → <b>长方体</b><br>🎲 骰子 → <b>正方体</b><br>🥫 易拉罐 → <b>圆柱</b><br>🏀 篮球 → <b>球</b><br><br>乐乐，你在家里能找到这四种图形吗？',h:'长方体最多见：书柜、冰箱、鞋盒<br>球最容易认：圆的、能滚的'},
+  {t:'🔍 找一找',c:'在生活中找图形：<br><br>📦 冰箱 → <b>长方体</b><br>🎲 骰子 → <b>正方体</b><br>🥫 易拉罐 → <b>圆柱</b><br>🏀 篮球 → <b>球</b><br><br>乐乐，你在家里能找到这四种图形吗？',h:'长方体最多见：书柜、冰箱、鞋盒<br>球最容易认：圆的、能滚的<br>💡 家长可以和孩子比赛谁先找到四种图形！'},
   {t:'🧱 拼一拼',c:'正方体可以拼搭哦！<br><br>🧊 + 🧊 = 两个正方体拼成<b>长方体</b><br><br>4个小正方体（2×2排列）拼成什么？还是<b>长方体</b>！<br><br>至少需要<b>8个</b>小正方体才能拼成一个大正方体（2×2×2）',h:'正方体拼搭是空间想象的基础<br>动手试试看！'},
   {t:'🎯 小试牛刀',c:'📦 鞋盒是什么立体图形？',q:'鞋盒是什么立体图形？',a:'长方体',choices:['长方体','正方体','圆柱','球']},
   {t:'📝 今天学到了',c:'✅ 四种立体图形：长方体、正方体、圆柱、球<br>✅ 正方体6个面都一样，长方体不是<br>✅ 2个正方体拼成长方体<br><br>出发探索图形王国！📐'}
@@ -546,7 +547,7 @@ const LECTURES = {
   {t:'📝 今天学到了',c:'✅ 10+几=十几<br>✅ 不进位加：十位不变，个位相加<br>✅ 不退位减：十位不变，个位相减<br><br>11-20小行家，出发！🔢'}
 ],
 8:[ // Day9 凑十法
-  {t:'🤝 凑十好朋友',c:'乐乐，今天学一个超级重要的本领——<b>凑十法</b>！<br><br>先记住<b>凑十好朋友</b>：<br>1️⃣+9️⃣=10　2️⃣+8️⃣=10<br>3️⃣+7️⃣=10　4️⃣+6️⃣=10<br>5️⃣+5️⃣=10<br><br>加起来等于10的两个数就是好朋友！',h:'好朋友口诀：<br>一九一九好朋友，二八二八手拉手<br>三七三七真亲密，四六四六一起走<br>五五凑成一双手'},
+  {t:'🤝 凑十好朋友',c:'乐乐，今天学一个超级重要的本领——<b>凑十法</b>！<br><br>先记住<b>凑十好朋友</b>：<br>1️⃣+9️⃣=10　2️⃣+8️⃣=10<br>3️⃣+7️⃣=10　4️⃣+6️⃣=10<br>5️⃣+5️⃣=10<br><br>加起来等于10的两个数就是好朋友！',h:'好朋友口诀：<br>一九一九好朋友，二八二八手拉手<br>三七三七真亲密，四六四六一起走<br>五五凑成一双手<br>💡 家长可以和孩子玩"凑十拍手"游戏：你出4，我出6——啪！'},
   {t:'🎯 凑十法怎么做',c:'<b>口诀：看大数，分小数，凑成十，加剩数</b><br><br>例：<span class="big-num">9 + 4</span><br><br>① 看大数：9<br>② 9差1到10<br>③ 分小数：把4拆成<b>1和3</b><br>④ 凑成十：9+1=10<br>⑤ 加剩数：10+3=<b>13</b>',h:'凑十法就是把一个数拆开<br>先凑成10，再加剩下的'},
   {t:'🧮 再来一个例子',c:'<span class="big-num">8 + 5</span><br><br>① 看大数：8<br>② 8差2到10<br>③ 分小数：把5拆成<b>2和3</b><br>④ 凑成十：8+2=10<br>⑤ 加剩数：10+3=<b>13</b><br><br>不管大数是9还是8、7、6，方法都一样！',h:'大数差几到10，就从小数里拿几'},
   {t:'🎯 小试牛刀',c:'<b>9 + 6 = ?</b><br><br>9差1到10，从6拿1，剩5',q:'9+6=?',a:'15',choices:['15','16','14']},
@@ -676,14 +677,14 @@ const STUDY_DAYS = [
 
 // 周末任务
 const WEEKEND_TASKS = [
-  {id:1,icon:'🛒',theme:'超市小当家',desc:'今天和爸爸/妈妈一起去超市吧！',tasks:['给你<b>20元现金</b>，去超市选自己喜欢的零食或文具','算一算：选了几样东西？一共多少钱？','付钱时自己数找回的零钱','回家记下来：名称+价格+总价','挑战：换一样东西，总价变多少？'],tip:'让孩子独立付钱找零，你在旁边看着就行'},
-  {id:2,icon:'🍪',theme:'厨房数学',desc:'穿上围裙，厨房变成数学实验室！',tasks:['和爸妈一起做饼干/包饺子','用量杯：半杯？两杯？','把面团分成相等的几份——这就是除法！','每份放几个葡萄干？每份一样多吗？','一共做了多少个？每人分几个？'],tip:'重点在"等分"和"计数"，不在乎好不好吃'},
-  {id:3,icon:'🔍',theme:'形状寻宝',desc:'在家里来一场形状大搜索！',tasks:['找长方体物品→拍照','找正方体物品→拍照','找圆柱物品→拍照','找球→拍照','挑战：找5个正方形和5个长方形的面'],tip:'集齐后让孩子介绍每样东西是什么形状'},
-  {id:4,icon:'⏰',theme:'时间小管家',desc:'今天来记录自己的一天！',tasks:['每做一件事看钟，记下时间','画一条时间线：几点到几点做了什么','算一算：吃饭花多长时间？学习花多长时间？','晚上看动画片前先说出现在几点'],tip:'画在纸上拍照留念，孩子会对时间有概念'},
-  {id:5,icon:'🎲',theme:'数学桌游日',desc:'不碰平板，玩桌面对战游戏！',tasks:['扑克牌大战：各抽一张比大小','骰子加法：扔两个骰子加点数','24点简化版：抽两张牌加起来','飞行棋/大富翁：走格子数步数','计分！谁是今天的数学王？'],tip:'让着点但也别太明显，开心最重要'},
-  {id:6,icon:'📏',theme:'测量小能手',desc:'用身体来量世界！',tasks:['用手（拃）量餐桌有多长','用脚（步）量客厅有多长','用尺子量书桌多少厘米','比一比：爸妈的手和你的手谁一拃更长？','找一个比1米长的东西和一个比1米短的'],tip:'让孩子理解"单位"——手大的人量得次数少'},
-  {id:7,icon:'🏪',theme:'家庭小商店',desc:'把家里的玩具开成店！',tasks:['挑5-10个玩具，标价1-20元','做"钱"：纸片写1元5元10元20元','爸妈当顾客来买玩具','买两样：一共多少钱？（加法）','给20元买一样：找多少？（减法）'],tip:'这个游戏孩子特别喜欢，可以玩很久'},
-  {id:8,icon:'🎪',theme:'数学游园会',desc:'把所有学过的数学本领都展示出来！',tasks:['速算擂台：爸妈出题比赛','认时间：指钟说时间','图形识别：家里随机找东西说形状','凑十表演：用凑十法讲一道题','颁奖：回顾30天，给自己鼓掌！'],tip:'今天是庆祝日！多发奖励，回顾成长'}
+  {id:1,icon:'🛒',theme:'超市小当家',desc:'今天和爸爸/妈妈一起去超市吧！',tasks:['给你<b>20元现金</b>，去超市选自己喜欢的零食或文具','算一算：选了几样东西？一共多少钱？','付钱时自己数找回的零钱','回家记下来：名称+价格+总价','挑战：换一样东西，总价变多少？'],tip:'让孩子独立付钱找零，你在旁边看着就行',bonusTask:'今天自己整理购物袋',bonusStars:5},
+  {id:2,icon:'🍪',theme:'厨房数学',desc:'穿上围裙，厨房变成数学实验室！',tasks:['和爸妈一起做饼干/包饺子','用量杯：半杯？两杯？','把面团分成相等的几份——这就是除法！','每份放几个葡萄干？每份一样多吗？','一共做了多少个？每人分几个？'],tip:'重点在"等分"和"计数"，不在乎好不好吃',bonusTask:'做完后自己收拾桌面',bonusStars:5},
+  {id:3,icon:'🔍',theme:'形状寻宝',desc:'在家里来一场形状大搜索！',tasks:['找长方体物品→拍照','找正方体物品→拍照','找圆柱物品→拍照','找球→拍照','挑战：找5个正方形和5个长方形的面'],tip:'集齐后让孩子介绍每样东西是什么形状',bonusTask:'拍完照自己把东西放回原位',bonusStars:5},
+  {id:4,icon:'⏰',theme:'时间小管家',desc:'今天来记录自己的一天！',tasks:['每做一件事看钟，记下时间','画一条时间线：几点到几点做了什么','算一算：吃饭花多长时间？学习花多长时间？','晚上看动画片前先说出现在几点'],tip:'画在纸上拍照留念，孩子会对时间有概念',bonusTask:'今天自己按时起床不用叫',bonusStars:10},
+  {id:5,icon:'🎲',theme:'数学桌游日',desc:'不碰平板，玩桌面对战游戏！',tasks:['扑克牌大战：各抽一张比大小','骰子加法：扔两个骰子加点数','24点简化版：抽两张牌加起来','飞行棋/大富翁：走格子数步数','计分！谁是今天的数学王？'],tip:'让着点但也别太明显，开心最重要',bonusTask:'游戏结束自己收拾牌和棋子',bonusStars:5},
+  {id:6,icon:'📏',theme:'测量小能手',desc:'用身体来量世界！',tasks:['用手（拃）量餐桌有多长','用脚（步）量客厅有多长','用尺子量书桌多少厘米','比一比：爸妈的手和你的手谁一拃更长？','找一个比1米长的东西和一个比1米短的'],tip:'让孩子理解"单位"——手大的人量得次数少',bonusTask:'自己削好铅笔准备明天的学习',bonusStars:5},
+  {id:7,icon:'🏪',theme:'家庭小商店',desc:'把家里的玩具开成店！',tasks:['挑5-10个玩具，标价1-20元','做"钱"：纸片写1元5元10元20元','爸妈当顾客来买玩具','买两样：一共多少钱？（加法）','给20元买一样：找多少？（减法）'],tip:'这个游戏孩子特别喜欢，可以玩很久',bonusTask:'今天自己整理书包和文具',bonusStars:10},
+  {id:8,icon:'🎪',theme:'数学游园会',desc:'把所有学过的数学本领都展示出来！',tasks:['速算擂台：爸妈出题比赛','认时间：指钟说时间','图形识别：家里随机找东西说形状','凑十表演：用凑十法讲一道题','颁奖：回顾30天，给自己鼓掌！'],tip:'今天是庆祝日！多发奖励，回顾成长',bonusTask:'自己总结：这30天我学会了什么？',bonusStars:10}
 ];
 
 // 地图数据
@@ -1404,7 +1405,8 @@ function finishDay(){
   });
   if(STATE.learningLog.length>50)STATE.learningLog=STATE.learningLog.slice(-50);
   checkBadges();saveState();updateLearnStats();
-  showModal('🎉','太棒了！`今天获得 <b>${ds}</b> 颗星 ⭐<br>擂台得分 <b>${STATE.arenaScore}</b> 分<br>最长连对 <b>${STATE.streakBest}</b> 题<br><br>第${mi+1}天挑战完成！',()=>{goMap();});
+  const tip=SCHOOL_TIPS[(mi)%SCHOOL_TIPS.length];
+  showModal('🎉','太棒了！','今天获得 <b>${ds}</b> 颗星 ⭐<br>擂台得分 <b>${STATE.arenaScore}</b> 分<br>最长连对 <b>${STATE.streakBest}</b> 题<br><br>第${mi+1}天挑战完成！<br><br><span style="font-size:13px;color:var(--text-light)">${tip}</span>',()=>{goMap();});
 }
 
 // ==================== 学习计时 & 休息提醒 ====================
@@ -1432,7 +1434,9 @@ function updateTimerDisplay(){
 }
 function showRestModal(){
   const remaining=Math.ceil((STATE._restUntil-Date.now())/60000);
-  showModal('😊','小眼睛累啦！','花花休息一下～<br>去喝口水、跳一跳、看看窗外<br><br><b style="font-size:18px;color:var(--pink-deep)">⏳ '+remaining+' 分钟后继续</b><br><br><span style="font-size:13px;color:var(--text-light)">休息好了学得更棒哦！</span>',()=>{
+  const tips=['🦘 跳10下跳绳吧！','🌿 看看窗外的绿色植物30秒','💧 喝一口水哦～','🙆 伸个大大的懒腰','👀 闭眼数到20，让眼睛休息','🚶 在房间里走一圈再回来'];
+  const tip=tips[Math.floor(Math.random()*tips.length)];
+  showModal('😊','小眼睛累啦！','花花休息一下～<br><br><b style="font-size:16px">'+tip+'</b><br><br><b style="font-size:18px;color:var(--pink-deep)">⏳ '+remaining+' 分钟后继续</b>',()=>{
     if(Date.now()<STATE._restUntil){
       const r=Math.ceil((STATE._restUntil-Date.now())/60000);
       alert('再休息 '+r+' 分钟吧～小眼睛需要放松！');
@@ -1487,26 +1491,64 @@ function confirmLeaveLearn(){
 // ==================== 周末 ====================
 function openWeekendDay(mi){
   STATE._mapIndex=mi;const d=MAP_DAYS[mi];STATE._weekendDay=d;
-  STATE._studyDay=d; // 拼音智能模式需要
+  STATE._studyDay=d;STATE._weekendChecks=[];
   if(STATE.pinyinMode==='smart'){STATE.pinyinEnabled=false;localStorage.setItem('pinyin_enabled','0');}
   document.getElementById('weekendTitle').textContent=`🎪 第${mi+1}天 · ${d.data.theme}`;
-  document.getElementById('taskCard').innerHTML=`<div class="task-icon">${d.data.icon}</div><h2>${d.data.theme}</h2><p style="color:var(--text-light);margin-bottom:12px">${d.data.desc}</p><div style="background:linear-gradient(135deg,#FFF8DC,#FFFDF5);border-radius:14px;padding:16px;text-align:left;line-height:1.8"><ol class="task-checklist">${d.data.tasks.map(t=>`<li>${t}</li>`).join('')}</ol></div><div style="margin-top:12px;padding:10px;background:linear-gradient(135deg,#F0F4FF,#F5F8FF);border-radius:12px;font-size:13px;text-align:left">${d.data.tip}</div>`;
+  // 渲染可勾选的子任务 + 自理附加任务
+  let tasksHTML=d.data.tasks.map((t,i)=>`<li id="wtask${i}" onclick="toggleWeekendTask(${i})" style="cursor:pointer;user-select:none"><span id="wcheck${i}" style="display:inline-block;width:22px;height:22px;border:2px solid #ccc;border-radius:6px;text-align:center;line-height:18px;margin-right:6px;font-size:12px;transition:all 0.3s">　</span>${t}</li>`).join('');
+  let bonusHTML='';
+  if(d.bonusTask){
+    bonusHTML=`<div style="margin-top:10px;padding:10px;background:linear-gradient(135deg,#FFF0E8,#FFF5F0);border-radius:12px;font-size:13px;border:1px dashed #FFB088"><b>🌟 自理小任务：</b>${d.bonusTask} +${d.bonusStars||5}⭐</div>`;
+  }
+  // 家长评星
+  const starRow=[1,2,3,4,5].map(s=>`<span id="prs${s}" onclick="setParentRating(${s})" style="font-size:28px;cursor:pointer;opacity:0.3;transition:all 0.2s">⭐</span>`).join('');
+  document.getElementById('taskCard').innerHTML=`<div class="task-icon">${d.data.icon}</div><h2>${d.data.theme}</h2><p style="color:var(--text-light);margin-bottom:12px">${d.data.desc}</p><div style="background:linear-gradient(135deg,#FFF8DC,#FFFDF5);border-radius:14px;padding:16px;text-align:left;line-height:1.8"><ol class="task-checklist">${tasksHTML}</ol><div id="taskProgress" style="text-align:center;font-size:13px;margin-top:6px;color:var(--text-light)">完成 0/${d.data.tasks.length}</div></div>${bonusHTML}<div style="margin-top:12px;padding:10px;background:linear-gradient(135deg,#F0F4FF,#F5F8FF);border-radius:12px;font-size:13px;text-align:left">${d.data.tip}</div><div style="margin-top:10px;text-align:center"><p style="font-size:13px;color:var(--text-light);margin-bottom:4px;">👨‍👧 家长评星：</p>${starRow}</div>`;
   document.getElementById('finishWeekendBtn').style.display=STATE.dayStars[mi]!==undefined?'none':'inline-block';
   switchPage('page-weekend');
 }
+// 子任务勾选
+function toggleWeekendTask(i){
+  if(!STATE._weekendChecks)STATE._weekendChecks=[];
+  const idx=STATE._weekendChecks.indexOf(i);
+  if(idx>=0)STATE._weekendChecks.splice(idx,1);else STATE._weekendChecks.push(i);
+  const el=document.getElementById('wcheck'+i);
+  if(el)el.textContent=idx>=0?'　':'✅';
+  if(el)el.style.borderColor=idx>=0?'#ccc':'var(--success)';
+  const d=STATE._weekendDay;
+  document.getElementById('taskProgress').textContent=`完成 ${STATE._weekendChecks.length}/${d.data.tasks.length}`;
+}
+// 家长评星
+function setParentRating(s){
+  STATE._parentRating=s;
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('prs'+i);
+    if(el)el.style.opacity=i<=s?'1':'0.3';
+  }
+}
+window.toggleWeekendTask=toggleWeekendTask;window.setParentRating=setParentRating;
+
 function finishWeekend(){
-  const mi=STATE._mapIndex;
-  // 家长验证
+  const mi=STATE._mapIndex;const d=STATE._weekendDay;
   if(!STATE._parentAuth){
     const pin=prompt('🔐 请家长输入密码确认：');
     const savedPin=localStorage.getItem('parent_pin')||'1234';
     if(pin!==savedPin){alert('密码错误！');return;}
   }
-  STATE.dayStars[mi]=3;STATE.totalStars=Object.values(STATE.dayStars).reduce((a,b)=>a+b,0);
-  STATE.totalScore+=20;STATE.completedDays=Object.keys(STATE.dayStars).length;
+  // 基础星 + 家长评星加成 + 自理加成 + 全完成奖励
+  let stars=3;
+  const checks=STATE._weekendChecks||[];
+  if(checks.length>=d.data.tasks.length)stars+=2; // 全完成额外+2
+  const rating=STATE._parentRating||0;
+  if(rating>=4)stars+=2;else if(rating>=2)stars+=1;
+  if(d.bonusTask&&checks.length>=d.data.tasks.length)stars+=(d.bonusStars||5);
+  STATE.dayStars[mi]=Math.min(stars,10);
+  STATE.totalStars=Object.values(STATE.dayStars).reduce((a,b)=>a+b,0);
+  STATE.totalScore+=20+stars*2;STATE.completedDays=Object.keys(STATE.dayStars).length;
   if(mi===STATE.currentDay&&STATE.currentDay<29)STATE.currentDay=mi+1;
   checkBadges();saveState();document.getElementById('finishWeekendBtn').style.display='none';
-  showModal('🌟','生活数学日完成！','和爸爸妈妈一起学数学<br>是最开心的事！<br><br>获得 <b>3</b> 颗星 ⭐',()=>goMap());
+  STATE._parentRating=0;STATE._weekendChecks=[];
+  const tip=SCHOOL_TIPS[(mi)%SCHOOL_TIPS.length];
+  showModal('🌟','生活数学日完成！','和爸爸妈妈一起学数学<br>是最开心的事！<br><br>获得 <b>${stars}</b> 颗星 ⭐<br><br><span style="font-size:13px;color:var(--text-light)">${tip}</span>',()=>goMap());
 }
 
 // ==================== 徽章 ====================
@@ -1616,6 +1658,9 @@ function showParentDashboard(){
       const rate=stats.total>0?Math.round(stats.correct/stats.total*100):0;
       const color=rate>=80?'#4CAF50':rate>=60?'#FF9800':'#F44336';
       rh+=`<div style="margin:4px 0;display:flex;align-items:center;gap:6px;"><span style="min-width:80px;font-size:12px;">${topic}</span><div style="flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden"><div style="width:${rate}%;height:100%;background:${color};border-radius:4px;"></div></div><span style="font-size:11px;min-width:35px;text-align:right;">${rate}%</span></div>`;
+      if(rate<60&&TUTOR_TIPS[topic]){
+        rh+=`<div style="font-size:11px;color:#F44336;padding:2px 0 4px 86px;">💡 ${TUTOR_TIPS[topic].hint}</div>`;
+      }
     }
     rh+=`<div style="font-weight:600;margin:10px 0 4px;">📋 最近记录</div>`;
     STATE.learningLog.slice(-5).reverse().forEach(log=>{
@@ -1686,6 +1731,43 @@ document.addEventListener('keydown',function(e){
     const ans=document.getElementById('answerInput');if(ans&&document.activeElement===ans){submitAnswer();return;}
   }
 });
+
+// ==================== 小学小知识彩蛋 ====================
+const SCHOOL_TIPS=[
+  '🏫 小学上课要先举手再发言哦～','🚰 下课要记得喝水和上厕所呀','🎒 自己的书包要自己整理哦','📝 老师说话时眼睛要看着老师','✋ 想回答问题先举手，等老师叫你','📖 上课前把课本和铅笔摆整齐','👋 见到老师要说"老师好"','🪑 坐姿端正，小手放桌上','🗣️ 和同学说话要轻声细语','📋 记作业：每天放学前记好作业内容','⏰ 听到上课铃要快回座位','🍱 午餐后自己收拾餐具','🧹 值日时认真扫地擦黑板','📏 排队时要站直，不推不挤','🔢 写数字要一笔一画认真写','🤝 同学遇到困难主动帮忙','📚 读题时用手指着字一个一个读','✏️ 铅笔尖了找老师帮忙削','🌈 犯了错误不要怕，改正就好','🦷 吃完午饭记得漱口','💤 中午要安静午休，不打扰别人','🧢 体育课后记得把衣服穿好','📐 用完的文具放回笔盒里','🌻 每天开开心心来上学','👨‍👧 放学回家先和爸妈说说今天学了什么','🗓️ 明天要用的东西今晚就装好','🎨 画画时大胆用颜色，不用怕画错','🧠 遇到不会的题先自己想，再问老师','💪 坚持每天来上学，不迟到不早退','🏆 你是最棒的小学生！'
+];
+
+// ==================== 辅导建议文案 ====================
+const TUTOR_TIPS={
+  '比大小':{hint:'用实物（比如糖果、积木）摆出两堆，让孩子直观比较多少'},
+  '第几个':{hint:'排队时问孩子"从你这边数，妈妈是第几个？"生活中随时练习'},
+  '找规律':{hint:'用彩色积木或珠子按规律排列，让孩子接着摆'},
+  '加法填空':{hint:'用小棒或手指摆出已知的数，边数边加'},
+  '减法填空':{hint:'画圆圈代表总数，划掉知道的，剩下就是答案'},
+  '连加达人':{hint:'用数轴：从第一个数开始，向右跳第二个数步，再跳第三个数步'},
+  '连减小能手':{hint:'用数轴：从第一个数开始，向左一步一步跳'},
+  '图文理解':{hint:'先让孩子复述题目讲了一件什么事，再找数字和关键词'},
+  '认图形':{hint:'在家找实物：冰箱是长方体，篮球是球，水杯是圆柱'},
+  '左右分辨':{hint:'用"拿筷子的手是右手"帮助记忆，玩"举左手举右手"游戏'},
+  '数位认识':{hint:'用小棒演示：1捆=10根=1个十，散开的是几个一'},
+  '十加几':{hint:'用"十几=10+几"口诀，先确认十位是1'},
+  '不进位加':{hint:'强调十位不变，只算个位，用数小棒的方式演示'},
+  '凑十好朋友':{hint:'用手指数：1和9、2和8、3和7、4和6、5和5，做手势配对游戏'},
+  '9加几':{hint:'用小棒摆出9根和要加的数，先从多的那边拿1根凑成10'},
+  '破十法练习':{hint:'用小棒摆1捆+几根，要减时拆开那捆，拿出10根来减'},
+  '想加算减':{hint:'反过来想：几加几等于被减数？先想加法再算减法'},
+  '认指针':{hint:'用实物钟或纸钟，让孩子拨动指针，感受时针比分针慢很多'},
+  '读整时':{hint:'分针指向12就不看，只看时针指向几就是几时'},
+  '读半时':{hint:'分针指向6时，看时针刚走过几。用纸钟反复拨整时和半时对比'},
+  '排队问题':{hint:'用积木或玩偶摆排队，让孩子站着数，体会"自己数了两次所以减1"'},
+  '填未知数':{hint:'用天平或跷跷板比喻：两边要平衡，缺的一边补上'},
+  '拼搭达人':{hint:'用积木实际拼搭，2个正方体拼成长方体，4个拼成更大的长方体'},
+  '数字谜题':{hint:'先看行再看列，排除已有数字，剩下的就是答案'},
+  '闪卡心算':{hint:'用扑克牌替代：抽两张牌比谁先说出和/差'},
+  '综合推理':{hint:'把条件排成一行：A>B, B>C → A>B>C，用小动物玩偶演示'},
+  '认图形':{hint:'用橡皮泥捏立体图形，长方体、正方体、圆柱、球各捏一个'},
+  '数独':{hint:'先找只缺一个数字的行或列，填上再看下一个'}
+};
 
 // ==================== 初始化 ====================
 loadState();renderMap();initPinyinToggle();
