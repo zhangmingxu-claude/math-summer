@@ -553,12 +553,7 @@ function numPadConfirm(){
     submitMistake();
   }else if(_numPadTarget==='arena'){
     const ai=document.getElementById('arenaInput');if(ai)ai.value=val;
-    // 如果擂台未激活，先激活；否则直接提交
-    if(!STATE.arenaActive){STATE.arenaActive=true;STATE.arenaScore=0;STATE.arenaSeconds=120;
-      document.getElementById('arenaSubmit').textContent='GO!';document.getElementById('arenaScoreDisplay').textContent='得分：0';
-      document.getElementById('arenaTimer').classList.remove('urgent');startArenaTimer();
-    }
-    submitArena();
+    submitArena(); // 统一由submitArena处理激活/提交逻辑
   }
 }
 window.numPadInput=numPadInput;window.numPadDelete=numPadDelete;window.numPadConfirm=numPadConfirm;
@@ -1106,34 +1101,43 @@ function updatePhaseTabs(){
   });
 }
 function switchPhase(phase){
-  // 讲堂：隐藏键盘，显示轮播
+  // 讲堂
   if(phase==='lecture'){
     hideNumPad();STATE.learnPhase='lecture';
     updatePhaseTabs();updateProgress();
     document.getElementById('lectureCarousel').scrollIntoView({behavior:'smooth'});
     return;
   }
-  // 闯关练习：键盘归位到练习区
+  // 闯关练习：强制键盘归位到练习区题目下方
   if(phase==='level'){
+    hideNumPad();
     if(STATE.learnPhase==='lecture'){startPractice();return;}
     STATE.learnPhase='level';updatePhaseTabs();updateProgress();
-    // 重新渲染当前题目，触发键盘挂载到练习区
-    if(STATE.currentQuestion){
+    // 有当前题目→重渲染（触发showNumPad挂载键盘）；无题目→新开一关
+    if(STATE.currentQuestion&&!STATE.currentQuestion.choices){
       renderQuestion(STATE.currentQuestion);
     }else if(STATE._studyDay){
-      nextLevel(STATE._studyDay);
+      STATE.currentQuestion=genQ(STATE._studyDay.data.id-1,STATE.currentLevel);
+      renderQuestion(STATE.currentQuestion);
     }
     document.getElementById('practiceArea').scrollIntoView({behavior:'smooth'});
     return;
   }
-  // 趣味擂台：键盘挂载到擂台区
+  // 趣味擂台：键盘挂载到擂台区题目下方
   if(phase==='arena'){
+    hideNumPad();
     if(STATE.learnPhase==='lecture'){alert('请先完成闯关练习再挑战擂台哦～');return;}
     STATE.learnPhase='arena';updatePhaseTabs();updateProgress();
     document.getElementById('phaseTab1').classList.add('done');document.getElementById('phaseTab2').classList.add('active');
     document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'});
-    hideNumPad();
-    if(!STATE.arenaActive){document.getElementById('arenaSubmit').click();}
+    // 擂台已激活→重渲染当前擂台题（触发showNumPad挂载键盘）
+    if(STATE.arenaActive&&STATE.arenaQuestion&&!STATE.arenaQuestion.choices){
+      const q=STATE.arenaQuestion;
+      document.getElementById('arenaQuestion').innerHTML=`<span style="font-size:26px">${q.q}</span>`;
+      showNumPad('arena');
+    }else if(!STATE.arenaActive){
+      document.getElementById('arenaSubmit').click();
+    }
     return;
   }
 }
@@ -1341,6 +1345,8 @@ function updateLearnStats(){
 function submitArena(){
   if(!STATE.arenaActive){
     STATE.arenaActive=true;STATE.arenaScore=0;STATE.arenaSeconds=120;
+    STATE.learnPhase='arena';updatePhaseTabs();updateProgress();
+    document.getElementById('phaseTab1').classList.add('done');document.getElementById('phaseTab2').classList.add('active');
     document.getElementById('arenaSubmit').textContent='GO!';document.getElementById('arenaScoreDisplay').textContent='得分：0';
     document.getElementById('arenaTimer').classList.remove('urgent');
     startArenaTimer();nextArenaQ();return;
