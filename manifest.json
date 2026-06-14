@@ -1,7 +1,7 @@
 {
-  "name": "朵朵的数学冒险",
-  "short_name": "数学冒险",
-  "description": "幼小衔接数学学习平台 - 30天闯关",
+  "name": "乐乐的数学冒险",
+  "short_name": "乐乐数学",
+  "description": "乐乐数学学习平台 - 30天闯关",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
