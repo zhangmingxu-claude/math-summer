@@ -1280,18 +1280,21 @@ function nextAfterFB(){
         STATE.learnPhase='arena';updatePhaseTabs();updateProgress();
         document.getElementById('phaseTab1').classList.add('done');document.getElementById('phaseTab2').classList.add('active');
         document.getElementById('feedbackBox').className='feedback-box';
-        // 解锁擂台
+        hideNumPad();
+        // 解锁并直接激活擂台
         const arenaCard=document.getElementById('arenaCard');
         arenaCard.classList.remove('locked');
         const arenaBtn=document.getElementById('arenaSubmit');
-        arenaBtn.disabled=false;arenaBtn.textContent='开始挑战！';
-        hideNumPad();
-        document.getElementById('questionBox').innerHTML='🎊 三关全部通过！';
-        document.getElementById('answerRow').innerHTML=`
-          <button class="btn btn-yellow" style="font-size:18px;padding:14px 32px;animation:iconBounce 1s ease-in-out infinite" onclick="document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'});document.getElementById('arenaSubmit').focus();">⚡ 开始趣味擂台</button>
-        `;
+        arenaBtn.disabled=false;arenaBtn.textContent='GO!';
+        document.getElementById('questionBox').innerHTML='🎊 闯关完成，擂台已开启！';
+        document.getElementById('answerRow').innerHTML='';
         document.getElementById('hintBox').className='hint-box';
-        setTimeout(()=>document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'}),600);
+        // 自动启动擂台
+        STATE.arenaActive=true;STATE.arenaScore=0;STATE.arenaSeconds=120;
+        document.getElementById('arenaScoreDisplay').textContent='得分：0';
+        document.getElementById('arenaTimer').classList.remove('urgent');
+        startArenaTimer();nextArenaQ();
+        setTimeout(()=>document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'}),400);
       }
     }else{
       STATE.currentQuestion=genQ(day.data.id-1,STATE.currentLevel);
