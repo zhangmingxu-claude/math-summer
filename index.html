@@ -494,55 +494,56 @@ let _numPadTarget=null; // 'practice'|'mistake'|'arena'
 function showNumPad(target){
   _numPadTarget=target;
   const pad=document.getElementById('numPad');
-  // 键盘搬家：擂台→arenaCard，练习/错题→answerRow
+  // 擂台→arenaCard；练习→practiceArea（answerRow父容器，innerHTML不会销毁键盘）
   if(target==='arena'){
     const ac=document.getElementById('arenaCard');
-    if(ac&&pad.parentNode!==ac)ac.appendChild(pad);
+    if(ac)ac.appendChild(pad);
   }else{
-    const ar=document.getElementById('answerRow');
-    if(ar&&pad.parentNode!==ar)ar.appendChild(pad);
+    const pa=document.getElementById('practiceArea');
+    if(pa)pa.appendChild(pad);
   }
   pad.classList.add('show');
-  document.getElementById('numDisplay').textContent='';
-  document.getElementById('hiddenInput').value='';
-  const oldInp=document.getElementById('answerInput');
-  if(oldInp)oldInp.style.display='none';
-  const arenaInp=document.getElementById('arenaInput');
-  if(arenaInp)arenaInp.style.display='none';
+  const disp=document.getElementById('numDisplay');if(disp)disp.textContent='';
+  const hid=document.getElementById('hiddenInput');if(hid)hid.value='';
 }
 
 function hideNumPad(){
   _numPadTarget=null;
-  document.getElementById('numPad').classList.remove('show');
-  document.getElementById('numDisplay').textContent='';
-  document.getElementById('hiddenInput').value='';
+  const pad=document.getElementById('numPad');
+  if(pad)pad.classList.remove('show');
+  const disp=document.getElementById('numDisplay');
+  if(disp)disp.textContent='';
+  const hid=document.getElementById('hiddenInput');
+  if(hid)hid.value='';
 }
 
 function numPadInput(digit){
   const display=document.getElementById('numDisplay');
   const hidden=document.getElementById('hiddenInput');
+  if(!display||!hidden)return;
   const cur=hidden.value;
-  // 最大2位限制（幼小衔接所有答案≤20，两位数足够）
   if(cur.length>=2)return;
   hidden.value=cur+digit;
   display.textContent=hidden.value;
-  display.classList.remove('flash');
   sfxClick();
 }
 
 function numPadDelete(){
   const hidden=document.getElementById('hiddenInput');
+  const display=document.getElementById('numDisplay');
+  if(!hidden||!display)return;
   const cur=hidden.value;
   if(cur.length===0)return;
   hidden.value=cur.slice(0,-1);
-  document.getElementById('numDisplay').textContent=hidden.value;
+  display.textContent=hidden.value;
   sfxClick();
 }
 
 function numPadConfirm(){
   const hidden=document.getElementById('hiddenInput');
+  if(!hidden)return;
   const val=hidden.value.trim();
-  if(val==='')return; // 空输入不提交
+  if(val==='')return;
   sfxClick();
   // 根据目标调用对应提交函数
   if(_numPadTarget==='practice'){
