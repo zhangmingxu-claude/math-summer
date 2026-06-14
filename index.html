@@ -252,9 +252,9 @@ const PINYIN_MAP={一:'yī',七:'qī',三:'sān',上:'shàng',下:'xià',不:'b�
   <div class="learn-container">
     <div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" id="learnProgress" style="width:0%"></div></div></div>
     <div class="phase-tabs">
-      <div class="phase-tab active" id="phaseTab0" onclick="switchPhase('lecture')">📖 小老师讲堂</div>
-      <div class="phase-tab" id="phaseTab1" onclick="switchPhase('level')">🎯 闯关练习</div>
-      <div class="phase-tab" id="phaseTab2" onclick="switchPhase('arena')">⚡ 趣味擂台</div>
+      <div class="phase-tab active" id="phaseTab0">📖 小老师讲堂</div>
+      <div class="phase-tab" id="phaseTab1">🎯 闯关练习</div>
+      <div class="phase-tab" id="phaseTab2">⚡ 趣味擂台</div>
     </div>
 
     <!-- 讲堂轮播 -->
@@ -492,29 +492,18 @@ let _numPadTarget=null; // 'practice'|'mistake'|'arena'
 function showNumPad(target){
   _numPadTarget=target;
   const pad=document.getElementById('numPad');
-  // 动态挂载：练习→answerRow，擂台→arenaCard底部
-  if(target==='arena'){
-    const arenaCard=document.getElementById('arenaCard');
-    if(arenaCard&&pad.parentNode!==arenaCard)arenaCard.appendChild(pad);
-  }else{
-    const answerRow=document.getElementById('answerRow');
-    if(answerRow&&pad.parentNode!==answerRow)answerRow.appendChild(pad);
-  }
+  // 强制挂载到对应区域（每次直接移动，不判断parentNode）
+  const dest=target==='arena'?document.getElementById('arenaCard'):document.getElementById('answerRow');
+  if(dest)dest.appendChild(pad);
   pad.classList.add('show');
   document.getElementById('numDisplay').textContent='';
   document.getElementById('hiddenInput').value='';
-  const oldInp=document.getElementById('answerInput');
-  if(oldInp)oldInp.style.display='none';
-  const arenaInp=document.getElementById('arenaInput');
-  if(arenaInp)arenaInp.style.display='none';
 }
 
 function hideNumPad(){
   _numPadTarget=null;
   const pad=document.getElementById('numPad');
   pad.classList.remove('show');
-  document.getElementById('numDisplay').textContent='';
-  document.getElementById('hiddenInput').value='';
 }
 
 function numPadInput(digit){
@@ -1100,49 +1089,6 @@ function updatePhaseTabs(){
     else if(STATE.learnPhase==='done'){el.classList.add('done');}
   });
 }
-function switchPhase(phase){
-  // 讲堂
-  if(phase==='lecture'){
-    hideNumPad();STATE.learnPhase='lecture';
-    updatePhaseTabs();updateProgress();
-    document.getElementById('lectureCarousel').scrollIntoView({behavior:'smooth'});
-    return;
-  }
-  // 闯关练习：强制键盘归位到练习区题目下方
-  if(phase==='level'){
-    hideNumPad();
-    if(STATE.learnPhase==='lecture'){startPractice();return;}
-    STATE.learnPhase='level';updatePhaseTabs();updateProgress();
-    // 有当前题目→重渲染（触发showNumPad挂载键盘）；无题目→新开一关
-    if(STATE.currentQuestion&&!STATE.currentQuestion.choices){
-      renderQuestion(STATE.currentQuestion);
-    }else if(STATE._studyDay){
-      STATE.currentQuestion=genQ(STATE._studyDay.data.id-1,STATE.currentLevel);
-      renderQuestion(STATE.currentQuestion);
-    }
-    document.getElementById('practiceArea').scrollIntoView({behavior:'smooth'});
-    return;
-  }
-  // 趣味擂台：键盘挂载到擂台区题目下方
-  if(phase==='arena'){
-    hideNumPad();
-    if(STATE.learnPhase==='lecture'){alert('请先完成闯关练习再挑战擂台哦～');return;}
-    STATE.learnPhase='arena';updatePhaseTabs();updateProgress();
-    document.getElementById('phaseTab1').classList.add('done');document.getElementById('phaseTab2').classList.add('active');
-    document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'});
-    // 擂台已激活→重渲染当前擂台题（触发showNumPad挂载键盘）
-    if(STATE.arenaActive&&STATE.arenaQuestion&&!STATE.arenaQuestion.choices){
-      const q=STATE.arenaQuestion;
-      document.getElementById('arenaQuestion').innerHTML=`<span style="font-size:26px">${q.q}</span>`;
-      showNumPad('arena');
-    }else if(!STATE.arenaActive){
-      document.getElementById('arenaSubmit').click();
-    }
-    return;
-  }
-}
-window.switchPhase=switchPhase;
-
 function nextLevel(day){
   const lvl=day.data.levels[STATE.currentLevel];
   STATE.levelTotal=0;STATE.levelCorrect=0;STATE.levelWrong=0;STATE.streakCount=0;STATE.selectedChoice=null;
