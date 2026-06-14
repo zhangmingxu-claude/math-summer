@@ -1,4 +1,4 @@
-const CACHE_NAME = 'math-summer-v3.1';
+const CACHE_NAME = 'math-summer-v3.2';
 const ASSETS = ['./','./index.html','./manifest.json'];
 
 self.addEventListener('install', event => {
