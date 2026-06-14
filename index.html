@@ -651,7 +651,7 @@ function genQ(dayId,levelIdx){
     }
     case'shapeId':{const ss=lvl.shapes,shape=ss[rand(0,ss.length-1)];return{q:`哪个是<b>${shape}</b>？`,a:shape,type:'choice',choices:[{l:'A',v:ss[0]},{l:'B',v:ss[1]},{l:'C',v:ss[2]},{l:'D',v:ss[3]}]};}
     case'shapeReal':{const its=[['冰箱','长方体'],['骰子','正方体'],['水杯','圆柱'],['篮球','球'],['鞋盒','长方体'],['魔方','正方体'],['铅笔','圆柱'],['地球仪','球']];const it=its[rand(0,its.length-1)];return{q:`<b>${it[0]}</b>是什么形状？`,a:it[1],type:'choice',choices:[{l:'A',v:'长方体'},{l:'B',v:'正方体'},{l:'C',v:'圆柱'},{l:'D',v:'球'}]};}
-    case'shapeBuild':{const qs=[{q:'2个正方体拼一起是什么体？',a:'长方体',choices:[{l:'A',v:'长方体'},{l:'B',v:'正方体'},{l:'C',v:'圆柱'},{l:'D',v:'球'}]},{q:'至少几个小正方体拼成大正方体？',a:'8',choices:[{l:'A',v:'4'},{l:'B',v:'6'},{l:'C',v:'8'},{l:'D',v:'10'}]}];return qs[rand(0,qs.length-1)];}
+    case'shapeBuild':{const qs=[{q:'2个正方体拼一起是什么体？',a:'长方体',type:'choice',choices:[{l:'A',v:'长方体'},{l:'B',v:'正方体'},{l:'C',v:'圆柱'},{l:'D',v:'球'}]},{q:'至少几个小正方体拼成大正方体？',a:'8',type:'choice',choices:[{l:'A',v:'4'},{l:'B',v:'6'},{l:'C',v:'8'},{l:'D',v:'10'}]}];return qs[rand(0,qs.length-1)];}
     case'position':{
       const objs=['🍎苹果','📚书','🧸玩具熊','🚗小车','⚽皮球'];const sh=shuffle([...objs]).slice(0,5);
       if(lvl.dim==='updown'){const ref=rand(0,4);const ans=2<ref?'上面':'下面';return{q:`架子上：<br>🔝${sh[0]}<br>　${sh[1]}<br>　${sh[2]}<br>　${sh[3]}<br>🔚${sh[4]}<br><br><b>${sh[2]}</b>在<b>${sh[ref]}</b>的上面还是下面？`,a:ans,type:'choice',choices:[{l:'A',v:'上面'},{l:'B',v:'下面'}]};}
@@ -670,7 +670,7 @@ function genQ(dayId,levelIdx){
     case'breakTen':{const a=rand(11,18),b=rand(a%10+1,9);return{q:`${a} - ${b} = ?`,a:a-b};}
     case'addToSub':{const a=rand(11,18),b=rand(a%10+1,9);return{q:`${a} - ${b} = ?<br><span style="font-size:13px">想：${b}+?=${a}</span>`,a:a-b};}
     case'borrowSub':{const a=rand(11,18),b=rand(a%10+1,9);return{q:`${a} - ${b} = ?`,a:a-b};}
-    case'clockPart':{const qs=[{q:'短短粗粗的指针叫什么？',a:'时针',choices:[{l:'A',v:'时针'},{l:'B',v:'分针'},{l:'C',v:'秒针'}]},{q:'长长细细的指针叫什么？',a:'分针',choices:[{l:'A',v:'时针'},{l:'B',v:'分针'},{l:'C',v:'秒针'}]},{q:'分针指向12表示什么？',a:'整时',choices:[{l:'A',v:'整时'},{l:'B',v:'半时'},{l:'C',v:'大约'}]}];return qs[rand(0,qs.length-1)];}
+    case'clockPart':{const qs=[{q:'短短粗粗的指针叫什么？',a:'时针',type:'choice',choices:[{l:'A',v:'时针'},{l:'B',v:'分针'},{l:'C',v:'秒针'}]},{q:'长长细细的指针叫什么？',a:'分针',type:'choice',choices:[{l:'A',v:'时针'},{l:'B',v:'分针'},{l:'C',v:'秒针'}]},{q:'分针指向12表示什么？',a:'整时',type:'choice',choices:[{l:'A',v:'整时'},{l:'B',v:'半时'},{l:'C',v:'大约'}]}];return qs[rand(0,qs.length-1)];}
     case'clockReadHour':{const h=rand(1,12);return{q:clockSVG(h,0)+`<br>分针指向12，时针指向<b>${h}</b><br>这是几时？`,a:h};}
     case'clockDraw':{const h=rand(1,12);return{q:`"<b>${h}时</b>"的时候<br>分针指向数字几？`,a:12};}
     case'clockHalfId':{const h=rand(1,11),isHalf=rand(0,1);return isHalf?{q:clockSVG(h,30)+`<br>分针指向6，时针在${h}和${h+1}之间<br>这是几时？`,a:h,disp:`${h}时半`}:{q:clockSVG(h,0)+`<br>分针指向12，时针指向${h}<br>这是几时？`,a:h,disp:`${h}时`};}
@@ -681,7 +681,7 @@ function genQ(dayId,levelIdx){
     case'clockScene':{const ss=[{q:'早上太阳刚出来大约是几时？',a:7},{q:'中午吃饭大约是几时？',a:12},{q:'下午放学大约是几时？',a:16},{q:'晚上睡觉大约是几时？',a:9}];return ss[rand(0,ss.length-1)];}
     case'timeOrder':{const acts=[['起床刷牙','吃早饭','学习'],['吃早饭','学习','吃午饭'],['下午玩耍','吃晚饭','洗漱睡觉']];const a=acts[rand(0,acts.length-1)];return{q:`排序：1.${a[0]} 2.${a[1]} 3.${a[2]}<br>最早的是第几个？`,a:1};}
     case'timeSeq':{const a=rand(1,6),b=rand(2,7);return{q:`现在是<b>${a}时</b>，<b>${b}小时</b>后是几时？`,a:(a+b)%12||12};}
-    case'calendar':{const qs=[{q:'一周有几天？',a:7},{q:'今天是周一，后天是周几？',a:'周三',choices:[{l:'A',v:'周二'},{l:'B',v:'周三'},{l:'C',v:'周四'}]},{q:'一年有几个月？',a:12}];return qs[rand(0,qs.length-1)];}
+    case'calendar':{const qs=[{q:'一周有几天？',a:7},{q:'今天是周一，后天是周几？',a:'周三',type:'choice',choices:[{l:'A',v:'周二'},{l:'B',v:'周三'},{l:'C',v:'周四'}]},{q:'一年有几个月？',a:12}];return qs[rand(0,qs.length-1)];}
     case'clockReview1':{const h=rand(1,12);return{q:clockSVG(h,0)+`<br>分针12，时针${h}，几时？`,a:h};}
     case'clockReview2':{const h=rand(1,11),isHalf=rand(0,1);return isHalf?{q:clockSVG(h,30)+'<br>几时半？',a:h,disp:`${h}时半`}:{q:clockSVG(h,0)+'<br>几时？',a:h,disp:`${h}时`};}
     case'clockSpeed':{const h=rand(1,11),isHalf=rand(0,1);return isHalf?{q:`分针6，时针${h}和${h+1}之间→？`,a:h,disp:`${h}时半`}:{q:`分针12，时针${h}→？`,a:h,disp:`${h}时`};}
@@ -703,7 +703,7 @@ function genQ(dayId,levelIdx){
     }
     case'queue':{const f=rand(3,8),b=rand(2,6);return{q:`排队：从前面数排第${f}，从后面数排第${b}<br>一共几人？`,a:f+b-1,hint:`${f}+${b}-1=${f+b-1}（自己数了2次要减1）`};}
     case'extraCond':{const a=rand(3,10),b=rand(2,8),extras=['今年6岁','穿红衣服','喜欢吃苹果'];return rand(0,1)?{q:`小红${a}支铅笔，小明比小红多${b}支，小红${extras[rand(0,2)]}，小明几支？`,a:a+b}:{q:`妈妈买${a}个橘子，吃${b}个，妈妈${extras[rand(0,2)]}，剩几个？`,a:a-b};}
-    case'reason':{const qs=[{q:'苹果比梨重，梨比橘子重。<br>谁最轻？',a:'橘子',choices:[{l:'A',v:'苹果'},{l:'B',v:'梨'},{l:'C',v:'橘子'}]},{q:'小明比小红高，小刚比小明高。<br>谁最高？',a:'小刚',choices:[{l:'A',v:'小明'},{l:'B',v:'小红'},{l:'C',v:'小刚'}]},{q:'A>B>C，谁最小？',a:'C',choices:[{l:'A',v:'A'},{l:'B',v:'B'},{l:'C',v:'C'}]}];return qs[rand(0,qs.length-1)];}
+    case'reason':{const qs=[{q:'苹果比梨重，梨比橘子重。<br>谁最轻？',a:'橘子',type:'choice',choices:[{l:'A',v:'苹果'},{l:'B',v:'梨'},{l:'C',v:'橘子'}]},{q:'小明比小红高，小刚比小明高。<br>谁最高？',a:'小刚',type:'choice',choices:[{l:'A',v:'小明'},{l:'B',v:'小红'},{l:'C',v:'小刚'}]},{q:'A>B>C，谁最小？',a:'C',type:'choice',choices:[{l:'A',v:'A'},{l:'B',v:'B'},{l:'C',v:'C'}]}];return qs[rand(0,qs.length-1)];}
     case'numPattern':{const ps=[[1,4,7,10,13],[2,6,10,14,18],[20,16,12,8,4],[3,6,9,12,15],[5,10,15,20,25]];const p=ps[rand(0,ps.length-1)];return{q:`找规律：${p.slice(0,4).join(', ')}, ? <br>下一个是几？`,a:p[4]};}
     case'shapePattern':{const ps=['🔴🔵🔴🔵?','⭐🌟⭐🌟?','🔺🔻🔺🔻?','🍎🍏🍎🍏?'];const idx=rand(0,ps.length-1);return{q:`图形规律：${ps[idx]}<br>下一个是什么？`,a:idx,type:'choice',choices:[{l:'A',v:0},{l:'B',v:1},{l:'C',v:2},{l:'D',v:3}]};}
     case'logic':{const qs=[{q:'☆+3=8，☆=?',a:5},{q:'△-4=6，△=?',a:10},{q:'□+□=10，□=?',a:5},{q:'○+5=12，○=?',a:7}];return qs[rand(0,qs.length-1)];}
@@ -724,7 +724,7 @@ function genArenaQ(dayId){
     case'fillAdd':case'fillSub':a=rand(1,9);b=rand(1,9-a);return{q:`${a}+?=${a+b}`,a:b};
     case'chainAdd':case'chainSub':case'chainMix':a=rand(2,8);b=rand(1,8);const c=rand(1,5);return{q:`${a}+${b}+${c}=?`,a:a+b+c};
     case'wordProblem':a=rand(3,12);b=rand(2,10);return rand(0,1)?{q:`${a}只鸟+${b}只鸟=？`,a:a+b}:{q:`${a}个苹果-${b}个=？`,a:a-b};
-    case'shapeId':return{q:`长方体有几个面？`,a:'6',choices:[{l:'A',v:'4'},{l:'B',v:'6'},{l:'C',v:'8'}]};
+    case'shapeId':return{q:`长方体有几个面？`,a:'6',type:'choice',choices:[{l:'A',v:'4'},{l:'B',v:'6'},{l:'C',v:'8'}]};
     case'placeValue':case'placeBreak':case'placeBuild':a=rand(10,19);return{q:`${a}的十位是几？`,a:Math.floor(a/10)};
     case'tenPlus':case'noCarryAdd':case'noBorrowSub':a=rand(11,18);b=rand(1,19-a);return{q:`${a}+${b}=?`,a:a+b};
     case'makeTenFriend':case'makeTen9':case'makeTen8':a=rand(6,9);b=rand(2,9);return{q:`${a}+${b}=?`,a:a+b};
@@ -873,7 +873,7 @@ function renderQuestion(q){
   document.getElementById('hintBox').className='hint-box';
   STATE.selectedChoice=null;
 
-  if(q.type==='choice'&&q.choices){
+  if(q.choices&&q.choices.length>0){
     q.choices.forEach(c=>{
       const btn=document.createElement('button');btn.className='btn-choice';btn.textContent=c.l+'. '+c.v;
       btn.onclick=()=>{STATE.selectedChoice=c.v;row.querySelectorAll('.btn-choice').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');};
@@ -1013,7 +1013,7 @@ function nextArenaQ(){
   // 清理旧的arena选项按钮
   const oldBtns=document.querySelectorAll('.arena-choice-btn');
   oldBtns.forEach(b=>b.remove());
-  if(q.type==='choice'&&q.choices){
+  if(q.choices&&q.choices.length>0){
     aq.innerHTML=q.q;
     if(ai)ai.style.display='none';
     const arenaRow=document.getElementById('arenaCard').querySelector('.answer-row');
