@@ -1,6 +1,6 @@
 ============================================================
   乐乐的数学冒险 — 开发与部署文档
-  最后更新：2026-06-14  v3.3
+  最后更新：2026-06-15  v3.6
   GitHub: https://github.com/zhangmingxu-claude/math-summer
   线上地址: https://zhangmingxu-claude.github.io/math-summer/
 ============================================================
@@ -9,49 +9,43 @@
 -----------
 单文件 HTML5 + PWA 数学学习平台，面向幼小衔接（5-7岁）。
 - 22天系统学习日 + 8个周末生活数学日 = 30天闯关
-- 每天含：小老师讲堂（互动PPT式）→ 三关练习 → 趣味擂台
+- 每天含：小老师讲堂 → 三关练习 → 趣味擂台 → 错题回顾
 - 支持添加到平板桌面，离线可用（Service Worker 缓存）
+- 内置数字键盘（双键盘体系，练习/擂台各自独立）
+- 25分钟休息提醒 + 护眼模式 + 家长学习报告
 
 二、文件结构
 -----------
 math-summer/
-  index.html      ← 唯一核心文件（1483行），包含全部HTML/CSS/JS
-  manifest.json    ← PWA 应用清单（添加桌面时的名称/图标）
-  sw.js            ← Service Worker（离线缓存策略）
-  开发文档.txt     ← 本文件
+  index.html       ← 唯一核心文件（~1700行），包含全部HTML/CSS/JS
+  manifest.json     ← PWA 应用清单
+  sw.js             ← Service Worker（离线缓存策略）
+  CLAUDE.md         ← AI 上下文文件
+  开发文档.txt       ← 本文件
 
-三、拼音注音实现（v3.3）
------------------------
-采用嵌入式映射表方案，不依赖任何外部库：
+三、拼音注音实现
+---------------
+嵌入式映射表方案，零外部依赖：
 
 1. PINYIN_MAP 对象（<head> 内）：
    - 792个汉字 → 拼音映射，覆盖全站所有中文
    - 数据来源：mozillazg/pinyin-data 开源词典
-   - 仅保留最常用读音（一声），7KB gzip 后约 3KB
+   - 生成方式见第四章
 
-2. processPinyin() 函数（正文 JS）：
+2. processPinyin() 函数：
    - 遍历讲堂 slide 的文本节点
-   - PINYIN_MAP[ch] 查表 → 命中则包裹 <ruby> 标签
-   - 未命中（表情/数字/英文/标点）→ 原样保留，跳过
-   - 每个元素处理完打标记 data-pinyin-done，翻页不走第二次
+   - PINYIN_MAP[ch] 查表 → 汉字包裹 <ruby> 标签
+   - 表情/数字/英文/标点原样保留
+   - data-pinyin-done 缓存标记
 
-3. CSS 控制：
-   - ruby-position: over（标准）+ -webkit-ruby-position: before（Safari）
-   - display: inline ruby + vertical-align: baseline 防止错位
-   - rt 字号 0.4em，灰色 #999
-   - rp（降级括号）display:none
+3. 拼音智能模式：
+   - 学习日自动开启，周末自动关闭
+   - 家长面板可设置为「总是开/关/智能」
 
-4. 拼音开关：
-   - 学习页右上角 🔤 按钮，默认开启
-   - 状态存 localStorage('pinyin_enabled')
-   - 切换时清除缓存 + 重渲染讲堂
-   - 非学习页自动隐藏按钮
+四、如何更新拼音映射表
+---------------------
+前提：Python 3 + 网络
 
-四、如何更新拼音映射表（如果新增内容需要新汉字）
-----------------------------------------------
-前提条件：Python 3 + 网络（首次下载词典）
-
-步骤：
 1. 提取全站汉字：
    python3 -c "
    with open('index.html','r',encoding='utf-8') as f:
@@ -69,7 +63,6 @@ math-summer/
        'https://cdn.jsdelivr.net/gh/mozillazg/pinyin-data@master/pinyin.txt',
        '_pinyin_data.txt'
    )
-   print('done')
    "
 
 3. 生成映射表：
@@ -86,81 +79,81 @@ math-summer/
        chars = f.read().strip()
    entries = [f'{ch}:{pinyin_map[ch]}' for ch in chars if ch in pinyin_map]
    with open('_new_map.txt','w',encoding='utf-8') as f:
-       f.write("const PINYIN_MAP={"+','.join(entries)+"};")
-   print(f'{len(entries)} entries generated')
+       f.write('const PINYIN_MAP={' + ','.join(entries) + '};')
+   print(f'{len(entries)} entries')
    "
 
-4. 复制 _new_map.txt 内容替换 index.html 中的 <script>const PINYIN_MAP={...};</script> 块
+4. 复制 _new_map.txt 替换 index.html 中 PINYIN_MAP 块
 
-5. 清理临时文件：rm _chars.txt _pinyin_data.txt _new_map.txt
+五、内置数字键盘
+---------------
+双键盘体系，练习区和擂台区各一个：
+- numPadPractice（id="numPadPractice"）：在 practiceArea 内
+- numPadArena（id="numPadArena"）：在 arenaCard 内
 
-五、如何修改讲堂内容
--------------------
-在 index.html 中搜索 "LECTURES = {"（约第520行附近）
+核心函数：
+- showNumPad(target) — 切换显示 target 对应键盘
+- hideNumPad() — 隐藏两个键盘
+- numPadInput/Delete/Confirm — 输入/删除/确认（通过 _numPadTarget 区分）
+- _padSuffix() — 返回当前目标键盘的元素ID后缀
 
-数据结构：
+特性：
+- 最大2位输入限制
+- 单键删除（⌫只删最后一位）
+- 确认键 ✓ 跨2行突出显示
+- 数字/删除/确认键颜色区分
+- 答错自动清空输入
+
+六、擂台系统
+-----------
+activateArena() — 激活擂台（按钮 onclick）
+submitArena()  — 提交答案（键盘✓或选项按钮调用）
+
+按钮状态：初始"⚡ 进入擂台"→激活后"GO!"(禁用)→结束恢复
+
+七、讲堂内容结构
+---------------
 LECTURES = {
-  0: [  // Day1（注意：数组索引从0开始，对应第1天）
+  0: [  // Day1（数组索引从0开始）
     {
-      t: '📖 标题',           // 幻灯片标题
-      c: 'HTML正文内容...',    // 支持 <b> <br> <span class="big-num">
-      h: '提示内容（可选）',    // 显示在黄色高亮框
-      q: '互动问题（可选）',    // 显示在蓝色互动框
-      a: '正确答案',           // 配合 q 使用
-      choices: ['选项1','选项2'] // 配合 q 使用（可选）
+      t: '📖 标题',
+      c: 'HTML正文',
+      h: '提示（黄色框）',
+      q: '互动问题',
+      a: '正确答案',
+      choices: ['选项1','选项2']
     },
-    // ... 更多幻灯片
   ],
-  1: [ /* Day2 */ ],
-  // ...
+  // ... 共22天
 }
 
-注意：
-- c/h 字段中需要大号数字时用 <span class="big-num">X</span>
-- 需要显示钟表时用 clockSVG(hour, minute) 函数
-- emoji 可以直接使用，拼音引擎会自动跳过
-- 新增汉字会自动被拼音引擎覆盖（前提是更新了映射表）
-
-六、关键数据结构
+八、关键数据结构
 ---------------
-STATE 对象（会话状态，部分持久化到 localStorage）：
-- 持久化字段：currentDay, completedDays, totalStars, totalScore,
-             dayStars, arenaTotal, badges, streakBest, wrongBook
-- 会话字段：learnPhase, currentLevel, lectureStep, arenaActive 等
+STATE 对象（localStorage key: math_summer_v3）：
+持久化：currentDay, completedDays, totalStars, totalScore, dayStars,
+        arenaTotal, badges, streakBest, wrongBook, learningLog
+会话：learnPhase, currentLevel, lectureStep, arenaActive 等
 
-STUDY_DAYS 数组（22天学习日配置）：
-- 每天包含 topic（主题）和 levels（3关配置）
-- 每个 level 有 type（题目类型）、count（题数）等
+STUDY_DAYS：22天 × 3关练习配置
+WEEKEND_TASKS：8个周末任务（含 bonusTask/bonusStars 自理项）
+SCHOOL_TIPS：30条小学入学小知识
+TUTOR_TIPS：28个知识点家长辅导建议
 
-WEEKEND_TASKS 数组（8个周末任务配置）：
-- 包含 icon、theme、desc、tasks（任务列表）、tip（家长提示）
-
-MAP_DAYS 数组（30天地图）：
-- 由 WP（week pattern）自动生成，混合学习日和周末
-
-七、部署流程
+九、部署流程
 -----------
-1. 修改代码 → 本地测试（Chrome DevTools 移动端模拟）
-2. git add index.html [其他文件]
-3. git commit -m "描述改动"
-4. git push origin master
-5. GitHub Pages 自动部署（约30秒生效）
-6. 平板刷新 https://zhangmingxu-claude.github.io/math-summer/
+1. 修改 index.html → 本地测试
+2. git commit -m "描述" && git push origin master
+3. GitHub Pages 自动部署
+4. 平板访问 https://zhangmingxu-claude.github.io/math-summer/
 
-注意：
-- 若更改了 sw.js，需更新 CACHE_NAME 版本号以触发缓存刷新
-- 平板首次访问需联网（缓存 PWA 资源），之后可离线使用
-- 拼音映射表已嵌入，零外部依赖，离线完全可用
-
-八、浏览器兼容
--------------
-- Chrome / Edge (Android 平板)：完整支持，可 PWA 安装
-- Safari (iPad)：完整支持，包括 -webkit-ruby-position
-- 微信内置浏览器：基本支持，PWA 安装不可用
-- 已知问题：极旧 iOS (<13) 的 ruby-position 支持不完整
-
-九、版本历史
+十、版本历史
 -----------
+v3.6 (2026-06-15) - 双键盘体系 + activateArena/submitArena分离 + 擂台始终可用
+                   + 25分钟休息提醒 + 护眼模式 + 答错算理引导 + 错题间隔复习
+                   + 家长学习报告 + 拼音智能模式 + 周末任务拆分评星自理
+                   + 小学入学彩蛋 + 亲子互动提示 + 横屏适配
+v3.5 (2026-06-14) - 休息建议 + 辅导文案 + 周末闭环 + 彩蛋 + 音效柔和
+v3.4 (2026-06-14) - 答错引导 + 休息提醒 + 护眼 + 错题复习 + 家长报告 + 拼音智能
 v3.3 (2026-06-14) - 嵌入式拼音映射表，移除 pinyin-pro CDN
-v3.2 (2026-06-14) - 拼音注音功能（pinyin-pro），错题回顾独立模式
+v3.2 (2026-06-14) - 拼音注音（pinyin-pro），错题回顾独立模式
 v3.1 (2026-06-12) - 初始线上版本
