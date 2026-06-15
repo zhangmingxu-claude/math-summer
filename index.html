@@ -1242,34 +1242,40 @@ function showFB(correct,answer){
 
 function nextAfterFB(){
   setTimeout(()=>{
-    const day=STATE._studyDay;const lvl=day.data.levels[STATE.currentLevel];
+    const day=STATE._studyDay;
+    const idx=STATE.currentLevel;
+    const lvl=day.data.levels[idx];
+    const isLastLevel=(idx>=day.data.levels.length-1);
+    // 关卡完成条件：题数达标 且 不是最后一道题的回调
     if(STATE.levelTotal>=lvl.count){
       const acc=STATE.levelCorrect/Math.max(STATE.levelTotal,1);
       const stars=acc>=0.9?3:acc>=0.7?2:1;
-      STATE._levelStars[STATE.currentLevel]=stars;
+      STATE._levelStars[idx]=stars;
       document.getElementById('levelStars').textContent='⭐'.repeat(stars)+'☆'.repeat(3-stars);
       document.getElementById('feedbackBox').className='feedback-box show correct';
-      document.getElementById('feedbackBox').innerHTML=`🎉 第${STATE.currentLevel+1}关完成！${stars}颗星！`;
+      document.getElementById('feedbackBox').innerHTML=`🎉 第${idx+1}关完成！${stars}颗星！`;
       sfxLevelUp();spawnConfetti(20);
-      if(STATE.currentLevel<day.data.levels.length-1){
+      if(!isLastLevel){
         STATE.currentLevel++;updatePhaseTabs();updateProgress();
         setTimeout(()=>nextLevel(day),1500);
       }else{
-        STATE.learnPhase='arena';updatePhaseTabs();updateProgress();
-        document.getElementById('phaseTab1').classList.add('done');document.getElementById('phaseTab2').classList.add('active');
-        // 关闭键盘 + 清空练习区 + 提示进入擂台
-        hideNumPad();
-        document.getElementById('feedbackBox').className='feedback-box';
-        document.getElementById('questionBox').innerHTML='🎊 闯关全部完成！';
-        document.getElementById('answerRow').innerHTML=`
-          <button class="btn btn-yellow" style="font-size:18px;padding:14px 32px;animation:iconBounce 1s ease-in-out infinite" onclick="document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'});activateArena();">⚡ 进入趣味擂台</button>
-        `;
-        document.getElementById('hintBox').className='hint-box';
-        document.getElementById('levelStars').textContent='⭐⭐⭐';
-        sfxLevelUp();spawnConfetti(40);
+        // === 全部关卡完成 ===
+        try{
+          hideNumPad();
+          STATE.learnPhase='arena';updatePhaseTabs();updateProgress();
+          document.getElementById('phaseTab1').classList.add('done');document.getElementById('phaseTab2').classList.add('active');
+          document.getElementById('feedbackBox').className='feedback-box';
+          document.getElementById('hintBox').className='hint-box';
+          document.getElementById('questionBox').innerHTML='🎊 闯关全部完成！';
+          document.getElementById('answerRow').innerHTML=`
+            <button class="btn btn-yellow" style="font-size:18px;padding:14px 32px;animation:iconBounce 1s ease-in-out infinite" onclick="hideNumPad();document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'});activateArena();">⚡ 进入趣味擂台</button>
+          `;
+          document.getElementById('levelStars').textContent='⭐⭐⭐';
+          sfxLevelUp();spawnConfetti(40);
+        }catch(e){console.log('arena transition error',e);}
       }
     }else{
-      STATE.currentQuestion=genQ(day.data.id-1,STATE.currentLevel);
+      STATE.currentQuestion=genQ(day.data.id-1,idx);
       renderQuestion(STATE.currentQuestion);
       document.getElementById('feedbackBox').className='feedback-box';
       document.getElementById('hintBox').className='hint-box';
