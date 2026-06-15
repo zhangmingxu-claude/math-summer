@@ -479,36 +479,28 @@ function initPinyinToggle(){
 }
 
 // ==================== 内置数字键盘 ====================
-let _numPadTarget=null; // 'practice'|'mistake'|'arena'
-
-function showNumPad(target){
-  _numPadTarget=target;
-  const pad=document.getElementById('numPad');
-  if(!pad)return;
-  pad.classList.add('show');
-  const disp=document.getElementById('numDisplay');if(disp)disp.textContent='';
-  const hid=document.getElementById('hiddenInput');if(hid)hid.value='';
+// ==================== 内置数字键盘 ====================
+// 状态即DOM：不维护变量，直接查哪个键盘可见
+function _padSuffix(){
+  const pa=document.getElementById('numPadArena');
+  return (pa&&pa.classList.contains('show'))?'Arena':'';
 }
 
-// 根据当前模式获取对应键盘元素ID后缀（练习=''，擂台='Arena'）
-function _padSuffix(){return _numPadTarget==='arena'?'Arena':'';}
-
 function hideNumPad(){
-  _numPadTarget=null;
   ['numPadPractice','numPadArena'].forEach(id=>{
     const p=document.getElementById(id);if(p)p.classList.remove('show');
   });
 }
 
 function showNumPad(target){
-  _numPadTarget=target;
-  // 安全隐藏两个键盘（null保护，防止残留DOM导致崩溃）
+  // 安全隐藏两个键盘
   const pp=document.getElementById('numPadPractice');if(pp)pp.classList.remove('show');
   const pa=document.getElementById('numPadArena');if(pa)pa.classList.remove('show');
+  // 显示目标键盘
   const padId=target==='arena'?'numPadArena':'numPadPractice';
   const pad=document.getElementById(padId);if(!pad)return;
   pad.classList.add('show');
-  // 清空显示和隐藏输入
+  // 清空对应显示和隐藏输入
   const s=_padSuffix();
   const disp=document.getElementById('numDisplay'+s);if(disp)disp.textContent='';
   const hid=document.getElementById('hiddenInput'+s);if(hid)hid.value='';
@@ -541,12 +533,15 @@ function numPadConfirm(){
   if(!hidden)return;
   const val=hidden.value.trim();if(val==='')return;
   sfxClick();
-  if(_numPadTarget==='arena'){
+  // 可见键盘是擂台→submitArena，否则→submitAnswer/submitMistake
+  if(s==='Arena'){
     document.getElementById('arenaInput')&&(document.getElementById('arenaInput').value=val);
     submitArena();
   }else{
     document.getElementById('answerInput')&&(document.getElementById('answerInput').value=val);
-    if(_numPadTarget==='mistake')submitMistake();else submitAnswer();
+    // 错题回顾也走这里，通过当前上下文判断
+    if(STATE._mistakeReviewIdx>0||document.body.classList.contains('review-mode'))submitMistake();
+    else submitAnswer();
   }
 }
 window.numPadInput=numPadInput;window.numPadDelete=numPadDelete;window.numPadConfirm=numPadConfirm;
@@ -1262,11 +1257,16 @@ function nextAfterFB(){
       }else{
         STATE.learnPhase='arena';updatePhaseTabs();updateProgress();
         document.getElementById('phaseTab1').classList.add('done');document.getElementById('phaseTab2').classList.add('active');
-        document.getElementById('feedbackBox').className='feedback-box';
+        // 关闭键盘 + 清空练习区 + 提示进入擂台
         hideNumPad();
-        document.getElementById('questionBox').innerHTML='🎊 闯关完成！<br><span style="font-size:16px">👇 下方擂台随时可挑战</span>';
-        document.getElementById('answerRow').innerHTML='';
+        document.getElementById('feedbackBox').className='feedback-box';
+        document.getElementById('questionBox').innerHTML='🎊 闯关全部完成！';
+        document.getElementById('answerRow').innerHTML=`
+          <button class="btn btn-yellow" style="font-size:18px;padding:14px 32px;animation:iconBounce 1s ease-in-out infinite" onclick="document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'});activateArena();">⚡ 进入趣味擂台</button>
+        `;
         document.getElementById('hintBox').className='hint-box';
+        document.getElementById('levelStars').textContent='⭐⭐⭐';
+        sfxLevelUp();spawnConfetti(40);
       }
     }else{
       STATE.currentQuestion=genQ(day.data.id-1,STATE.currentLevel);
@@ -1294,6 +1294,7 @@ function updateLearnStats(){
 // ==================== 擂台 (关联知识点) ====================
 // 激活擂台（仅按钮调用）
 function activateArena(){
+  if(STATE.arenaActive)return; // 已激活，防重复
   STATE.arenaActive=true;STATE.arenaScore=0;STATE.arenaSeconds=120;
   document.getElementById('arenaSubmit').textContent='GO!';
   document.getElementById('arenaSubmit').disabled=true; // 激活后禁用按钮，提交靠键盘✓
