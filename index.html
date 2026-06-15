@@ -291,7 +291,7 @@ const PINYIN_MAP={一:'yī',七:'qī',三:'sān',上:'shàng',下:'xià',不:'b�
       <div class="question-box" id="arenaQuestion" style="font-size:24px;min-height:50px;">准备好了吗？</div>
       <div class="answer-row" style="justify-content:center;">
         <input class="answer-input" type="number" id="arenaInput" placeholder="?" autocomplete="off" inputmode="numeric">
-        <button class="btn btn-yellow" id="arenaSubmit" onclick="submitArena()">⚡ 进入擂台</button>
+        <button class="btn btn-yellow" id="arenaSubmit" onclick="activateArena()">⚡ 进入擂台</button>
       </div>
       <div class="feedback-box" id="arenaFeedback"></div>
       <div style="margin-top:8px;font-weight:700;font-size:17px;" id="arenaScoreDisplay">得分：0</div>
@@ -542,8 +542,7 @@ function numPadConfirm(){
   const val=hidden.value.trim();if(val==='')return;
   sfxClick();
   if(_numPadTarget==='arena'){
-    const ai=document.getElementById('arenaInput');if(ai)ai.value=val;
-    if(!STATE.arenaActive){submitArena();return;} // 首次进入擂台
+    document.getElementById('arenaInput')&&(document.getElementById('arenaInput').value=val);
     submitArena();
   }else{
     document.getElementById('answerInput')&&(document.getElementById('answerInput').value=val);
@@ -1293,13 +1292,18 @@ function updateLearnStats(){
 }
 
 // ==================== 擂台 (关联知识点) ====================
+// 激活擂台（仅按钮调用）
+function activateArena(){
+  STATE.arenaActive=true;STATE.arenaScore=0;STATE.arenaSeconds=120;
+  document.getElementById('arenaSubmit').textContent='GO!';
+  document.getElementById('arenaSubmit').disabled=true; // 激活后禁用按钮，提交靠键盘✓
+  document.getElementById('arenaScoreDisplay').textContent='得分：0';
+  document.getElementById('arenaTimer').classList.remove('urgent');
+  hideNumPad();startArenaTimer();nextArenaQ();
+}
+
+// 提交擂台答案（仅键盘✓或选项按钮调用）
 function submitArena(){
-  if(!STATE.arenaActive){
-    STATE.arenaActive=true;STATE.arenaScore=0;STATE.arenaSeconds=120;
-    document.getElementById('arenaSubmit').textContent='GO!';document.getElementById('arenaScoreDisplay').textContent='得分：0';
-    document.getElementById('arenaTimer').classList.remove('urgent');
-    hideNumPad();startArenaTimer();nextArenaQ();return;
-  }
   const inp=document.getElementById('arenaInput');if(!inp)return;
   const ans=inp.value.trim();if(ans===''||!STATE.arenaQuestion)return;
   const q=STATE.arenaQuestion;
