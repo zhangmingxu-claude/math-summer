@@ -160,9 +160,6 @@ body{font-family:var(--font);background:linear-gradient(170deg,#FFF5F5 0%,#FFF0F
 .install-banner{display:none;background:linear-gradient(135deg,var(--pink-deep),#FFB6C1);color:#fff;text-align:center;padding:12px;font-weight:600;cursor:pointer;font-size:14px;animation:slideDown 0.4s ease}
 @keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
 @media(max-width:480px){.days-grid{gap:7px}.day-cell{font-size:10px;border-radius:14px}.day-cell .day-num{font-size:15px}.question-box{font-size:24px;padding:14px}}
-/* 擂台锁定 */
-.arena-card.locked{opacity:0.45;pointer-events:none}
-.arena-card.locked .btn-yellow{background:#ccc!important;color:#999!important}
 /* 内置数字键盘（练习区和擂台区各一个） */
 .num-pad{display:none;margin:10px 0;user-select:none;-webkit-user-select:none}
 .num-pad.show{display:block}
@@ -287,14 +284,14 @@ const PINYIN_MAP={一:'yī',七:'qī',三:'sān',上:'shàng',下:'xià',不:'b�
     </div>
 
     <!-- 趣味擂台 -->
-    <div class="arena-card locked" id="arenaCard">
+    <div class="arena-card" id="arenaCard">
       <h3>⚡ 趣味擂台</h3>
       <p style="color:var(--text-light);font-size:13px;">限时2分钟，题目来自今天知识点</p>
       <div class="timer" id="arenaTimer">2:00</div>
       <div class="question-box" id="arenaQuestion" style="font-size:24px;min-height:50px;">准备好了吗？</div>
       <div class="answer-row" style="justify-content:center;">
         <input class="answer-input" type="number" id="arenaInput" placeholder="?" autocomplete="off" inputmode="numeric">
-        <button class="btn btn-yellow" id="arenaSubmit" onclick="submitArena()" disabled>🔒 先完成闯关</button>
+        <button class="btn btn-yellow" id="arenaSubmit" onclick="submitArena()">⚡ 进入擂台</button>
       </div>
       <div class="feedback-box" id="arenaFeedback"></div>
       <div style="margin-top:8px;font-weight:700;font-size:17px;" id="arenaScoreDisplay">得分：0</div>
@@ -1083,11 +1080,7 @@ function resetArenaUI(){
   document.getElementById('arenaScoreDisplay').textContent='得分：0';document.getElementById('arenaQuestion').innerHTML='准备好了吗？';
   document.getElementById('arenaInput').value='';document.getElementById('arenaFeedback').className='feedback-box';
   if(STATE.arenaTimer)clearInterval(STATE.arenaTimer);STATE.arenaActive=false;STATE.arenaScore=0;STATE.arenaSeconds=120;
-  // 默认锁定擂台，三关完成后解锁
-  const arenaCard=document.getElementById('arenaCard');
-  arenaCard.classList.add('locked');
-  document.getElementById('arenaSubmit').disabled=true;
-  document.getElementById('arenaSubmit').textContent='🔒 先完成闯关';
+  document.getElementById('arenaSubmit').textContent='⚡ 进入擂台';
 }
 
 function startPractice(){
@@ -1274,15 +1267,9 @@ function nextAfterFB(){
         document.getElementById('phaseTab1').classList.add('done');document.getElementById('phaseTab2').classList.add('active');
         document.getElementById('feedbackBox').className='feedback-box';
         hideNumPad();
-        // 解锁擂台（不自动激活，等用户点按钮）
-        const arenaCard=document.getElementById('arenaCard');
-        arenaCard.classList.remove('locked');
-        const arenaBtn=document.getElementById('arenaSubmit');
-        arenaBtn.disabled=false;arenaBtn.textContent='⚡ 进入擂台';
-        document.getElementById('questionBox').innerHTML='🎊 闯关完成！<br><span style="font-size:16px">👇 点击擂台按钮开始挑战</span>';
+        document.getElementById('questionBox').innerHTML='🎊 闯关完成！<br><span style="font-size:16px">👇 下方擂台随时可挑战</span>';
         document.getElementById('answerRow').innerHTML='';
         document.getElementById('hintBox').className='hint-box';
-        setTimeout(()=>document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'}),600);
       }
     }else{
       STATE.currentQuestion=genQ(day.data.id-1,STATE.currentLevel);
@@ -1366,7 +1353,9 @@ function endArena(){
   document.getElementById('arenaFeedback').innerHTML=`擂台得分：<b>${STATE.arenaScore}</b> 分！`;
   sfxComplete();spawnConfetti(50);
   STATE.learnPhase='done';updatePhaseTabs();updateProgress();document.getElementById('learnProgress').style.width='100%';
-  // 擂台结束即解锁下一天（不依赖错题回顾）
+  document.getElementById('arenaSubmit').textContent='⚡ 进入擂台';
+  hideNumPad();
+  // 擂台结束即解锁下一天
   const mi=STATE._mapIndex;
   if(mi===STATE.currentDay&&STATE.currentDay<29&&!STATE._previewMode){STATE.currentDay=mi+1;}
   // 错题回顾
