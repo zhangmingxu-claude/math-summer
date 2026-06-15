@@ -1077,6 +1077,7 @@ function resetArenaUI(){
   document.getElementById('arenaScoreDisplay').textContent='得分：0';document.getElementById('arenaQuestion').innerHTML='准备好了吗？';
   document.getElementById('arenaInput').value='';document.getElementById('arenaFeedback').className='feedback-box';
   if(STATE.arenaTimer)clearInterval(STATE.arenaTimer);STATE.arenaActive=false;STATE.arenaScore=0;STATE.arenaSeconds=120;
+  document.getElementById('arenaSubmit').disabled=false;
   document.getElementById('arenaSubmit').textContent='⚡ 进入擂台';
 }
 
@@ -1350,6 +1351,7 @@ function endArena(){
   document.getElementById('arenaFeedback').innerHTML=`擂台得分：<b>${STATE.arenaScore}</b> 分！`;
   sfxComplete();spawnConfetti(50);
   STATE.learnPhase='done';updatePhaseTabs();updateProgress();document.getElementById('learnProgress').style.width='100%';
+  document.getElementById('arenaSubmit').disabled=false;
   document.getElementById('arenaSubmit').textContent='⚡ 进入擂台';
   hideNumPad();
   // 擂台结束即解锁下一天
