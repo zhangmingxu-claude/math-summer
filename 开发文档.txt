@@ -1,6 +1,6 @@
 ============================================================
   乐乐的数学冒险 — 开发与部署文档
-  最后更新：2026-06-15  v3.6
+  最后更新：2026-06-15  v3.7
   GitHub: https://github.com/zhangmingxu-claude/math-summer
   线上地址: https://zhangmingxu-claude.github.io/math-summer/
 ============================================================
@@ -94,8 +94,8 @@ math-summer/
 核心函数：
 - showNumPad(target) — 切换显示 target 对应键盘
 - hideNumPad() — 隐藏两个键盘
-- numPadInput/Delete/Confirm — 输入/删除/确认（通过 _numPadTarget 区分）
-- _padSuffix() — 返回当前目标键盘的元素ID后缀
+- numPadInput/Delete/Confirm — 输入/删除/确认
+- _padSuffix() — 直接查DOM（numPadArena可见→'Arena'，否则→''），不维护变量
 
 特性：
 - 最大2位输入限制
@@ -106,10 +106,11 @@ math-summer/
 
 六、擂台系统
 -----------
-activateArena() — 激活擂台（按钮 onclick）
+activateArena() — 激活擂台（按钮 onclick，含防重复检查）
 submitArena()  — 提交答案（键盘✓或选项按钮调用）
 
 按钮状态：初始"⚡ 进入擂台"→激活后"GO!"(禁用)→结束恢复
+三关完成后练习区显示醒目按钮"⚡ 进入趣味擂台"，点击直接激活
 
 七、讲堂内容结构
 ---------------
@@ -148,10 +149,12 @@ TUTOR_TIPS：28个知识点家长辅导建议
 
 十、版本历史
 -----------
+v3.7 (2026-06-15) - 键盘状态即DOM(_padSuffix查可见) + isLastLevel预计算 + 三关完成醒目按钮
+                   + 删_numPadTarget变量 + 旧死代码清理 + try-catch保护
 v3.6 (2026-06-15) - 双键盘体系 + activateArena/submitArena分离 + 擂台始终可用
                    + 25分钟休息提醒 + 护眼模式 + 答错算理引导 + 错题间隔复习
                    + 家长学习报告 + 拼音智能模式 + 周末任务拆分评星自理
-                   + 小学入学彩蛋 + 亲子互动提示 + 横屏适配
+                   + 小学入学彩蛋 + 亲子互动提示
 v3.5 (2026-06-14) - 休息建议 + 辅导文案 + 周末闭环 + 彩蛋 + 音效柔和
 v3.4 (2026-06-14) - 答错引导 + 休息提醒 + 护眼 + 错题复习 + 家长报告 + 拼音智能
 v3.3 (2026-06-14) - 嵌入式拼音映射表，移除 pinyin-pro CDN

@@ -5,7 +5,7 @@
 - **线上地址**: https://zhangmingxu-claude.github.io/math-summer/
 - **GitHub**: https://github.com/zhangmingxu-claude/math-summer
 - **核心文件**: `index.html`（~1700行，含全部 HTML/CSS/JS）
-- **当前版本**: v3.6
+- **当前版本**: v3.7
 - **技术栈**: 纯原生 JS + Web Audio API + Service Worker + 嵌入式拼音映射表
 
 ## 文件结构
@@ -57,8 +57,9 @@ math-summer/
 - `numPadPractice` — 练习区键盘（在 practiceArea 内）
 - `numPadArena` — 擂台区键盘（在 arenaCard 内）
 - 两个键盘各自独立，不存在 DOM 移动，互不干扰
+- **状态即DOM**：`_padSuffix()` 直接检查 `numPadArena` 是否可见，不维护变量
 - `showNumPad(target)` — 切换显示/隐藏对应键盘
-- `numPadInput/Delete/Confirm` — 通过 `_numPadTarget` 区分目标
+- `numPadInput/Delete/Confirm` — 通过 `_padSuffix()` 自动识别当前活跃键盘
 - 最大2位输入限制 + 单键删除 + 防误触设计
 
 ### 擂台激活
