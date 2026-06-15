@@ -298,9 +298,6 @@ const PINYIN_MAP={一:'yī',七:'qī',三:'sān',上:'shàng',下:'xià',不:'b�
       <div class="num-pad" id="numPadArena"><div class="num-display" id="numDisplayArena"></div><div class="num-pad-grid"><button class="num-key num" onclick="numPadInput('1')">1</button><button class="num-key num" onclick="numPadInput('2')">2</button><button class="num-key num" onclick="numPadInput('3')">3</button><button class="num-key del" onclick="numPadDelete()">⌫</button><button class="num-key num" onclick="numPadInput('4')">4</button><button class="num-key num" onclick="numPadInput('5')">5</button><button class="num-key num" onclick="numPadInput('6')">6</button><button class="num-key ok" onclick="numPadConfirm()">✓<br>确认</button><button class="num-key num" onclick="numPadInput('7')">7</button><button class="num-key num" onclick="numPadInput('8')">8</button><button class="num-key num" onclick="numPadInput('9')">9</button><button class="num-key num zero" onclick="numPadInput('0')">0</button></div><input type="number" id="hiddenInputArena" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px" autocomplete="off" inputmode="numeric"></div>
     </div>
 
-      </div>
-      <input type="number" id="hiddenInput" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px" autocomplete="off" inputmode="numeric">
-    </div>
 
     <div style="text-align:center;padding:14px;">
       <button class="btn btn-success" id="finishDayBtn" onclick="finishDay()" style="display:none;font-size:17px;padding:12px 36px;">🎉 完成今天的学习！</button>
@@ -505,9 +502,9 @@ function hideNumPad(){
 
 function showNumPad(target){
   _numPadTarget=target;
-  // 只显示对应键盘
-  document.getElementById('numPadPractice').classList.remove('show');
-  document.getElementById('numPadArena').classList.remove('show');
+  // 安全隐藏两个键盘（null保护，防止残留DOM导致崩溃）
+  const pp=document.getElementById('numPadPractice');if(pp)pp.classList.remove('show');
+  const pa=document.getElementById('numPadArena');if(pa)pa.classList.remove('show');
   const padId=target==='arena'?'numPadArena':'numPadPractice';
   const pad=document.getElementById(padId);if(!pad)return;
   pad.classList.add('show');
