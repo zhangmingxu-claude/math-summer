@@ -163,8 +163,8 @@ body{font-family:var(--font);background:linear-gradient(170deg,#FFF5F5 0%,#FFF0F
 /* 擂台锁定 */
 .arena-card.locked{opacity:0.45;pointer-events:none}
 .arena-card.locked .btn-yellow{background:#ccc!important;color:#999!important}
-/* 内置数字键盘 */
-.num-pad{display:none;position:sticky;bottom:0;background:rgba(255,250,248,0.97);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:10px 14px 14px;margin:8px -14px -14px;z-index:50;user-select:none;-webkit-user-select:none}
+/* 内置数字键盘（练习区和擂台区各一个） */
+.num-pad{display:none;margin:10px 0;user-select:none;-webkit-user-select:none}
 .num-pad.show{display:block}
 .num-display{background:rgba(255,255,255,0.9);border:3px solid var(--pink-light);border-radius:16px;padding:12px;text-align:center;font-size:42px;font-weight:800;min-height:60px;color:var(--text);letter-spacing:4px;margin-bottom:10px;transition:all 0.2s;word-break:break-all}
 .num-display.flash{border-color:var(--pink-deep);box-shadow:0 0 0 8px rgba(255,154,162,0.15)}
@@ -267,6 +267,16 @@ const PINYIN_MAP={一:'yī',七:'qī',三:'sān',上:'shàng',下:'xià',不:'b�
       <h3 id="levelTitle">🎯 第1关</h3>
       <div class="question-box" id="questionBox">准备开始！</div>
       <div class="answer-row" id="answerRow"></div>
+      <div class="num-pad" id="numPadPractice">
+        <div class="num-display" id="numDisplay"></div>
+        <div class="num-pad-grid">
+          <button class="num-key num" onclick="numPadInput('1')">1</button><button class="num-key num" onclick="numPadInput('2')">2</button><button class="num-key num" onclick="numPadInput('3')">3</button><button class="num-key del" onclick="numPadDelete()">⌫</button>
+          <button class="num-key num" onclick="numPadInput('4')">4</button><button class="num-key num" onclick="numPadInput('5')">5</button><button class="num-key num" onclick="numPadInput('6')">6</button><button class="num-key ok" onclick="numPadConfirm()">✓<br>确认</button>
+          <button class="num-key num" onclick="numPadInput('7')">7</button><button class="num-key num" onclick="numPadInput('8')">8</button><button class="num-key num" onclick="numPadInput('9')">9</button>
+          <button class="num-key num zero" onclick="numPadInput('0')">0</button>
+        </div>
+        <input type="number" id="hiddenInput" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px" autocomplete="off" inputmode="numeric">
+      </div>
       <div class="hint-box" id="hintBox"></div>
       <div class="feedback-box" id="feedbackBox"></div>
       <div style="text-align:center;margin-top:10px;">
@@ -288,24 +298,9 @@ const PINYIN_MAP={一:'yī',七:'qī',三:'sān',上:'shàng',下:'xià',不:'b�
       </div>
       <div class="feedback-box" id="arenaFeedback"></div>
       <div style="margin-top:8px;font-weight:700;font-size:17px;" id="arenaScoreDisplay">得分：0</div>
+      <div class="num-pad" id="numPadArena"><div class="num-display" id="numDisplayArena"></div><div class="num-pad-grid"><button class="num-key num" onclick="numPadInput('1')">1</button><button class="num-key num" onclick="numPadInput('2')">2</button><button class="num-key num" onclick="numPadInput('3')">3</button><button class="num-key del" onclick="numPadDelete()">⌫</button><button class="num-key num" onclick="numPadInput('4')">4</button><button class="num-key num" onclick="numPadInput('5')">5</button><button class="num-key num" onclick="numPadInput('6')">6</button><button class="num-key ok" onclick="numPadConfirm()">✓<br>确认</button><button class="num-key num" onclick="numPadInput('7')">7</button><button class="num-key num" onclick="numPadInput('8')">8</button><button class="num-key num" onclick="numPadInput('9')">9</button><button class="num-key num zero" onclick="numPadInput('0')">0</button></div><input type="number" id="hiddenInputArena" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px" autocomplete="off" inputmode="numeric"></div>
     </div>
 
-    <!-- 内置数字键盘（练习和擂台共用，不移位） -->
-    <div class="num-pad" id="numPad">
-      <div class="num-display" id="numDisplay"></div>
-      <div class="num-pad-grid">
-        <button class="num-key num" onclick="numPadInput('1')">1</button>
-        <button class="num-key num" onclick="numPadInput('2')">2</button>
-        <button class="num-key num" onclick="numPadInput('3')">3</button>
-        <button class="num-key del" onclick="numPadDelete()">⌫</button>
-        <button class="num-key num" onclick="numPadInput('4')">4</button>
-        <button class="num-key num" onclick="numPadInput('5')">5</button>
-        <button class="num-key num" onclick="numPadInput('6')">6</button>
-        <button class="num-key ok" onclick="numPadConfirm()">✓<br>确认</button>
-        <button class="num-key num" onclick="numPadInput('7')">7</button>
-        <button class="num-key num" onclick="numPadInput('8')">8</button>
-        <button class="num-key num" onclick="numPadInput('9')">9</button>
-        <button class="num-key num zero" onclick="numPadInput('0')">0</button>
       </div>
       <input type="number" id="hiddenInput" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px" autocomplete="off" inputmode="numeric">
     </div>
@@ -501,60 +496,64 @@ function showNumPad(target){
   const hid=document.getElementById('hiddenInput');if(hid)hid.value='';
 }
 
+// 根据当前模式获取对应键盘元素ID后缀（练习=''，擂台='Arena'）
+function _padSuffix(){return _numPadTarget==='arena'?'Arena':'';}
+
 function hideNumPad(){
   _numPadTarget=null;
-  const pad=document.getElementById('numPad');
-  if(pad)pad.classList.remove('show');
-  const disp=document.getElementById('numDisplay');
-  if(disp)disp.textContent='';
-  const hid=document.getElementById('hiddenInput');
-  if(hid)hid.value='';
+  ['numPadPractice','numPadArena'].forEach(id=>{
+    const p=document.getElementById(id);if(p)p.classList.remove('show');
+  });
+}
+
+function showNumPad(target){
+  _numPadTarget=target;
+  // 只显示对应键盘
+  document.getElementById('numPadPractice').classList.remove('show');
+  document.getElementById('numPadArena').classList.remove('show');
+  const padId=target==='arena'?'numPadArena':'numPadPractice';
+  const pad=document.getElementById(padId);if(!pad)return;
+  pad.classList.add('show');
+  // 清空显示和隐藏输入
+  const s=_padSuffix();
+  const disp=document.getElementById('numDisplay'+s);if(disp)disp.textContent='';
+  const hid=document.getElementById('hiddenInput'+s);if(hid)hid.value='';
 }
 
 function numPadInput(digit){
-  const display=document.getElementById('numDisplay');
-  const hidden=document.getElementById('hiddenInput');
+  const s=_padSuffix();
+  const display=document.getElementById('numDisplay'+s);
+  const hidden=document.getElementById('hiddenInput'+s);
   if(!display||!hidden)return;
-  const cur=hidden.value;
-  if(cur.length>=2)return;
-  hidden.value=cur+digit;
+  if(hidden.value.length>=2)return;
+  hidden.value=hidden.value+digit;
   display.textContent=hidden.value;
   sfxClick();
 }
 
 function numPadDelete(){
-  const hidden=document.getElementById('hiddenInput');
-  const display=document.getElementById('numDisplay');
-  if(!hidden||!display)return;
-  const cur=hidden.value;
-  if(cur.length===0)return;
-  hidden.value=cur.slice(0,-1);
+  const s=_padSuffix();
+  const hidden=document.getElementById('hiddenInput'+s);
+  const display=document.getElementById('numDisplay'+s);
+  if(!hidden||!display||hidden.value.length===0)return;
+  hidden.value=hidden.value.slice(0,-1);
   display.textContent=hidden.value;
   sfxClick();
 }
 
 function numPadConfirm(){
-  const hidden=document.getElementById('hiddenInput');
+  const s=_padSuffix();
+  const hidden=document.getElementById('hiddenInput'+s);
   if(!hidden)return;
-  const val=hidden.value.trim();
-  if(val==='')return;
+  const val=hidden.value.trim();if(val==='')return;
   sfxClick();
-  // 根据目标调用对应提交函数
-  if(_numPadTarget==='practice'){
-    // 模拟原 submitAnswer 的流程
-    document.getElementById('answerInput')&&(document.getElementById('answerInput').value=val);
-    submitAnswer();
-  }else if(_numPadTarget==='mistake'){
-    document.getElementById('answerInput')&&(document.getElementById('answerInput').value=val);
-    submitMistake();
-  }else if(_numPadTarget==='arena'){
+  if(_numPadTarget==='arena'){
     const ai=document.getElementById('arenaInput');if(ai)ai.value=val;
-    // 如果擂台未激活，先激活；否则直接提交
-    if(!STATE.arenaActive){STATE.arenaActive=true;STATE.arenaScore=0;STATE.arenaSeconds=120;
-      document.getElementById('arenaSubmit').textContent='GO!';document.getElementById('arenaScoreDisplay').textContent='得分：0';
-      document.getElementById('arenaTimer').classList.remove('urgent');startArenaTimer();
-    }
+    if(!STATE.arenaActive){submitArena();return;} // 首次进入擂台
     submitArena();
+  }else{
+    document.getElementById('answerInput')&&(document.getElementById('answerInput').value=val);
+    if(_numPadTarget==='mistake')submitMistake();else submitAnswer();
   }
 }
 window.numPadInput=numPadInput;window.numPadDelete=numPadDelete;window.numPadConfirm=numPadConfirm;
@@ -1275,20 +1274,15 @@ function nextAfterFB(){
         document.getElementById('phaseTab1').classList.add('done');document.getElementById('phaseTab2').classList.add('active');
         document.getElementById('feedbackBox').className='feedback-box';
         hideNumPad();
-        // 解锁并直接激活擂台
+        // 解锁擂台（不自动激活，等用户点按钮）
         const arenaCard=document.getElementById('arenaCard');
         arenaCard.classList.remove('locked');
         const arenaBtn=document.getElementById('arenaSubmit');
-        arenaBtn.disabled=false;arenaBtn.textContent='GO!';
-        document.getElementById('questionBox').innerHTML='🎊 闯关完成，擂台已开启！';
+        arenaBtn.disabled=false;arenaBtn.textContent='⚡ 进入擂台';
+        document.getElementById('questionBox').innerHTML='🎊 闯关完成！<br><span style="font-size:16px">👇 点击擂台按钮开始挑战</span>';
         document.getElementById('answerRow').innerHTML='';
         document.getElementById('hintBox').className='hint-box';
-        // 自动启动擂台
-        STATE.arenaActive=true;STATE.arenaScore=0;STATE.arenaSeconds=120;
-        document.getElementById('arenaScoreDisplay').textContent='得分：0';
-        document.getElementById('arenaTimer').classList.remove('urgent');
-        startArenaTimer();nextArenaQ();
-        setTimeout(()=>document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'}),400);
+        setTimeout(()=>document.getElementById('arenaCard').scrollIntoView({behavior:'smooth'}),600);
       }
     }else{
       STATE.currentQuestion=genQ(day.data.id-1,STATE.currentLevel);
